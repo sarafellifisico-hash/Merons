@@ -431,7 +431,10 @@ function createFaceMesh(face, scale) {
     transparent: true,
     opacity: face.opacity,
     side: THREE.DoubleSide,
-    depthWrite: false
+    depthWrite: false,
+    polygonOffset: true,
+    polygonOffsetFactor: -1,
+    polygonOffsetUnits: -1
   });
   
   return new THREE.Mesh(geometry, material);
