@@ -62,6 +62,33 @@
     border-radius: 6px;
     padding: 6px 12px;
   }
+	/* Estado minimizado do painel */
+#panel.minimized {
+  width: 60px !important;
+  height: 60px !important;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+/* Esconde o conteúdo quando minimizado */
+#panel.minimized .panel-inner { display: none; }
+
+/* Estilo do botão de toggle */
+#toggleBtn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 40;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.2);
+  color: white;
+  padding: 5px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 12px;
+}
+	
 </style>
 <script async src="https://unpkg.com/es-module-shims@1.8.0/dist/es-module-shims.js"></script>
 <script type="importmap">
