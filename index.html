@@ -1,3 +1,5 @@
+from IPython.display import HTML
+HTML('''
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -88,7 +90,7 @@
   cursor: pointer;
   font-size: 12px;
 }
-	
+
 </style>
 <script async src="https://unpkg.com/es-module-shims@1.8.0/dist/es-module-shims.js"></script>
 <script type="importmap">
@@ -99,7 +101,7 @@
 <div id="canvas-wrap"></div>
 
 <aside id="panel">
-	<button id="toggleBtn">UI</button> 
+	<button id="toggleBtn">UI</button>
   <div class="panel-inner">
   <div class="panel-inner">
     <div class="mb-5">
@@ -118,13 +120,13 @@
     <div class="divider"></div>
 
 	  <div class="sec-title mb-3">Circle Types and their radii</div>
-      <div class="grid grid-cols-2 gap-x-10 gap-y-[10px] text-[11px] text-[#c2cee4]">
-        <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" class="check layer-toggle" data-layer="0" checked><span><span class="legend-dot" style="background:#ffffff"></span>CiMe - R 0.464</span></label>
-        <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" class="check layer-toggle" data-layer="1" checked><span><span class="legend-dot" style="background:#446dff"></span>CM - R 1.000</span></label>
-        <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" class="check layer-toggle" data-layer="2" checked><span><span class="legend-dot" style="background:#00e676"></span>CiMo - R 22,270</span></label>
-        <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" class="check layer-toggle" data-layer="3" checked><span><span class="legend-dot" style="background:#ffe04a"></span>CMo - R 48.000</span></label>
-        <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" class="check layer-toggle" data-layer="4" checked><span><span class="legend-dot" style="background:#ff622e"></span>CiEx - R 89.110</span></label>
-        <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" class="check layer-toggle" data-layer="5" checked><span><span class="legend-dot" style="background:#ff4557"></span>CEx - R 192.000</span></label>
+      <div class="grid grid-cols-2 gap-x-8 gap-y-[10px] text-[11px] text-[#c2cee4]">
+        <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" class="check layer-toggle" data-layer="0" checked><span><span class="legend-dot" style="background:#ffffff"></span>CiMe - R 0.46</span></label>
+        <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" class="check layer-toggle" data-layer="1" checked><span><span class="legend-dot" style="background:#446dff"></span>CM - R 1.00</span></label>
+        <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" class="check layer-toggle" data-layer="2" checked><span><span class="legend-dot" style="background:#00e676"></span>CiMo - R 46.40</span></label>
+        <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" class="check layer-toggle" data-layer="3" checked><span><span class="legend-dot" style="background:#ffe04a"></span>CMo - R 100.00</span></label>
+        <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" class="check layer-toggle" data-layer="4" checked><span><span class="legend-dot" style="background:#ff9a2e"></span>CiEx - R 460.40</span></label>
+        <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" class="check layer-toggle" data-layer="5" checked><span><span class="legend-dot" style="background:#ff0000"></span>CEx - R 1.000.00</span></label>
       </div>
 
     <div class="divider"></div>
@@ -136,46 +138,6 @@
         <span class="mono text-[13px] text-[#d6e3ff]" id="faceOpacityVal">0.50</span>
       </div>
       <input type="range" id="faceOpacity" min="0.05" max="1" step="0.01" value="0.5">
-      <div class="hint mt-1">Keeps colors: white, violet, blue, green.</div>
-    </div>
-
-    <div class="divider"></div>
-
-    <div>
-      <div class="sec-title mb-2">Number of Compalpha Meridians</div>
-<div class="flex gap-2 flex-wrap">
-  <label class="chip">
-    <input type="radio" name="meridians" value="12" class="sr-only">
-    <span>12</span>
-  </label>
-  <label class="chip">
-    <input type="radio" name="meridians" value="18" class="sr-only">
-    <span>18</span>
-  </label>
-  <label class="chip">
-    <input type="radio" name="meridians" value="36" class="sr-only" checked>
-    <span>36</span>
-  </label>
-</div>
-<label class="flex items-center gap-3 cursor-pointer mt-4 text-[13.5px]">
-  <input type="checkbox" id="emphasizeMeridians" class="check">
-  <span>Highlight Meridians</span>
-</label>
-    </div>
-	  
-	<div class="divider"></div>
-	  
-	<div>
-      <div class="sec-title mb-3">Meronic Rotation</div>
-      <div class="flex items-center gap-3 mb-3">
-        <button id="rotateToggle" class="btn-primary">Pause</button>
-        <div class="text-[12px] text-[#7f8daa]">Joint orbital spin</div>
-      </div>
-      <div class="flex justify-between text-[11px] text-[#6f7f9e] mb-1">
-        <span>Speed</span>
-        <span class="mono text-[#b6c6e4]" id="rotateSpeedVal">0.0015</span>
-      </div>
-      <input type="range" id="rotateSpeed" min="0" max="0.01" step="0.0001" value="0.0015">
     </div>
 
     <div class="divider"></div>
@@ -186,63 +148,90 @@
         <span class="text-[12.5px] text-[#9baacc]">Distance between Cuboctahedrons</span>
         <span class="mono text-[13px] text-[#d6e3ff]" id="interMeronDistVal">0.0</span>
       </div>
-      <input type="range" id="interMeronDist" min="0" max="400" step="1" value="0">
+      <input type="range" id="interMeronDist" min="0" max="1840" step="1" value="0">
       <div class="hint mt-2">At <b>0.0</b>, the Cuboctahedrons touch vertex to vertex.</div>
     </div>
 
-    <div class="divider"></div>
+  <div class="divider"></div>
 
-    <div>
-      <div class="sec-title mb-3">Intersection Physics</div>
-      <label class="flex items-center gap-3 cursor-pointer text-[13.5px] text-[#c4cfe2]">
-        <input class="check" type="checkbox" id="autoAlignSpins">
-        <span>Auto-Synchronize Spins (Bond)</span>
+  <div>
+    <div class="sec-title mb-3">Number of Compalpha Meridians</div>
+    <div class="flex gap-2 flex-wrap">
+      <label class="chip">
+        <input type="radio" name="meridians" value="12" class="sr-only">
+        <span>12</span>
+      </label>
+      <label class="chip">
+        <input type="radio" name="meridians" value="18" class="sr-only">
+        <span>18</span>
+      </label>
+      <label class="chip">
+        <input type="radio" name="meridians" value="36" class="sr-only" checked>
+        <span>36</span>
       </label>
     </div>
+    <label class="flex items-center gap-3 cursor-pointer mt-4 text-[13.5px]">
+      <input type="checkbox" id="emphasizeMeridians" class="check">
+      <span>Highlight Meridians</span>
+    </label>
+  </div>
 
-    <div class="divider"></div>
+  <div class="divider"></div>
 
-    <div>
-      <div class="sec-title mb-2">Alpha Distance (local edge)</div>
-      <div class="flex items-center justify-between mb-1">
-        <span class="text-[12.5px] text-[#9baacc]">Cuboctahedron scale</span>
-        <span class="mono text-[13px] text-[#d6e3ff]" id="alphaDistanceVal">1.732</span>
-      </div>
-      <input type="range" id="alphaDistance" disabled min="1.732" max="1.732" step="0.001" value="1.732" class="mb-3">
-      <div class="text-[11px] text-[#6f7f9e] mt-1">Locked = √3 ≈ 1.732 (CiM tangency at 120°)</div>
+  <div>
+    <div class="sec-title mb-2">Meridian Resolution</div>
+    <div class="flex items-center justify-between mb-1">
+      <span class="text-[12.5px] text-[#9baacc]">Smoothness of the Circles</span>
+      <span class="mono text-[13px] text-[#d6e3ff]" id="meridianResVal">48</span>
     </div>
+    <input type="range" id="meridianResolution" min="12" max="96" step="1" value="48">
+  </div>
 
-    <div class="divider"></div>
+  <div class="divider"></div>
 
-    <div>
-      <div class="sec-title mb-3">Visualization</div>
-      <div class="space-y-[11px] text-[13.5px] text-[#c4cfe2]">
-        <label class="flex items-center gap-3 cursor-pointer"><input class="check" type="checkbox" id="showVectors" checked> <span>Show Alpha Axes</span></label>
-        <label class="flex items-center gap-3 cursor-pointer"><input class="check" type="checkbox" id="showEdges" checked> <span>Show Edges</span></label>
-        <label class="flex items-center gap-3 cursor-pointer"><input class="check" type="checkbox" id="showTriades"> <span>Show Faces (Triads)</span></label>
-        <label class="flex items-center gap-3 cursor-pointer"><input class="check" type="checkbox" id="showFaces" checked> <span>Show Translucent Faces</span></label>
-        <label class="flex items-center gap-3 cursor-pointer"><input class="check" type="checkbox" id="showLabels"> <span>Show Cα Labels</span></label>
-      </div>
+  <div>
+    <div class="sec-title mb-3">Meronic Rotation</div>
+    <div class="flex items-center gap-3 mb-3">
+      <button id="rotateToggle" class="btn-primary">Pause</button>
+      <div class="text-[12px] text-[#7f8daa]">Joint orbital spin</div>
     </div>
-
-    <div class="divider"></div>
-
-    <div>
-      <div class="sec-title mb-3">Camera Position</div>
-      <div class="flex flex-wrap gap-2">
-        <button class="cam-btn" data-cam="geral">General View</button>
-        <button class="cam-btn" data-cam="topo">Top</button>
-        <button class="cam-btn" data-cam="frente">Front</button>
-      </div>
-      <button id="saveConfig" class="mt-4 w-full btn-primary">💾 Save Settings</button>
-      <button id="loadConfig" class="mt-2 w-full bg-[#1a2438] hover:bg-[#25334f] border border-[#3a5d9e] text-[#a8c0ff] py-2 rounded-xl text-sm">📂 Load Settings</button>
-      <button id="autoVaryBtn" class="mt-2 w-full cam-btn">🔄 Automatic Alpha Animation</button>
-      <button id="zoomCiMCEx" class="mt-2 w-full bg-[#ff2a2a] hover:bg-[#ff5555] border border-[#ff6b6b] text-white py-2 rounded-xl text-sm font-medium">CiM → CEx</button>
+    <div class="flex justify-between text-[11px] text-[#6f7f9e] mb-1">
+      <span>Speed</span>
+      <span class="mono text-[13px] text-[#d6e3ff]" id="rotateSpeedVal">0.0015</span>
     </div>
+    <input type="range" id="rotateSpeed" min="0" max="0.01" step="0.0001" value="0.0015">
+  </div>
+
+  <div class="divider"></div>
+
+  <div>
+    <div class="sec-title mb-3">Visualization</div>
+    <div class="space-y-[11px] text-[13.5px] text-[#c4cfe2]">
+      <label class="flex items-center gap-3 cursor-pointer"><input class="check" type="checkbox" id="showVectors" checked> <span>Show Alpha Axes</span></label>
+      <label class="flex items-center gap-3 cursor-pointer"><input class="check" type="checkbox" id="showEdges" checked> <span>Show Edges</span></label>
+      <label class="flex items-center gap-3 cursor-pointer"><input class="check" type="checkbox" id="showTriades"> <span>Show Faces (Triads)</span></label>
+      <label class="flex items-center gap-3 cursor-pointer"><input class="check" type="checkbox" id="showFaces" checked> <span>Show Translucent Faces</span></label>
+      <label class="flex items-center gap-3 cursor-pointer"><input class="check" type="checkbox" id="showLabels"> <span>Show Cα Labels</span></label>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <div>
+    <div class="sec-title mb-3">Camera Position</div>
+    <div class="flex flex-wrap gap-2">
+      <button class="cam-btn" data-cam="geral">General View</button>
+      <button class="cam-btn" data-cam="topo">Top</button>
+      <button class="cam-btn" data-cam="frente">Front</button>
+    </div>
+    <button id="saveConfig" class="mt-4 w-full btn-primary">💾 Save Settings</button>
+    <button id="loadConfig" class="mt-2 w-full bg-[#1a2438] hover:bg-[#25334f] border border-[#3a5d9e] text-[#a8c0ff] py-2 rounded-xl text-sm">📂 Load Settings</button>
+    <button id="autoVaryBtn" class="mt-2 w-full cam-btn">🔄 Automatic Alpha Animation</button>
+    <button id="zoomCiMCEx" class="mt-2 w-full bg-[#ff2a2a] hover:bg-[#ff5555] border border-[#ff6b6b] text-white py-2 rounded-xl text-sm font-medium">CiM → CEx</button>
   </div>
 </aside>
 
-<div id="legend-float" class="fixed right-6 bottom-6 z-20 text-[11.5px] text-[#8292b0] bg-[#<div id="legend-float" class="fixed right-6 bottom-6 z-20 text-[11.5px] text-[#8292b0] bg-[#0c111b]/70 backdrop-blur-md border-white/[0.07] rounded-2xl px-4 py-3 leading-relaxed shadow-xl">
+<div id="legend-float" class="fixed right-6 bottom-6 z-20 text-[11.5px] text-[#8292b0] bg-[#0c111b]/70 backdrop-blur-md border-white/[0.07] rounded-2xl px-4 py-3 leading-relaxed shadow-xl">
   <div class="font-bold text-[#bdcbe6] mb-1">Alpha Triads</div>
   <div><span class="legend-dot" style="background:#bfcfe6"></span> Triad A – α1, α2, α3</div>
   <div><span class="legend-dot" style="background:#bfcfe6"></span> Triad B – α4, α5, α6</div>
@@ -258,7 +247,7 @@ const wrap = document.getElementById('canvas-wrap');
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x020208);
 
-const camera = new THREE.PerspectiveCamera(52, window.innerWidth / window.innerHeight, 0.1, 5000);
+const camera = new THREE.PerspectiveCamera(52, window.innerWidth / window.innerHeight, 0.1, 10000); // Increased far clipping plane
 camera.position.set(8, -7, 6);
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -271,7 +260,7 @@ const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 controls.dampingFactor = 0.07;
 controls.minDistance = 1.5;
-controls.maxDistance = 2500;
+controls.maxDistance = 8000;
 
 scene.add(new THREE.AmbientLight(0xffffff, 0.35));
 const universeGroup = new THREE.Group();
@@ -298,7 +287,7 @@ const cuboFaces = [
   {indices: [2,7,9], color: 0x6bafff, opacity: 0.22}, // C (fixed from [2,9,7])
   {indices: [3,6,10], color: 0xffe06b, opacity: 0.22}, // D
   {indices: [3,7,11], color: 0x88aaff, opacity: 0.22},
-  
+
   // Quadrados aproximados (divididos em 2 triângulos cada) - 6 faces completas
   {indices: [0,1,5,4], color: 0x99bbff, opacity: 0.22, isQuad: true},
   {indices: [0,2,8,9], color: 0x99bbff, opacity: 0.22, isQuad: true},
@@ -311,10 +300,10 @@ const cuboFaces = [
 const LAYER_DEFS = [
   {r:0.464, cor:0xffffff, opacidade:1.0},
   {r:1.0, cor:0x2b5bff, opacidade:1.0},
-  {r:22.27, cor:0x00e676, opacidade:0.8},
-  {r:48.0, cor:0xffff00, opacidade:0.6},
-  {r:89.11, cor:0xff9a2e, opacidade:0.35},
-  {r:192.0, cor:0xff0000, opacidade:0.18},
+  {r:46.40, cor:0x00e676, opacidade:0.8},
+  {r:100.0, cor:0xffff00, opacidade:0.6},
+  {r:460.40, cor:0xff9a2e, opacidade:0.35},
+  {r:1000.00, cor:0xff0000, opacidade:0.18},
 ];
 
 let compalphas = [], meronGroups = [], edgeLines = [], triadeLines = [], faceMeshes = [];
@@ -322,6 +311,7 @@ let currentMeridians = 36;
 let currentDistance = 1.7320508075688772;
 let currentMeronCount = 1;
 let currentInterMeronDist = 0;
+let meridianResolution = 48; // New variable for meridian resolution
 // polarity removed
 let meronParent = [], meronParentTri = [];
 let autoVaryAlpha = false;
@@ -370,28 +360,28 @@ function makeAlphaLabel(text) {
   const canvas = document.createElement('canvas');
   canvas.width = baseW * dpr;
   canvas.height = baseH * dpr;
-  
+
   const ctx = canvas.getContext('2d');
   ctx.scale(dpr, dpr); // desenha em coordenadas normais
   ctx.clearRect(0, 0, baseW, baseH);
-  
+
   // agora use um tamanho de fonte confortável (não precisa ser 12px)
   ctx.font = '600 14px "Instrument Sans", system-ui, sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillStyle = '#FFFF00';
-  
+
   // melhora a nitidez
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
-  
+
   ctx.fillText(text, baseW/2, baseH/2 - 16);
-  
+
   const texture = new THREE.CanvasTexture(canvas);
   texture.minFilter = THREE.LinearFilter; // evita blur de mipmap
   texture.generateMipmaps = false;
   texture.needsUpdate = true;
-  
+
   const mat = new THREE.SpriteMaterial({ map: texture, transparent: true });
   const spr = new THREE.Sprite(mat);
   spr.scale.set(4, 2, 1); // era 10,5 — reduzi porque a textura agora é 3x maior
@@ -408,9 +398,10 @@ function buildCompalpha(index, meridianCount) {
     layerMaterials.push(mat);
     for(let m=0; m<meridianCount; m++){
       const u = (m / meridianCount) * Math.PI * 2;
-      const points = []; const res = 48;
-      for(let k=0; k<=res; k++){
-        const v = (k/res) * Math.PI * 2;
+      const points = [];
+      // Use meridianResolution instead of hardcoded 48
+      for(let k=0; k<=meridianResolution; k++){
+        const v = (k/meridianResolution) * Math.PI * 2;
         const R = ld.r; const rad = R + R * Math.cos(v);
         points.push(new THREE.Vector3(rad * Math.cos(u), rad * Math.sin(u), R * Math.sin(v)));
       }
@@ -425,7 +416,7 @@ function buildCompalpha(index, meridianCount) {
   axisGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,-1),new THREE.Vector3(0,0,1)]), new THREE.LineBasicMaterial({color:0xff0000})));
   const cone = new THREE.Mesh(new THREE.ConeGeometry(0.1,0.314,16), new THREE.MeshBasicMaterial({color:0xff0000}));
   cone.position.set(0,0,1.157); cone.rotation.x = Math.PI/2; axisGroup.add(cone);
-  
+
   group.add(axisGroup);
   group.add(makeAlphaLabel('Cα '+(index+1)));
   return group;
@@ -435,14 +426,14 @@ function createFaceMesh(face, scale) {
   const geometry = new THREE.BufferGeometry();
   const positions = [];
   const indices = face.indices;
-  
+
   if (face.isQuad) {
     // Divide quadrado em 2 triângulos
     positions.push(
       basePositions[indices[0]].x * scale, basePositions[indices[0]].y * scale, basePositions[indices[0]].z * scale,
       basePositions[indices[1]].x * scale, basePositions[indices[1]].y * scale, basePositions[indices[1]].z * scale,
       basePositions[indices[2]].x * scale, basePositions[indices[2]].y * scale, basePositions[indices[2]].z * scale,
-      
+
       basePositions[indices[0]].x * scale, basePositions[indices[0]].y * scale, basePositions[indices[0]].z * scale,
       basePositions[indices[2]].x * scale, basePositions[indices[2]].y * scale, basePositions[indices[2]].z * scale,
       basePositions[indices[3]].x * scale, basePositions[indices[3]].y * scale, basePositions[indices[3]].z * scale
@@ -454,9 +445,9 @@ function createFaceMesh(face, scale) {
       basePositions[indices[2]].x * scale, basePositions[indices[2]].y * scale, basePositions[indices[2]].z * scale
     );
   }
-  
+
   geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-  
+
   const material = new THREE.MeshBasicMaterial({
     color: face.color,
     transparent: true,
@@ -464,31 +455,31 @@ function createFaceMesh(face, scale) {
     side: THREE.DoubleSide,
     depthWrite: false
   });
-  
+
   return new THREE.Mesh(geometry, material);
 }
 
 function buildMeronGroup(meronIndex = 0) {
   const group = new THREE.Group();
-  const mEdgeGroup = new THREE.Group(); 
+  const mEdgeGroup = new THREE.Group();
   const mTriadeGroup = new THREE.Group();
   const mFaceGroup = new THREE.Group(); // New group for translucent faces
-  
-  group.add(mEdgeGroup); 
+
+  group.add(mEdgeGroup);
   group.add(mTriadeGroup);
   group.add(mFaceGroup);
-  
-  group.userData = { 
-    edgeGroup: mEdgeGroup, 
-    triadeGroup: mTriadeGroup, 
+
+  group.userData = {
+    edgeGroup: mEdgeGroup,
+    triadeGroup: mTriadeGroup,
     faceGroup: mFaceGroup,
-    localComps: [] 
+    localComps: []
   };
 
   for(let i=0; i<12; i++){
     const comp = buildCompalpha(i, currentMeridians);
-    group.add(comp); 
-    compalphas.push(comp); 
+    group.add(comp);
+    compalphas.push(comp);
     group.userData.localComps.push(comp);
   }
 
@@ -517,7 +508,7 @@ function buildMeronGroup(meronIndex = 0) {
       mTriadeGroup.add(line); triadeLines.push({line,a,b,comps:group.userData.localComps});
     });
   });
-  
+
   // Create translucent faces - colors by meronic level
   const scale = currentDistance / 110;
   let meronColor, meronOpacity;
@@ -534,14 +525,14 @@ function buildMeronGroup(meronIndex = 0) {
     // Heneicosalpha - translucent green
     meronColor = 0x00FF00; meronOpacity = 0.60;
   }
-  
+
   cuboFaces.forEach(face => {
     const faceWithMeronColor = { ...face, color: meronColor, opacity: meronOpacity };
     const mesh = createFaceMesh(faceWithMeronColor, scale);
     mFaceGroup.add(mesh);
     faceMeshes.push(mesh);
   });
-  
+
   return group;
 }
 
@@ -575,7 +566,7 @@ function setupSpatialDocking() {
     const v0 = basePositions[tri.indices[0]].clone().multiplyScalar(scale);
     const v1 = basePositions[tri.indices[1]].clone().multiplyScalar(scale);
     const v2 = basePositions[tri.indices[2]].clone().multiplyScalar(scale);
-    
+
     let centerLocal = v0.clone().add(v1).add(v2).divideScalar(3);
     let normalLocal = centerLocal.clone().normalize();
 
@@ -602,7 +593,7 @@ function setupSpatialDocking() {
 function updateLocalGeometries() {
   const scale = currentDistance/110;
   meronGroups.forEach(mg => mg.userData.localComps.forEach((comp,i) => comp.position.copy(basePositions[i]).multiplyScalar(scale)));
-  
+
   // Atualizar faces
   faceMeshes.forEach(mesh => {
     const positions = mesh.geometry.attributes.position.array;
@@ -610,16 +601,18 @@ function updateLocalGeometries() {
     // Rebuild positions would be better but for simplicity we scale existing
     mesh.scale.setScalar(scale / (currentDistance/110)); // Mantém proporcional
   });
-  
+
   edgeLines.forEach(({line,a,b,comps}) => {
     const attr = line.geometry.attributes.position || line.geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(6),3)).attributes.position;
     attr.setXYZ(0,comps[a].position.x,comps[a].position.y,comps[a].position.z);
-    attr.setXYZ(1,comps[b].position.x,comps[b].position.y,comps[b].position.z); attr.needsUpdate = true;
+    attr.setXYZ(1,comps[b].position.x,comps[b].position.y,comps[b].position.z);
+    attr.needsUpdate = true;
   });
   triadeLines.forEach(({line,a,b,comps}) => {
     const attr = line.geometry.attributes.position || line.geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(6),3)).attributes.position;
     attr.setXYZ(0,comps[a].position.x,comps[a].position.y,comps[a].position.z);
-    attr.setXYZ(1,comps[b].position.x,comps[b].position.y,comps[b].position.z); attr.needsUpdate = true;
+    attr.setXYZ(1,comps[b].position.x,comps[b].position.y,comps[b].position.z);
+    attr.needsUpdate = true;
   });
 }
 
@@ -634,15 +627,15 @@ function applySpinsAndPolarities() {
 
 function buildUniverse() {
   universeGroup.clear();
-  compalphas = []; 
-  meronGroups = []; 
-  edgeLines = []; 
-  triadeLines = []; 
+  compalphas = [];
+  meronGroups = [];
+  edgeLines = [];
+  triadeLines = [];
   faceMeshes = [];
 
   for(let i=0; i<currentMeronCount; i++){
     const mg = buildMeronGroup(i);
-    universeGroup.add(mg); 
+    universeGroup.add(mg);
     meronGroups.push(mg);
   }
 
@@ -665,14 +658,14 @@ function buildUniverse() {
   });
 }
 
-function updateLabelVisibility(){ 
-  const v = document.getElementById('showLabels').checked; 
-  compalphas.forEach(c => c.traverse(o => { if(o.name==='alphaLabel') o.visible = v; })); 
+function updateLabelVisibility(){
+  const v = document.getElementById('showLabels').checked;
+  compalphas.forEach(c => c.traverse(o => { if(o.name==='alphaLabel') o.visible = v; }));
 }
 
-function updateVectorVisibility(){ 
-  const v = document.getElementById('showVectors').checked; 
-  compalphas.forEach(c => c.traverse(o => { if(o.name==='alphaVector') o.visible = v; })); 
+function updateVectorVisibility(){
+  const v = document.getElementById('showVectors').checked;
+  compalphas.forEach(c => c.traverse(o => { if(o.name==='alphaVector') o.visible = v; }));
 }
 
 function updateLayerVisibility(){
@@ -716,8 +709,8 @@ function createMeronCountUI() {
 
 function updateAlphaDistance(value) {
   currentDistance = parseFloat(value) || 1.7320508075688772;
-  document.getElementById('alphaDistance').value = currentDistance;
-  document.getElementById('alphaDistanceVal').textContent = currentDistance.toFixed(3);
+  // document.getElementById('alphaDistance').value = currentDistance; // Removed non-existent UI element
+  // document.getElementById('alphaDistanceVal').textContent = currentDistance.toFixed(3); // Removed non-existent UI element
   setupSpatialDocking();
   updateLocalGeometries();
 }
@@ -738,7 +731,7 @@ document.querySelectorAll('.cam-btn').forEach(b => {
     const currentDist = camera.position.distanceTo(controls.target) || 300;
     const targetPosition = dir.clone().multiplyScalar(currentDist);
     animateCamera(camera.position, targetPosition, 1000);
-  }); 
+  });
 });
 
 function animateCamera(startPos, endPos, duration) {
@@ -749,8 +742,8 @@ function animateCamera(startPos, endPos, duration) {
   function update(currentTime) {
     const elapsed = currentTime - startTime;
     const progress = Math.min(elapsed / duration, 1);
-    const easeProgress = progress < 0.5 
-      ? 2 * progress * progress 
+    const easeProgress = progress < 0.5
+      ? 2 * progress * progress
       : 1 - Math.pow(-2 * progress + 2, 2) / 2;
 
     camera.position.lerpVectors(startClone, endPos, easeProgress);
@@ -759,7 +752,8 @@ function animateCamera(startPos, endPos, duration) {
 
     if (progress < 1) {
       requestAnimationFrame(update);
-    } else {
+    }
+    else {
       isAnimatingCam = false;
     }
   }
@@ -770,7 +764,8 @@ function animateCamera(startPos, endPos, duration) {
 function saveConfig() {
   const config = {
     currentDistance, currentInterMeronDist, currentMeridians, currentMeronCount,
-    autoAlignSpins: document.getElementById('autoAlignSpins').checked,
+    meridianResolution, // Save new resolution
+    // autoAlignSpins: document.getElementById('autoAlignSpins').checked, // Removed non-existent UI element
     showVectors: document.getElementById('showVectors').checked,
     showEdges: document.getElementById('showEdges').checked,
     showTriades: document.getElementById('showTriades').checked,
@@ -793,6 +788,13 @@ function loadConfig() {
   document.getElementById('interMeronDist').value = currentInterMeronDist;
   document.getElementById('interMeronDistVal').textContent = currentInterMeronDist.toFixed(1);
   if (c.showFaces !== undefined) document.getElementById('showFaces').checked = c.showFaces;
+  // if (c.autoAlignSpins !== undefined) document.getElementById('autoAlignSpins').checked = c.autoAlignSpins; // Removed non-existent UI element
+
+  // Load new resolution
+  meridianResolution = c.meridianResolution || 48;
+  document.getElementById('meridianResolution').value = meridianResolution;
+  document.getElementById('meridianResVal').textContent = meridianResolution;
+
   buildUniverse();
   alert('✅ Settings loaded!');
 }
@@ -819,30 +821,39 @@ createMeronCountUI();
 updateMeronInfo(1);
 buildUniverse();
 
-const alphaSlider = document.getElementById('alphaDistance');
+// Removed the setTimeout block that was setting meronCount to 21.
+
+// const alphaSlider = document.getElementById('alphaDistance'); // Removed non-existent UI element
 
 // slider locked - no event
 
 document.getElementById('saveConfig').addEventListener('click', saveConfig);
 document.getElementById('loadConfig').addEventListener('click', loadConfig);
 
-document.getElementById('rotateToggle').addEventListener('click', e => { 
-  window.autoRotate =!window.autoRotate; 
-  e.target.textContent = window.autoRotate? 'Pause' : 'Resume'; 
+document.getElementById('rotateToggle').addEventListener('click', e => {
+  window.autoRotate =!window.autoRotate;
+  e.target.textContent = window.autoRotate? 'Pause' : 'Resume';
 });
 window.autoRotate = true;
-document.getElementById('rotateSpeed').addEventListener('input', e => { 
-  rotateSpeed = parseFloat(e.target.value); 
-  document.getElementById('rotateSpeedVal').textContent = rotateSpeed.toFixed(4); 
+document.getElementById('rotateSpeed').addEventListener('input', e => {
+  rotateSpeed = parseFloat(e.target.value);
+  document.getElementById('rotateSpeedVal').textContent = rotateSpeed.toFixed(4);
 });
 
-document.getElementById('interMeronDist').addEventListener('input', e => { 
-  currentInterMeronDist = parseFloat(e.target.value); 
-  document.getElementById('interMeronDistVal').textContent = currentInterMeronDist.toFixed(1); 
-  setupSpatialDocking(); 
+document.getElementById('interMeronDist').addEventListener('input', e => {
+  currentInterMeronDist = parseFloat(e.target.value);
+  document.getElementById('interMeronDistVal').textContent = currentInterMeronDist.toFixed(1);
+  setupSpatialDocking();
 });
 
 document.getElementById('faceOpacity').addEventListener('input', e => { updateFaceOpacity(e.target.value); });
+
+// New event listener for meridian resolution
+document.getElementById('meridianResolution').addEventListener('input', e => {
+  meridianResolution = parseInt(e.target.value);
+  document.getElementById('meridianResVal').textContent = meridianResolution;
+  buildUniverse(); // Rebuild scene with new resolution
+});
 
 // autoAlign removed
 document.getElementById('showLabels').addEventListener('change', updateLabelVisibility);
@@ -851,8 +862,8 @@ document.getElementById('showEdges').addEventListener('change', e => meronGroups
 document.getElementById('showTriades').addEventListener('change', e => meronGroups.forEach(mg => mg.userData.triadeGroup.visible = e.target.checked));
 document.getElementById('showFaces').addEventListener('change', updateFaceVisibility);
 
-document.querySelectorAll('input[name="meridians"]').forEach(r => r.addEventListener('change', e => { 
-  if(e.target.checked){ currentMeridians = parseInt(e.target.value); buildUniverse(); }
+document.querySelectorAll('input[name="meridians"]').forEach(r => r.addEventListener('change', e => {
+  if(e.target.checked){ currentMeridians = parseInt(e.target.value); buildUniverse(); };
 }));
 document.getElementById('emphasizeMeridians').addEventListener('change', updateEmphasis);
 document.querySelectorAll('.layer-toggle').forEach(cb => cb.addEventListener('change', updateLayerVisibility));
@@ -874,15 +885,17 @@ window.addEventListener('resize', () => {
 
 let zoomedOut = false;
 const posCiM = new THREE.Vector3(12, -9, 10); // posição inicial perto dos CiM
-const posCEx = new THREE.Vector3(0, -680, 640); // ajuste fino: era -1800,1200 (longe demais)
+const posCEx = new THREE.Vector3(0, -1800, 1200); // Adjusted for larger view
+
+Object.assign(camPositions, { posCEx: posCEx }); // Make posCEx accessible via camPositions
 
 document.getElementById('zoomCiMCEx').addEventListener('click', () => {
   const startPos = camera.position.clone();
   const startTarget = controls.target.clone();
-  const endPos = zoomedOut ? posCiM : posCEx;
+  const endPos = zoomedOut ? posCiM : camPositions.posCEx; // Use camPositions.posCEx here
   const duration = 1800;
   const startTime = performance.now();
-  
+
   function animateZoom(now) {
     const t = Math.min((now - startTime) / duration, 1);
     const ease = t < 0.5 ? 2*t*t : -1 + (4 - 2*t)*t;
@@ -899,3 +912,5 @@ document.getElementById('zoomCiMCEx').addEventListener('click', () => {
 </script>
 </body>
 </html>
+'''
+)
