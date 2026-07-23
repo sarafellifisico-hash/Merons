@@ -147,7 +147,7 @@
         <span class="text-[12.5px] text-[#9baacc]">Distance between Cuboctahedrons</span>
         <span class="mono text-[13px] text-[#d6e3ff]" id="interMeronDistVal">0.0</span>
       </div>
-      <input type="range" id="interMeronDist" min="0" max="1840" step="1" value="0">
+      <input type="range" id="interMeronDist" min="0" max="2000" step="1" value="0">
       <div class="hint mt-2">At <b>0.0</b>, the Cuboctahedrons touch vertex to vertex.</div>
     </div>
 
@@ -228,6 +228,7 @@
     <button id="autoVaryBtn" class="mt-2 w-full cam-btn">🔄 Automatic Alpha Animation</button>
     <button id="zoomCiMCEx" class="mt-2 w-full bg-[#ff2a2a] hover:bg-[#ff5555] border border-[#ff6b6b] text-white py-2 rounded-xl text-sm font-medium">CiM → CEx</button>
   </div>
+</div>
 
 <script type="module">
 import * as THREE from 'three';
@@ -279,12 +280,12 @@ const cuboFaces = [
   {indices: [3,7,11], color: 0x88aaff, opacity: 0.22},
 
   // Quadrados aproximados (divididos em 2 triângulos cada) - 6 faces completas
-  {indices: [0,1,5,4], color: 0x99bbff, opacity: 0.22, isQuad: true},
-  {indices: [0,2,8,9], color: 0x99bbff, opacity: 0.22, isQuad: true},
-  {indices: [1,3,10,11], color: 0x99bbff, opacity: 0.22, isQuad: true},
-  {indices: [2,3,6,7], color: 0x99bbff, opacity: 0.22, isQuad: true},
-  {indices: [4,6,8,10], color: 0x99bbff, opacity: 0.22, isQuad: true},
-  {indices: [5,7,9,11], color: 0x99bbff, opacity: 0.22, isQuad: true},
+  {indices: [0,4,1,5], color: 0x99bbff, opacity: 0.22, isQuad: true},
+  {indices: [0,9,2,8], color: 0x99bbff, opacity: 0.22, isQuad: true},
+  {indices: [1,10,3,11], color: 0x99bbff, opacity: 0.22, isQuad: true},
+  {indices: [2,7,3,6], color: 0x99bbff, opacity: 0.22, isQuad: true},
+  {indices: [4,8,6,10], color: 0x99bbff, opacity: 0.22, isQuad: true},
+  {indices: [5,11,7,9], color: 0x99bbff, opacity: 0.22, isQuad: true},
 ];
 
 const LAYER_DEFS = [
@@ -412,41 +413,55 @@ function buildCompalpha(index, meridianCount) {
   return group;
 }
 
+function getOutwardFaceIndices(indices) {
+  const ordered = indices.slice();
+  const a = basePositions[ordered[0]];
+  const b = basePositions[ordered[1]];
+  const c = basePositions[ordered[2]];
+  const normal = new THREE.Vector3()
+    .subVectors(b, a)
+    .cross(new THREE.Vector3().subVectors(c, a));
+  const center = ordered.reduce(
+    (sum, index) => sum.add(basePositions[index]),
+    new THREE.Vector3()
+  ).divideScalar(ordered.length);
+
+  if (normal.dot(center) < 0) ordered.reverse();
+  return ordered;
+}
+
+function updateFaceGeometry(mesh, scale) {
+  const positions = mesh.geometry.getAttribute('position');
+  mesh.userData.faceIndices.forEach((vertexIndex, localIndex) => {
+    const vertex = basePositions[vertexIndex];
+    positions.setXYZ(localIndex, vertex.x * scale, vertex.y * scale, vertex.z * scale);
+  });
+  positions.needsUpdate = true;
+  mesh.geometry.computeVertexNormals();
+  mesh.geometry.computeBoundingBox();
+  mesh.geometry.computeBoundingSphere();
+}
+
 function createFaceMesh(face, scale) {
   const geometry = new THREE.BufferGeometry();
-  const positions = [];
-  const indices = face.indices;
-
-  if (face.isQuad) {
-    // Divide quadrado em 2 triângulos
-    positions.push(
-      basePositions[indices[0]].x * scale, basePositions[indices[0]].y * scale, basePositions[indices[0]].z * scale,
-      basePositions[indices[1]].x * scale, basePositions[indices[1]].y * scale, basePositions[indices[1]].z * scale,
-      basePositions[indices[2]].x * scale, basePositions[indices[2]].y * scale, basePositions[indices[2]].z * scale,
-
-      basePositions[indices[0]].x * scale, basePositions[indices[0]].y * scale, basePositions[indices[0]].z * scale,
-      basePositions[indices[2]].x * scale, basePositions[indices[2]].y * scale, basePositions[indices[2]].z * scale,
-      basePositions[indices[3]].x * scale, basePositions[indices[3]].y * scale, basePositions[indices[3]].z * scale
-    );
-  } else {
-    positions.push(
-      basePositions[indices[0]].x * scale, basePositions[indices[0]].y * scale, basePositions[indices[0]].z * scale,
-      basePositions[indices[1]].x * scale, basePositions[indices[1]].y * scale, basePositions[indices[1]].z * scale,
-      basePositions[indices[2]].x * scale, basePositions[indices[2]].y * scale, basePositions[indices[2]].z * scale
-    );
-  }
-
-  geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  const faceIndices = getOutwardFaceIndices(face.indices);
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(faceIndices.length * 3, 3));
+  geometry.setIndex(faceIndices.length === 4 ? [0,1,2, 0,2,3] : [0,1,2]);
 
   const material = new THREE.MeshBasicMaterial({
     color: face.color,
     transparent: true,
     opacity: face.opacity,
     side: THREE.DoubleSide,
-    depthWrite: false
+    depthWrite: false,
+    depthTest: true
   });
 
-  return new THREE.Mesh(geometry, material);
+  const mesh = new THREE.Mesh(geometry, material);
+  mesh.userData.faceIndices = faceIndices;
+  mesh.renderOrder = 1;
+  updateFaceGeometry(mesh, scale);
+  return mesh;
 }
 
 function buildMeronGroup(meronIndex = 0) {
@@ -584,13 +599,8 @@ function updateLocalGeometries() {
   const scale = currentDistance/110;
   meronGroups.forEach(mg => mg.userData.localComps.forEach((comp,i) => comp.position.copy(basePositions[i]).multiplyScalar(scale)));
 
-  // Atualizar faces
-  faceMeshes.forEach(mesh => {
-    const positions = mesh.geometry.attributes.position.array;
-    const face = cuboFaces[faceMeshes.indexOf(mesh) % cuboFaces.length]; // Aproximação simples
-    // Rebuild positions would be better but for simplicity we scale existing
-    mesh.scale.setScalar(scale / (currentDistance/110)); // Mantém proporcional
-  });
+  // Keep each face coincident with the dynamically positioned vertices.
+  faceMeshes.forEach(mesh => updateFaceGeometry(mesh, scale));
 
   edgeLines.forEach(({line,a,b,comps}) => {
     const attr = line.geometry.attributes.position || line.geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(6),3)).attributes.position;
