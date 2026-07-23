@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Meronic Builder (From Metalpha to Heneicosalpha)</title>
+<title>Meronic Builder (Up to 69 Metalpha Merons)</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -106,7 +106,7 @@
     <div class="mb-5">
       <div class="text-[20px] tracking-widest text-[#7d8caa] uppercase font-bold mb-1">Meronic Builder</div>
       <h1 class="text-[18px] leading-tight font-[700] tracking-[-0.015em] text-[#f0f4ff]">Meronic Connections</h1>
-      <p class="text-[14.5px] text-[#8d9bb7] mt-1.5">From Metalpha to Heneicosalpha</p>
+      <p class="text-[14.5px] text-[#8d9bb7] mt-1.5">From Metalpha to 69 Metalpha Merons</p>
     </div>
 
     <div>
@@ -330,82 +330,130 @@ function updateFaceOpacity(val){
 
 let varyInterval;
 
-const MERON_NAMES = [
-  'Metalpha','Etalpha','Propalpha','Butalpha','Pentalpha','Hexalpha','Heptalpha','Octalpha','Nonalpha','Decalpha',
-  'Undecalpha','Dodecalpha','Tridecalpha','Tetradecalpha','Pentadecalpha','Hexadecalpha','Heptadecalpha','Octadecalpha','Nonadecalpha','Eicosalpha','Heneicosalpha'
+const MAX_MERON_COUNT = 69;
+const MERON_RADICALS = [
+  'met','et','prop','but','pent','hex','hept','oct','non','dec',
+  'undec','dodec','tridec','tetradec','pentadec','hexadec','heptadec','octadec','nonadec','eicos',
+  'heneicos','docos','tricos','tetracos','pentacos','hexacos','heptacos','octacos','nonacos','triacont',
+  'hentriacont','dotriacont','tritriacont','tetratriacont','pentatriacont','hexatriacont','heptatriacont','octatriacont','nonatriacont','tetracont',
+  'hentetracont','dotetracont','tritetracont','tetratetracont','pentatetracont','hexatetracont','heptatetracont','octatetracont','nonatetracont','pentacont',
+  'henpentacont','dopentacont','tripentacont','tetrapentacont','pentapentacont','hexapentacont','heptapentacont','octapentacont','nonapentacont','hexacont',
+  'henhexacont','dohexacont','trihexacont','tetrahexacont','pentahexacont','hexahexacont','heptahexacont','octahexacont','nonahexacont'
 ];
 
 function updateMeronInfo(n){
-  const name = MERON_NAMES[n-1];
   const compalphas = 9*n + 3;
-  const massa = n;
-  const info = `Meron ${name} (${compalphas} Ca) – Mass ${massa}`;
+  const radical = MERON_RADICALS[n-1];
+  const meronName = radical.charAt(0).toUpperCase() + radical.slice(1) + 'alpha';
+  const info = `Meron ${meronName} (${compalphas} Ca) – Mass ${n}`;
   document.getElementById('meronInfo').textContent = info;
   document.getElementById('meronCountVal').textContent = `${n} ${n===1?'Meron':'Merons'}`;
 }
 
 
+const alphaLabelMaterialCache = new Map();
+const meridianGeometryCache = new Map();
+let sharedCompalphaResources = null;
+
 function makeAlphaLabel(text) {
+  let material = alphaLabelMaterialCache.get(text);
+  if (material) {
+    const cachedSprite = new THREE.Sprite(material);
+    cachedSprite.scale.set(4, 2, 1);
+    cachedSprite.name = 'alphaLabel';
+    return cachedSprite;
+  }
+
   const baseW = 256, baseH = 128;
-  const dpr = 3; // 2 = bom, 3 = muito nítido, 4 = retina
+  const dpr = 3;
   const canvas = document.createElement('canvas');
   canvas.width = baseW * dpr;
   canvas.height = baseH * dpr;
 
   const ctx = canvas.getContext('2d');
-  ctx.scale(dpr, dpr); // desenha em coordenadas normais
+  ctx.scale(dpr, dpr);
   ctx.clearRect(0, 0, baseW, baseH);
-
-  // agora use um tamanho de fonte confortável (não precisa ser 12px)
   ctx.font = '600 14px "Instrument Sans", system-ui, sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillStyle = '#FFFF00';
-
-  // melhora a nitidez
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
-
   ctx.fillText(text, baseW/2, baseH/2 - 16);
 
   const texture = new THREE.CanvasTexture(canvas);
-  texture.minFilter = THREE.LinearFilter; // evita blur de mipmap
+  texture.minFilter = THREE.LinearFilter;
   texture.generateMipmaps = false;
   texture.needsUpdate = true;
 
-  const mat = new THREE.SpriteMaterial({ map: texture, transparent: true });
-  const spr = new THREE.Sprite(mat);
-  spr.scale.set(4, 2, 1); // era 10,5 — reduzi porque a textura agora é 3x maior
+  material = new THREE.SpriteMaterial({ map: texture, transparent: true });
+  alphaLabelMaterialCache.set(text, material);
+  const spr = new THREE.Sprite(material);
+  spr.scale.set(4, 2, 1);
   spr.name = 'alphaLabel';
   return spr;
 }
 
+function getMeridianGeometry(meridianCount, layerIndex, layerDef) {
+  const key = `${meridianCount}:${meridianResolution}:${layerIndex}`;
+  if (meridianGeometryCache.has(key)) return meridianGeometryCache.get(key);
+
+  const positions = [];
+  for (let m = 0; m < meridianCount; m++) {
+    const u = (m / meridianCount) * Math.PI * 2;
+    let previous = null;
+    for (let k = 0; k <= meridianResolution; k++) {
+      const v = (k / meridianResolution) * Math.PI * 2;
+      const R = layerDef.r;
+      const rad = R + R * Math.cos(v);
+      const point = new THREE.Vector3(rad * Math.cos(u), rad * Math.sin(u), R * Math.sin(v));
+      if (previous) positions.push(previous.x, previous.y, previous.z, point.x, point.y, point.z);
+      previous = point;
+    }
+  }
+
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  geometry.computeBoundingSphere();
+  meridianGeometryCache.set(key, geometry);
+  return geometry;
+}
+
+function getSharedCompalphaResources() {
+  if (sharedCompalphaResources) return sharedCompalphaResources;
+  sharedCompalphaResources = {
+    sphereGeometry: new THREE.SphereGeometry(0.12,16,16),
+    sphereMaterial: new THREE.MeshBasicMaterial({color:0xffffff}),
+    axisGeometry: new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,-1),new THREE.Vector3(0,0,1)]),
+    axisMaterial: new THREE.LineBasicMaterial({color:0xff0000}),
+    coneGeometry: new THREE.ConeGeometry(0.1,0.314,16),
+    coneMaterial: new THREE.MeshBasicMaterial({color:0xff0000}),
+    layerMaterials: LAYER_DEFS.map(ld => new THREE.LineBasicMaterial({
+      color: ld.cor,
+      transparent: true,
+      opacity: ld.opacidade
+    }))
+  };
+  return sharedCompalphaResources;
+}
+
 function buildCompalpha(index, meridianCount) {
   const group = new THREE.Group();
+  const resources = getSharedCompalphaResources();
   const layerGroups = []; const layerMaterials = [];
   LAYER_DEFS.forEach((ld, li) => {
     const layerGroup = new THREE.Group(); layerGroup.name = 'layer-'+li;
-    const mat = new THREE.LineBasicMaterial({ color: ld.cor, transparent: true, opacity: ld.opacidade });
+    const mat = resources.layerMaterials[li];
     layerMaterials.push(mat);
-    for(let m=0; m<meridianCount; m++){
-      const u = (m / meridianCount) * Math.PI * 2;
-      const points = [];
-      // Use meridianResolution instead of hardcoded 48
-      for(let k=0; k<=meridianResolution; k++){
-        const v = (k/meridianResolution) * Math.PI * 2;
-        const R = ld.r; const rad = R + R * Math.cos(v);
-        points.push(new THREE.Vector3(rad * Math.cos(u), rad * Math.sin(u), R * Math.sin(v)));
-      }
-      layerGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(points), mat));
-    }
+    layerGroup.add(new THREE.LineSegments(getMeridianGeometry(meridianCount, li, ld), mat));
     group.add(layerGroup); layerGroups.push(layerGroup);
   });
   group.userData.layerGroups = layerGroups; group.userData.layerMaterials = layerMaterials;
-  group.add(new THREE.Mesh(new THREE.SphereGeometry(0.12,16,16), new THREE.MeshBasicMaterial({color:0xffffff})));
+  group.add(new THREE.Mesh(resources.sphereGeometry, resources.sphereMaterial));
 
   const axisGroup = new THREE.Group(); axisGroup.name = 'alphaVector';
-  axisGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,-1),new THREE.Vector3(0,0,1)]), new THREE.LineBasicMaterial({color:0xff0000})));
-  const cone = new THREE.Mesh(new THREE.ConeGeometry(0.1,0.314,16), new THREE.MeshBasicMaterial({color:0xff0000}));
+  axisGroup.add(new THREE.Line(resources.axisGeometry, resources.axisMaterial));
+  const cone = new THREE.Mesh(resources.coneGeometry, resources.coneMaterial);
   cone.position.set(0,0,1.157); cone.rotation.x = Math.PI/2; axisGroup.add(cone);
 
   group.add(axisGroup);
@@ -526,9 +574,12 @@ function buildMeronGroup(meronIndex = 0) {
   } else if (meronIndex >= 5 && meronIndex <= 8) {
     // Nonalpha - translucent blue
     meronColor = 0x0000FF; meronOpacity = 0.55;
-  } else {
+  } else if (meronIndex <= 20) {
     // Heneicosalpha - translucent green
     meronColor = 0x00FF00; meronOpacity = 0.60;
+  } else {
+    // Extended shell up to 69 Metalpha Merons - translucent amber
+    meronColor = 0xff9a2e; meronOpacity = 0.58;
   }
 
   cuboFaces.forEach(face => {
@@ -541,13 +592,9 @@ function buildMeronGroup(meronIndex = 0) {
   return group;
 }
 
-function setupSpatialDocking() {
-  const dist = currentDistance;
-  const scale = dist / 110;
-  meronParent = new Array(meronGroups.length).fill(-1);
-  meronParentTri = new Array(meronGroups.length).fill(-1);
-
-  const growth = [
+function createMeronGrowthPlan(limit) {
+  // Preserve the original Metalpha-to-Heneicosalpha arrangement exactly.
+  const legacyPairs = [
     null, {p:0,t:0},{p:0,t:1},{p:0,t:2},{p:0,t:3},
     {p:1,t:0},{p:2,t:1},{p:3,t:2},{p:4,t:3},
     {p:5,t:1},{p:5,t:2},{p:5,t:3},
@@ -555,6 +602,48 @@ function setupSpatialDocking() {
     {p:7,t:0},{p:7,t:1},{p:7,t:3},
     {p:8,t:0},{p:8,t:1},{p:8,t:2}
   ];
+  const plan = legacyPairs.map((entry, index) => entry && ({
+    ...entry,
+    invert: index >= 9
+  }));
+
+  // 21 -> 33: each of the 12 green cuboctahedra receives exactly one
+  // orange child, continuing through the same triangular face direction.
+  const firstOrangeIndex = plan.length;
+  for (let greenIndex = 9; greenIndex <= 20 && plan.length < limit; greenIndex++) {
+    plan.push({
+      p: greenIndex,
+      t: plan[greenIndex].t,
+      invert: true
+    });
+  }
+
+  // 33 -> 69: each first-generation orange child receives three children,
+  // one on every remaining triangular direction. Their Alpha Axes stay
+  // parallel to the axes of their orange parent.
+  const firstOrangeEnd = plan.length;
+  for (let orangeIndex = firstOrangeIndex; orangeIndex < firstOrangeEnd && plan.length < limit; orangeIndex++) {
+    const incomingTriad = plan[orangeIndex].t;
+    for (let triIndex = 0; triIndex < triades.length && plan.length < limit; triIndex++) {
+      if (triIndex === incomingTriad) continue;
+      plan.push({
+        p: orangeIndex,
+        t: triIndex,
+        invert: false
+      });
+    }
+  }
+
+  return plan;
+}
+
+const MERON_GROWTH = createMeronGrowthPlan(MAX_MERON_COUNT);
+
+function setupSpatialDocking() {
+  const dist = currentDistance;
+  const scale = dist / 110;
+  meronParent = new Array(meronGroups.length).fill(-1);
+  meronParentTri = new Array(meronGroups.length).fill(-1);
 
   if (meronGroups.length > 0) {
     meronGroups[0].position.set(0, 0, 0);
@@ -562,7 +651,7 @@ function setupSpatialDocking() {
   }
 
   for (let i = 1; i < meronGroups.length; i++) {
-    const g = growth[i];
+    const g = MERON_GROWTH[i];
     if (!g) break;
     const parent = meronGroups[g.p];
     const child = meronGroups[i];
@@ -575,7 +664,7 @@ function setupSpatialDocking() {
     let centerLocal = v0.clone().add(v1).add(v2).divideScalar(3);
     let normalLocal = centerLocal.clone().normalize();
 
-    if (i >= 9) {
+    if (g.invert) {
       centerLocal.negate();
       normalLocal.negate();
     }
@@ -587,6 +676,9 @@ function setupSpatialDocking() {
          .add(centerWorld.clone().multiplyScalar(2))
          .add(normalWorld.clone().multiplyScalar(currentInterMeronDist));
 
+    // A half-turn around the shared face normal maps the child's opposite
+    // triangle exactly onto the parent's triangle. It also maps each Alpha
+    // Axis onto the direction of the corresponding parent Alpha Axis.
     const qFlip = new THREE.Quaternion().setFromAxisAngle(normalLocal, Math.PI);
     child.quaternion.copy(parent.quaternion).multiply(qFlip);
 
@@ -625,8 +717,31 @@ function applySpinsAndPolarities() {
   });
 }
 
-function buildUniverse() {
+function disposeUniverseResources() {
+  const geometries = new Set();
+  const materials = new Set();
+  const textures = new Set();
+
+  universeGroup.traverse(object => {
+    if (object.geometry) geometries.add(object.geometry);
+    const objectMaterials = Array.isArray(object.material) ? object.material : [object.material];
+    objectMaterials.filter(Boolean).forEach(material => {
+      materials.add(material);
+      if (material.map) textures.add(material.map);
+    });
+  });
+
+  textures.forEach(texture => texture.dispose());
+  materials.forEach(material => material.dispose());
+  geometries.forEach(geometry => geometry.dispose());
   universeGroup.clear();
+  alphaLabelMaterialCache.clear();
+  meridianGeometryCache.clear();
+  sharedCompalphaResources = null;
+}
+
+function buildUniverse() {
+  disposeUniverseResources();
   compalphas = [];
   meronGroups = [];
   edgeLines = [];
@@ -691,7 +806,7 @@ function updateFaceVisibility() {
 function createMeronCountUI() {
   const container = document.getElementById('meronCountContainer');
   container.innerHTML = '';
-  for(let i=1; i<=21; i++){
+  for(let i=1; i<=MAX_MERON_COUNT; i++){
     const label = document.createElement('label');
     label.className = `chip text-center ${i===1? 'active' : ''}`;
     label.style.minWidth = '32px';
@@ -705,6 +820,16 @@ function createMeronCountUI() {
     });
     container.appendChild(label);
   }
+}
+
+function syncMeronCountUI() {
+  document.querySelectorAll('#meronCountContainer .chip').forEach(label => {
+    const input = label.querySelector('input');
+    const selected = Number(input.value) === currentMeronCount;
+    label.classList.toggle('active', selected);
+    input.checked = selected;
+  });
+  updateMeronInfo(currentMeronCount);
 }
 
 function updateAlphaDistance(value) {
@@ -783,6 +908,11 @@ function loadConfig() {
   if (!saved) return alert('No saved configuration.');
   const c = JSON.parse(saved);
   currentDistance = 1.7320508075688772;
+  currentMeronCount = THREE.MathUtils.clamp(
+    parseInt(c.currentMeronCount, 10) || 1,
+    1,
+    MAX_MERON_COUNT
+  );
   currentInterMeronDist = c.currentInterMeronDist || 0;
   updateAlphaDistance(currentDistance);
   document.getElementById('interMeronDist').value = currentInterMeronDist;
@@ -795,6 +925,7 @@ function loadConfig() {
   document.getElementById('meridianResolution').value = meridianResolution;
   document.getElementById('meridianResVal').textContent = meridianResolution;
 
+  syncMeronCountUI();
   buildUniverse();
   alert('✅ Settings loaded!');
 }
@@ -818,7 +949,7 @@ document.getElementById('autoVaryBtn').addEventListener('click', () => {
 
 // Initialization
 createMeronCountUI();
-updateMeronInfo(1);
+syncMeronCountUI();
 buildUniverse();
 
 // Removed the setTimeout block that was setting meronCount to 21.
