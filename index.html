@@ -48,6 +48,16 @@
   .btn-primary{ border:1px solid #385b97; background:#192846; color:#dfeaff; border-radius:12px; padding:9px 14px; font-size:13px; font-weight:700; }
   .cam-btn{ background:#141d2d; border:1px solid #2a374e; color:#b9c7e2; border-radius:10px; padding:7px 10px; font-size:12px; font-weight:600; }
   .cam-btn:hover{ background:#1b273d; color:white;}
+  .record-btn{ width:100%; border:1px solid #8f3038; background:#45171d; color:#ffdce0; border-radius:12px; padding:10px 14px; font-size:13px; font-weight:700; transition:.15s; }
+  .record-btn:hover{ background:#5a1d25; color:#fff; }
+  .record-btn:disabled{ opacity:.45; cursor:not-allowed; }
+  .record-btn.stop{ border-color:#49617f; background:#172337; color:#d8e7ff; }
+  .record-btn.stop:hover{ background:#1d2d47; }
+  .record-status{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:10px; color:#8d9bb7; font-size:12px; }
+  .record-status.recording{ color:#ffb4bc; }
+  .record-dot{ width:9px; height:9px; border-radius:50%; background:#56627a; display:inline-block; margin-right:7px; }
+  .record-status.recording .record-dot{ background:#ff4050; box-shadow:0 0 0 5px rgba(255,64,80,.13); animation:recordPulse 1.1s infinite; }
+  @keyframes recordPulse{ 50%{ opacity:.42; } }
   .divider{ height:1px; background: linear-gradient(90deg, rgba(255,255,.07), rgba(255,255,255,.015)); margin:18px 0;}
   .legend-dot { width:9px; height:9px; border-radius:50%; display:inline-block; margin-right:7px; }
   .hint { color:#6f7f9e; font-size:12px; line-height:1.45; }
@@ -228,6 +238,19 @@
     <button id="autoVaryBtn" class="mt-2 w-full cam-btn">🔄 Automatic Alpha Animation</button>
     <button id="zoomCiMCEx" class="mt-2 w-full bg-[#ff2a2a] hover:bg-[#ff5555] border border-[#ff6b6b] text-white py-2 rounded-xl text-sm font-medium">CiM → CEx</button>
   </div>
+
+  <div class="divider"></div>t
+
+  <div>
+    <div class="sec-title mb-3">Scene Recording</div>
+    <button id="startRecording" class="record-btn">● Start Recording</button>
+    <button id="stopRecording" class="record-btn stop mt-2" disabled>■ Finish Recording</button>
+    <div id="recordStatus" class="record-status" aria-live="polite">
+      <span><i class="record-dot"></i><span id="recordStatusText">Ready to record</span></span>
+      <span id="recordTimer" class="mono">00:00</span>
+    </div>
+    <p class="hint mt-3">Only the 3D scene is recorded. This control panel will not appear in the video.</p>
+  </div>
 </div>
 
 <script type="module">
@@ -246,6 +269,115 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.outputEncoding = THREE.sRGBEncoding;
 wrap.appendChild(renderer.domElement);
+
+const startRecordingBtn = document.getElementById('startRecording');
+const stopRecordingBtn = document.getElementById('stopRecording');
+const recordStatus = document.getElementById('recordStatus');
+const recordStatusText = document.getElementById('recordStatusText');
+const recordTimer = document.getElementById('recordTimer');
+let mediaRecorder = null;
+let recordedChunks = [];
+let recordingTimerId = null;
+let recordingStartedAt = 0;
+
+function chooseRecordingMimeType() {
+  const candidates = [
+    'video/mp4;codecs=avc1.42E01E',
+    'video/webm;codecs=vp9',
+    'video/webm;codecs=vp8',
+    'video/webm'
+  ];
+  return candidates.find(type => MediaRecorder.isTypeSupported(type)) || '';
+}
+
+function formatRecordingTime(milliseconds) {
+  const totalSeconds = Math.floor(milliseconds / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+}
+
+function updateRecordingTimer() {
+  recordTimer.textContent = formatRecordingTime(performance.now() - recordingStartedAt);
+}
+
+function setRecordingUi(isRecording) {
+  startRecordingBtn.disabled = isRecording;
+  stopRecordingBtn.disabled = !isRecording;
+  recordStatus.classList.toggle('recording', isRecording);
+  recordStatusText.textContent = isRecording ? 'Recording scene' : 'Ready to record';
+}
+
+function downloadRecording(blob, mimeType) {
+  const extension = mimeType.includes('mp4') ? 'mp4' : 'webm';
+  const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `meronic-builder-${stamp}.${extension}`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+startRecordingBtn.addEventListener('click', () => {
+  if (!window.MediaRecorder || !renderer.domElement.captureStream) {
+    recordStatusText.textContent = 'Recording is not supported by this browser';
+    return;
+  }
+
+  try {
+    const stream = renderer.domElement.captureStream(60);
+    const mimeType = chooseRecordingMimeType();
+    const options = mimeType ? { mimeType, videoBitsPerSecond: 12000000 } : { videoBitsPerSecond: 12000000 };
+    recordedChunks = [];
+    mediaRecorder = new MediaRecorder(stream, options);
+
+    mediaRecorder.addEventListener('dataavailable', event => {
+      if (event.data && event.data.size > 0) recordedChunks.push(event.data);
+    });
+
+    mediaRecorder.addEventListener('stop', () => {
+      clearInterval(recordingTimerId);
+      recordingTimerId = null;
+      const actualMimeType = mediaRecorder.mimeType || mimeType || 'video/webm';
+      const blob = new Blob(recordedChunks, { type: actualMimeType });
+      stream.getTracks().forEach(track => track.stop());
+      mediaRecorder = null;
+      recordedChunks = [];
+      setRecordingUi(false);
+      recordStatusText.textContent = blob.size > 0 ? 'Recording saved' : 'No video data was generated';
+      if (blob.size > 0) downloadRecording(blob, actualMimeType);
+    });
+
+    mediaRecorder.addEventListener('error', event => {
+      clearInterval(recordingTimerId);
+      recordingTimerId = null;
+      stream.getTracks().forEach(track => track.stop());
+      mediaRecorder = null;
+      setRecordingUi(false);
+      recordStatusText.textContent = `Recording error: ${event.error?.message || 'unknown error'}`;
+    });
+
+    mediaRecorder.start(1000);
+    recordingStartedAt = performance.now();
+    recordTimer.textContent = '00:00';
+    recordingTimerId = setInterval(updateRecordingTimer, 250);
+    setRecordingUi(true);
+  } catch (error) {
+    setRecordingUi(false);
+    recordStatusText.textContent = `Could not start: ${error.message}`;
+  }
+});
+
+stopRecordingBtn.addEventListener('click', () => {
+  if (mediaRecorder && mediaRecorder.state === 'recording') {
+    stopRecordingBtn.disabled = true;
+    recordStatusText.textContent = 'Finishing video';
+    mediaRecorder.stop();
+  }
+});
 
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
@@ -1015,7 +1147,7 @@ window.addEventListener('resize', () => {
 });
 
 let zoomedOut = false;
-const posCiM = new THREE.Vector3(12, -9, 10); // posição inicial perto dos CiM
+const posCiM = new THREE.Vector3(3, -3, 8); // posição inicial perto dos CiM
 const posCEx = new THREE.Vector3(0, -1800, 1200); // Adjusted for larger view
 
 Object.assign(camPositions, { posCEx: posCEx }); // Make posCEx accessible via camPositions
@@ -1024,11 +1156,11 @@ document.getElementById('zoomCiMCEx').addEventListener('click', () => {
   const startPos = camera.position.clone();
   const startTarget = controls.target.clone();
   const endPos = zoomedOut ? posCiM : camPositions.posCEx; // Use camPositions.posCEx here
-  const duration = 1800;
+  const duration = 3600;
   const startTime = performance.now();
 
   function animateZoom(now) {
-    const t = Math.min((now - startTime) / duration, 1);
+    const t = Math.min((now - startTime) / duration, 2);
     const ease = t < 0.5 ? 2*t*t : -1 + (4 - 2*t)*t;
     camera.position.lerpVectors(startPos, endPos, ease);
     controls.target.lerpVectors(startTarget, new THREE.Vector3(0,0,0), ease);
