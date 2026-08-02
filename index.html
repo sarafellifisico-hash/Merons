@@ -1058,15 +1058,12 @@ function buildMeronGroup(meronIndex = 0) {
   } else if (meronIndex >= 1 && meronIndex <= 4) {
     // Pentalpha - translucent lilac
     meronColor = 0x8A2BE2; meronOpacity = 0.50;
-  } else if (meronIndex >= 5 && meronIndex <= 8) {
-    // Nonalpha - translucent blue
+  } else if (meronIndex >= 5 && meronIndex <= 20) {
+    // 3F: all 16 cuboctahedra belong to the same structural foundation - blue
     meronColor = 0x0000FF; meronOpacity = 0.55;
-  } else if (meronIndex <= 20) {
-    // Heneicosalpha - translucent green
-    meronColor = 0x00FF00; meronOpacity = 0.60;
   } else {
-    // Extended shell up to 69 Metalpha Merons - translucent amber
-    meronColor = 0xff9a2e; meronOpacity = 0.58;
+    // 4F: the 48 cuboctahedra that complete Mass 69 - green
+    meronColor = 0x00FF00; meronOpacity = 0.60;
   }
 
   cuboFaces.forEach(face => {
@@ -1102,27 +1099,27 @@ function createMeronGrowthPlan(limit) {
     invert: index >= 9
   }));
 
-  // 21 -> 33: each of the 12 green cuboctahedra receives exactly one
-  // orange child, continuing through the same triangular face direction.
-  const firstOrangeIndex = plan.length;
-  for (let greenIndex = 9; greenIndex <= 20 && plan.length < limit; greenIndex++) {
+  // 21 -> 33: each of the 12 outer blue cuboctahedra receives exactly one
+  // green child, continuing through the same triangular face direction.
+  const firstGreenIndex = plan.length;
+  for (let blueIndex = 9; blueIndex <= 20 && plan.length < limit; blueIndex++) {
     plan.push({
-      p: greenIndex,
-      t: plan[greenIndex].t,
+      p: blueIndex,
+      t: plan[blueIndex].t,
       invert: true
     });
   }
 
-  // 33 -> 69: each first-generation orange child receives three children,
+  // 33 -> 69: each first-generation green child receives three children,
   // one on every remaining triangular direction. Their Alpha Axes stay
-  // parallel to the axes of their orange parent.
-  const firstOrangeEnd = plan.length;
-  for (let orangeIndex = firstOrangeIndex; orangeIndex < firstOrangeEnd && plan.length < limit; orangeIndex++) {
-    const incomingTriad = plan[orangeIndex].t;
+  // parallel to the axes of their green parent.
+  const firstGreenEnd = plan.length;
+  for (let greenIndex = firstGreenIndex; greenIndex < firstGreenEnd && plan.length < limit; greenIndex++) {
+    const incomingTriad = plan[greenIndex].t;
     for (let triIndex = 0; triIndex < triades.length && plan.length < limit; triIndex++) {
       if (triIndex === incomingTriad) continue;
       plan.push({
-        p: orangeIndex,
+        p: greenIndex,
         t: triIndex,
         invert: false
       });
