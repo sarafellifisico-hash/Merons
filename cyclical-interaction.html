@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>
+    (() => {
+        const nativeRAF = window.requestAnimationFrame.bind(window);
+        let paused = false;
+        window.requestAnimationFrame = callback => {
+            const runner = time => paused ? nativeRAF(runner) : callback(time);
+            return nativeRAF(runner);
+        };
+        addEventListener('message', event => {
+            if (event.data?.type === 'TUIDG_TAB_ACTIVE') paused = !event.data.active;
+        });
+    })();
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CYCLICAL INTERACTION 2D-3D</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fragment+Mono&family=Instrument+Sans:wght@400;500;600;700&display=swap');
+        :root {
+            --ink:#020208; --panel:#0e131d; --panel2:#151c29; --stroke:#243044;
+            --text:#dde6f6; --soft:#a6b2ca; --muted:#71829f; --accent:#7aa8ff;
+        }
+        * { box-sizing: border-box; }
+        body { margin: 0; overflow: hidden; background: var(--ink); color:var(--text); font-family:"Instrument Sans",system-ui,sans-serif; }
+        canvas { display: block; }
+        
+        #controls {
+            position:absolute; top:20px; bottom:20px; left:20px; color:var(--text);
+            font-family:"Fragment Mono",ui-monospace,monospace;
+            background:rgba(12,16,25,.74); backdrop-filter:blur(18px) saturate(1.25);
+            padding:22px 20px 26px; border-radius:22px; border:1px solid rgba(255,255,255,.075);
+            box-shadow:0 24px 80px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.045);
+            z-index:100; width:376px; max-width:calc(100vw - 32px); overflow-y:auto;
+            transition: width 0.3s, height 0.3s, padding 0.3s;
+        }
+        #controls::-webkit-scrollbar, #icDiagramContainer::-webkit-scrollbar { width:8px; }
+        #controls::-webkit-scrollbar-thumb, #icDiagramContainer::-webkit-scrollbar-thumb { background:var(--stroke); border-radius:8px; }
+        
+        .slider-container { margin-bottom: 12px; }
+        label { display: block; margin-bottom: 4px; font-size: 13px; }
+        input[type="range"] { -webkit-appearance:none; width:100%; height:28px; background:transparent; }
+        input[type="range"]::-webkit-slider-runnable-track { height:4px; background:#253247; border-radius:99px; }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance:none; width:16px; height:16px; margin-top:-6px; border-radius:50%; background:#e9f0ff; box-shadow:0 0 0 4px rgba(124,167,255,.14); cursor:pointer; }
+        #amplitudeValue, #frequencyValue, #gammaValue { display:inline-block; width:55px; text-align:right; font-weight:bold; color:#a8c0ff; }
+        button { padding:8px 12px; background:#141d2d; color:#b9c7e2; border:1px solid #2a374e; border-radius:10px; cursor:pointer; font-family:"Fragment Mono",ui-monospace,monospace; width:100%; text-align:left; transition:.15s; }
+        button:hover { background:#1b273d; color:#fff; border-color:#3b5788; }
+        button.active { background:#1a2842; border-color:#3a5d9e; color:#dbe8ff; font-weight:bold; }
+        .button-group { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+        
+        #energyPanel, #plasmaPanel { margin-top:18px!important; padding:12px!important; background:rgba(15,22,36,.86)!important; border:1px solid #26334a!important; border-radius:14px!important; }
+        #controls h2, #controls h3 { color:#a8c0ff!important; }
+        #controls > div[style*="font-size:9px"] { color:#71829f!important; }
+        .energy-bar-bg { flex:1; background:#0a1a2a; height:10px; border-radius:5px; overflow:hidden; border:1px solid #222; }
+        .mono-small { font-size:11px; line-height:1.6; color:#b9c7e2; }
+        .highlight { color:#a8c0ff; font-weight:bold; }
+        
+        #icDiagramContainer {
+            position:absolute; top:20px; right:20px; width:500px; height:620px;
+            min-width:300px; min-height:260px; max-width:calc(100vw - 40px); max-height:calc(100vh - 40px);
+            background:rgba(12,16,25,.78); backdrop-filter:blur(18px) saturate(1.25);
+            border:1px solid rgba(255,255,255,.075); border-radius:22px;
+            z-index:120; padding:14px; color:var(--text); font-family:"Fragment Mono",ui-monospace,monospace;
+            box-shadow:0 24px 80px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.045);
+            resize:both; overflow:auto;
+        }
+        
+        #icDiagramContainer h3 { margin:0 0 8px; color:#a8c0ff; font-size:12px; text-align:center; letter-spacing:.08em; }
+        #icCanvas { width:100%; height:auto; max-height:calc(100% - 128px); aspect-ratio:1; background:radial-gradient(circle at center,#101827 0%,#020208 85%); border:1px solid #243044; border-radius:14px; display:block; margin:0 auto; }
+        .ic-legend { font-size:10px; line-height:1.45; margin-top:8px; color:#ccc; }
+        .ic-legend b { font-weight: bold; }
+
+        /* --- Estilos de Minimização --- */
+        .minimized {
+            width: 60px !important;
+            height: 60px !important;
+            min-width: 60px !important;
+            min-height: 60px !important;
+            padding: 0 !important;
+            overflow: hidden !important;
+            background-color: rgba(12,16,25,.8) !important;
+            box-shadow: none !important;
+            display:flex!important;
+            align-items:center!important;
+            justify-content:center!important;
+        }
+        .minimized > *:not(.toggle-btn) {
+            display: none !important;
+        }
+        .toggle-btn {
+            position:absolute;top:10px;right:10px;z-index:140;
+            background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.2);
+            border-radius:8px;cursor:pointer;font-family:"Fragment Mono",monospace;
+            width:auto;text-align:center;font-size:12px;padding:5px 10px;
+            margin:0;height:auto;line-height:normal;font-weight:600;
+        }
+        .toggle-btn:hover { background:#1b273d; color:white; }
+        
+        #icDiagramContainer .toggle-btn { border-color:#385b97; }
+        #icDiagramContainer .toggle-btn:hover { background:#1b273d; color:white; }
+        
+        .minimized .toggle-btn {
+            position:static;
+            margin:0;
+            border:1px solid rgba(255,255,255,.2);
+            background:rgba(255,255,255,.1);
+            height:auto;
+        }
+        .minimized .toggle-btn:hover {
+            background: transparent;
+            color: #ffcc00;
+        }
+        #icDiagramContainer.minimized .toggle-btn:hover { color: #00ffcc; }
+
+        #functionInfo {
+            position:fixed; left:50%; bottom:24px; transform:translateX(-50%);
+            width:min(54vw,720px);
+            min-height:44px;
+            height:auto;
+            max-height:min(32vh,280px);
+            border:1px solid rgba(255,255,255,.075); border-radius:14px;
+            background:rgba(12,16,25,.74); backdrop-filter:blur(18px) saturate(1.25);
+            box-shadow:0 18px 55px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.045);
+            color:#a6b2ca; padding:12px 16px; z-index:90;
+            font:12px/1.45 "Instrument Sans",system-ui,sans-serif;
+            white-space:pre-wrap;
+            overflow-wrap:anywhere;
+            overflow-y:auto;
+            overscroll-behavior:contain;
+            scrollbar-gutter:stable;
+            pointer-events:auto;
+        }
+        #functionInfo::-webkit-scrollbar { width:8px; }
+        #functionInfo::-webkit-scrollbar-track { background:rgba(2,2,8,.22); border-radius:8px; }
+        #functionInfo::-webkit-scrollbar-thumb { background:#33405f; border-radius:8px; }
+        #functionInfo::-webkit-scrollbar-thumb:hover { background:#49617f; }
+
+        /* --- Ajustes para Mobile / Tablets --- */
+        @media (max-width: 800px) {
+            #controls { width: calc(100vw - 40px); left: 15px; max-width: none; }
+            #icDiagramContainer { width:calc(100vw - 40px); right:15px; top:auto; bottom:15px; resize:none; }
+            #icCanvas { width: 100%; height: auto; max-width: 400px; }
+            #functionInfo { width:calc(100vw - 40px); bottom:18px; max-height:36vh; }
+            /* Inicia os painéis minimizados por padrão em telas pequenas */
+            #controls, #icDiagramContainer { /* As classes serão adicionadas via JS abaixo */ }
+        }
+    </style>
+</head>
+<body>
+    <div id="controls">
+        <button class="toggle-btn" onclick="togglePanel('controls', this)" title="Minimize control panel" aria-label="Minimize control panel">X</button>
+        <h2 style="margin:0 0 14px 0; color:#ffcc00; font-size:15px;">Cyclic Interaction between Compalphas in a Vacuum Tube</h2><div style="font-size:9px;color:#00ffcc;margin-bottom:6px;">● RADIAL FIX v8 — CORRECTED AXIS | LENGTH LOCKED 18m | RADIAL ONLY | TUBE LIMIT</div>
+
+        <div class="slider-container">
+            <label for="amplitudeSlider">Oscillatory Amplitude: <span id="amplitudeValue">20°</span> | <span id="amplitudeRadValue">0.349 rad</span></label>
+            <input type="range" id="amplitudeSlider" min="0" max="180" value="20" step="1">
+        </div>
+
+        <div class="slider-container">
+            <label for="frequencySlider">Oscillatory Frequency: <span id="frequencyValue">1.0Hz</span></label>
+            <input type="range" id="frequencySlider" min="0.1" max="15" value="1.0" step="0.1">
+        </div>
+
+        <div class="slider-container">
+            <label for="gammaSlider">Damping γ: <span id="gammaValue">0.00</span></label>
+            <input type="range" id="gammaSlider" min="0" max="1" value="0" step="0.01">
+        </div>
+
+        <div class="button-group">
+            <button id="btnMode3" class="active">Ca1 &gt;...&lt; Ca9 (R=1)</button>
+            <button id="btnMode2">Ca1 &lt;&gt; Ca5 &lt;&gt; Ca9 (R=4)</button>
+            <button id="btnMode4">Ca1/5/9 ×3 (0°/45°/90° X) R=4</button>
+            <button id="btnMode1">Ca1 <> Ca9 (R=8)</button>
+            <div style="height:1px; background:#666; margin:6px 0;"></div>
+            <div style="font-size:10px; color:#ffcc00; margin-bottom:4px;">FILTROS DE POLARIZAÇÃO — MEIO → B</div>
+            <button id="btnPV" style="border-color:#00ff88; color:#aaffcc;">◧ PV — Vertical (0°) Meio→B</button>
+            <button id="btnPO" style="border-color:#ffcc00; color:#ffeeaa;">◧ PO — Oblíqua (45°) Meio→B</button>
+            <button id="btnPH" style="border-color:#0080ff; color:#aaccff;">◧ PH — Horizontal (90°) Meio→B</button>
+            <button id="btnResetPol" style="border-color:#ff8800; color:#ffcc88;">↺ Reset Filtros</button>
+            <div style="height:1px; background:#444; margin:6px 0;"></div>
+            <button id="togglePlanoAlpha">Show/Hide Alpha Planes</button>
+            <button id="btnReenergize" style="border-color:#00ff88; color:#00ff88;">↻ Re-energize System</button>
+            <div style="height:1px; background:#444; margin:6px 0;"></div>
+            <button id="btnToggleComphalphas" style="border-color:#ff4444; color:#ffaaaa;">👁 Hide Comphalphas</button>
+            <button id="btnTogglePlasma" style="border-color:#00ffff; color:#88ffff;">👁 Show Plasma</button>
+            <button id="btnToggleVacuum" style="border-color:#8888ff; color:#aaaaff;">👁 Hide Vacuum Tube</button>
+            <button id="btnToggleMagnet" style="border-color:#00ff88; color:#aaffcc;">👁 Show Bar Magnet</button>
+        </div>
+
+        <div id="energyPanel">
+            <h3 style="margin:0 0 8px 0; color:#ffcc00; font-size:12px;">OSCILLATORY ENERGY — E ∝ A²·f²·ΣR²</h3>
+            <div class="mono-small">
+                <div><span class="highlight">E_total</span> = 2π²·ΣR²·A²·f²·env² : <span id="eTotal" class="highlight">0</span></div>
+                <div style="display:flex; gap:6px; align-items:center; margin:6px 0;">
+                    <span style="width:32px;">E_kin</span>
+                    <div class="energy-bar-bg"><div id="eKinBar" style="height:100%; width:50%; background:linear-gradient(90deg,#00aaff,#00ffcc);"></div></div>
+                </div>
+                <div style="display:flex; gap:6px; align-items:center; margin-bottom:6px;">
+                    <span style="width:32px;">E_pot</span>
+                    <div class="energy-bar-bg"><div id="ePotBar" style="height:100%; width:50%; background:linear-gradient(90deg,#ff4444,#ffaa00);"></div></div>
+                </div>
+                <div>E_kin: <span id="eKin">0</span> | E_pot: <span id="ePot">0</span></div>
+                <div>Envelope: <span id="envelopeVal">100%</span> | γ·t: <span id="gammaT">0</span></div>
+                <div>Inertia ΣR²: <span id="inertiaVal">9</span> | Mode: <span id="modeVal">9×R=1</span></div>
+                <div style="margin-top:6px; font-size:10px; color:#aaa;">When γ>0: A_eff = A·e<sup>-γ·Δt</sup> → E(t)=E₀·e<sup>-2γ·Δt</sup></div>
+            </div>
+        </div>
+
+        <div id="plasmaPanel" style="margin-top:12px; padding:8px; background: rgba(0,20,35,0.95); border:1px solid #00ffff; border-radius:6px;">
+            <h3 style="margin:0 0 6px 0; color:#00ffff; font-size:11px;">PLASMA BEAM — COLOR vs AMPLITUDE (0-90°)</h3>
+            <div class="mono-small" style="font-size:10px;">
+                <div>Color: <span id="plasmaColorLabel" style="font-weight:bold; color:#ff0000;">RED</span> | Band: <span id="plasmaBandLabel">0-12.8°</span> | Amp_eff: <span id="plasmaAmpLabel">20°</span></div>
+                <div>Energy: <span id="plasmaEnergyLabel" style="color:#ffcc00;">I: 0</span> | Pulsing: <span style="color:#00ffff;">|sin(ωt)| + freq</span></div>
+                <div style="display:flex; gap:2px; margin-top:6px; height:10px;">
+                    <div style="flex:1; background:#ff0000; border-radius:2px;" title="0-12.8° RED"></div>
+                    <div style="flex:1; background:#ff8000; border-radius:2px;" title="12.8-25.7° ORANGE"></div>
+                    <div style="flex:1; background:#ffff00; border-radius:2px;" title="25.7-38.6° YELLOW"></div>
+                    <div style="flex:1; background:#00ff00; border-radius:2px;" title="38.6-51.4° GREEN"></div>
+                    <div style="flex:1; background:#0080ff; border-radius:2px;" title="51.4-64.3° BLUE"></div>
+                    <div style="flex:1; background:#8a2be2; border-radius:2px;" title="64.3-77.1° VIOLET"></div>
+                    <div style="flex:1; background:#ffffff; border-radius:2px;" title="77.1-90° WHITE"></div>
+                </div>
+                <div style="margin-top:4px; color:#aaa; font-size:9px;">90° / 7 ≈ 12.86° per band | >90° = WHITE | Macro = plasma only</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="icDiagramContainer">
+        <button class="toggle-btn" onclick="togglePanel('icDiagramContainer', this)" title="Minimize diagram" aria-label="Minimize diagram">X</button>
+        <h3>CYCLICAL INTERACTION DIAGRAM (CID)</h3>
+        <canvas id="icCanvas" width="800" height="800"></canvas>
+        <div class="ic-legend">
+            <div style="color:#00ffcc;">● Blue CCI: center = intersection of green Alpha Planes | radius = distance from center to Compalpha A and B | diameter = distance between Alpha Axes</div>
+            <div><span style="color:#ff4444;">— Alpha Axis A and B</span> oscillate opposite (counter-clockwise / clockwise) | <span style="color:#00ff00;">— Alpha Plane A and B</span> 90° fixed on each axis</div>
+            <div><span style="color:#00aaff;">--- CIP</span> Common Interaction Plane | <span style="color:#ffcc00;">● Movable CCI Center</span> | θA=<span id="icThetaA">-20°</span> θB=<span id="icThetaB">+20°</span> Δ=<span id="icDelta">40°</span></div>
+            <div>CCI diam=<span id="icDiam" style="color:#fff; font-weight:bold;">0</span> px | Radius=<span id="icRaio">0</span> px | Center Y=<span id="icCentroY">0</span> px | When θ→0°, diam→AB</div>
+        </div>
+    </div>
+    <!-- CAIXA DE EXPLICAÇÕES FUTURAS:
+         adicione os textos de cada função no objeto FUNCTION_HELP, no início do JavaScript.
+         Enquanto nenhuma explicação for cadastrada, esta caixa permanece vazia. -->
+    <div id="functionInfo" aria-live="polite"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/examples/js/controls/OrbitControls.js"></script>
+
+    <script>
+        // TEXTOS EXPLICATIVOS FUTUROS — associe o id do controle ao texto desejado.
+        // Use as crases (`...`) já preparadas abaixo: elas aceitam várias linhas,
+        // parágrafos e quebras de linha sem interromper o JavaScript.
+        // Exemplo:
+        // amplitudeSlider: `Primeira linha.
+        // Segunda linha.
+        // Terceira linha...`
+        const FUNCTION_HELP = {
+            amplitudeSlider: `In the Meronic Model, there are no "sinusoidal energy waves" traveling through a supposed empty void; consequently, the light's oscillation frequency does not determine a supposed "wavelength." Here, the radiation's "color" is determined by the Oscillatory Amplitude of the Compalphas that constitute the various "continuous physical media"—such as the vacuum of space.`, frequencySlider: ``, gammaSlider: `The attenuation of the Oscillatory Amplitude of Compalphas—resulting from distance, density, and the structural complexity arising from the chemical composition of the physical medium—is the true cause of the "reddening of light," rather than a supposed "stretching" of a sine wave due to a supposed "expansion of the universe" (of space) resulting from a supposed "Big Bang."`,
+            btnMode1: `And here, even with no Merons inside the glass tube, the 2 Merons (2 Compalphas) ​​at the tips of the electrodes are the ones participating in the Cyclic Interaction, given the absence of any "intermediaries" between them. In this case, there is likely no plasma glow in the tube, as that phenomenon results from the excitation of countless Merons.`, btnMode2: `Here, we have only 3 Merons (3 Compalphas), and since their Interaction Circles project indefinitely into space, each Meron (Compalpha) remains "directly connected" to the others, transferring its oscillatory energy regardless of the distance between them—and without the emission of any supposed "particles or waves."`, btnMode3: `Here, we have a row of just 9 Merons between A and B, each represented by a single Compalpha. This would constitute an extreme vacuum in which only nine Merons (atoms)—including the two Merons at the tips of electrodes A and B—participate in the Cyclic Interaction within the glass tube. `, btnMode4: `What we have here is the phenomenon of "light polarization." If countless Merons (Compalphas) ​​at A are oscillating across countless planes (V, H, O), and if the light reaching B passes through a material that restricts Compalpha oscillations to specific planes, then the Compalphas at B that relied on oscillations within the restricted planes would cease to oscillate.`,
+            btnPV: `In this position, the crystalline structure of the "polarizer" prevents Compalphas from oscillating in the Vertical Plane (VERTICAL OSCILLATIONS BLOCKED), allowing only oscillations from other planes of oscillation to pass through.`, btnPO: `In this position, the crystalline structure of the "polarizer" prevents Compalphas from oscillating in the oblique planes (OBLIQUE OSCILLATIONS BLOCKED), allowing only oscillations from other planes to pass through.`, btnPH: `In this configuration, the crystalline structure of the "polarizer" prevents Compalphas from oscillating in the Horizontal Plane (HORIZONTAL OSCILLATIONS BLOCKED), allowing only oscillations from other planes to pass through.`, btnResetPol: ``,
+            togglePlanoAlpha: ``, btnReenergize: ``,
+            btnToggleComphalphas: ``, btnTogglePlasma: ``,
+            btnToggleVacuum: ``, btnToggleMagnet: ``
+        };
+        const functionInfo = document.getElementById('functionInfo');
+        document.querySelectorAll('#controls button, #controls input').forEach(control => {
+            const showHelp = () => { functionInfo.textContent = FUNCTION_HELP[control.id] || ""; };
+            control.addEventListener('mouseenter', showHelp);
+            control.addEventListener('focus', showHelp);
+        });
+
+        // --- FUNÇÃO PARA MINIMIZAR/MAXIMIZAR PAINÉIS ---
+        function togglePanel(panelId, button) {
+            const panel = document.getElementById(panelId);
+            panel.classList.toggle('minimized');
+            const minimized = panel.classList.contains('minimized');
+            button.textContent = minimized ? 'UI' : 'X';
+            button.title = minimized ? 'Expand panel' : 'Minimize panel';
+            button.setAttribute('aria-label', button.title);
+        }
+
+        // Auto-minimizar em telas pequenas no carregamento (Opcional, melhora a UX)
+        if (window.innerWidth <= 800) {
+            document.getElementById('controls').classList.add('minimized');
+            document.getElementById('icDiagramContainer').classList.add('minimized');
+            document.querySelectorAll('.toggle-btn').forEach(button => {
+                button.textContent='UI'; button.title='Expand panel'; button.setAttribute('aria-label',button.title);
+            });
+        }
+
+        // ----- ORIGINAL 3D SCENE 100% - NO DISTORTION -----
+        const scene = new THREE.Scene(); scene.background = new THREE.Color(0x020208);
+        const camera = new THREE.PerspectiveCamera(40, window.innerWidth/window.innerHeight, 0.1, 1000); camera.position.set(19,18,24);
+        const renderer = new THREE.WebGLRenderer({antialias:true}); renderer.setSize(window.innerWidth,window.innerHeight); renderer.shadowMap.enabled=true; document.body.appendChild(renderer.domElement);
+        const controls = new THREE.OrbitControls(camera, renderer.domElement); controls.enableDamping=true; controls.dampingFactor=0.05; controls.target.set(0,4,0);
+        scene.add(new THREE.HemisphereLight(0xc8ddff,0x151821,0.72));
+        const dirLight=new THREE.DirectionalLight(0xffffff,1.0); dirLight.position.set(10,20,15); dirLight.castShadow=true; scene.add(dirLight);
+        const backLight=new THREE.DirectionalLight(0x6bafff,0.5); backLight.position.set(-10,10,-10); scene.add(backLight);
+
+        // ----- MODERN LAB BENCH / INTEGRATED POWER BASE -----
+        const metalMaterial=new THREE.MeshStandardMaterial({color:0xb8c1cc,metalness:0.88,roughness:0.24});
+        const darkMetalMaterial=new THREE.MeshStandardMaterial({color:0x27303b,metalness:0.72,roughness:0.32});
+        const baseMaterial=new THREE.MeshStandardMaterial({color:0x343b46,metalness:0.55,roughness:0.36});
+        const base=new THREE.Mesh(new THREE.BoxGeometry(20,1,12),baseMaterial);
+        base.position.set(0,0.7,0); base.receiveShadow=true; base.castShadow=true; scene.add(base);
+        const benchTop=new THREE.Mesh(new THREE.BoxGeometry(20.35,0.16,12.35),darkMetalMaterial);
+        benchTop.position.set(0,1.27,0); benchTop.castShadow=true; scene.add(benchTop);
+        const fascia=new THREE.Mesh(new THREE.BoxGeometry(19.4,0.58,0.12),new THREE.MeshStandardMaterial({color:0x111722,metalness:0.45,roughness:0.3}));
+        fascia.position.set(0,0.72,6.05); scene.add(fascia);
+        [-8.7,8.7].forEach(x=>{
+            [-4.8,4.8].forEach(z=>{
+                const foot=new THREE.Mesh(new THREE.CylinderGeometry(.34,.42,.42,32),darkMetalMaterial);
+                foot.position.set(x,0.21,z); foot.castShadow=true; scene.add(foot);
+            });
+        });
+
+        // Slim, cylindrical electrodes with insulated supports.
+        const electrodeGeometry=new THREE.CylinderGeometry(0.18,0.18,2.1,32);
+        const rodLeft=new THREE.Mesh(electrodeGeometry,metalMaterial); rodLeft.position.set(-9.75,8,0); rodLeft.rotation.z=-Math.PI/2; scene.add(rodLeft);
+        const rodRight=new THREE.Mesh(electrodeGeometry,metalMaterial); rodRight.position.set(9.75,8,0); rodRight.rotation.z=Math.PI/2; scene.add(rodRight);
+        const tipGeometry=new THREE.ConeGeometry(0.25,0.82,32);
+        const coneLeft=new THREE.Mesh(tipGeometry,metalMaterial); coneLeft.position.set(-8.72,8,0); coneLeft.rotation.z=-Math.PI/2; scene.add(coneLeft);
+        const coneRight=new THREE.Mesh(tipGeometry,metalMaterial); coneRight.position.set(8.72,8,0); coneRight.rotation.z=Math.PI/2; scene.add(coneRight);
+        const ceramicMaterial=new THREE.MeshStandardMaterial({color:0xe7edf5,metalness:0.05,roughness:0.32});
+        [-10.3,10.3].forEach(x=>{
+            const support=new THREE.Mesh(new THREE.CylinderGeometry(.42,.52,1.35,32),ceramicMaterial);
+            support.position.set(x,7.15,0); support.castShadow=true; scene.add(support);
+            const collar=new THREE.Mesh(new THREE.TorusGeometry(.48,.10,12,40),darkMetalMaterial);
+            collar.position.set(x,7.82,0); collar.rotation.x=Math.PI/2; scene.add(collar);
+        });
+
+        const totalLength=Math.abs(rodRight.position.x-rodLeft.position.x);
+        const tubeDiameter=totalLength/10; const tubeRadius=tubeDiameter/2; const cylLength=totalLength-tubeDiameter;
+        const glassMaterial=new THREE.MeshPhysicalMaterial({color:0xd9f2ff,metalness:0,roughness:0.02,transmission:0.96,thickness:0.35,ior:1.46,transparent:true,opacity:0.32,side:THREE.DoubleSide,clearcoat:1,clearcoatRoughness:0.03});
+        const glassTubeGroup=new THREE.Group(); const cylGeo=new THREE.CylinderGeometry(tubeRadius,tubeRadius,cylLength,96,1,false); const cylMesh=new THREE.Mesh(cylGeo,glassMaterial); cylMesh.rotation.z=Math.PI/2; glassTubeGroup.add(cylMesh);
+        const rimMaterial=new THREE.MeshStandardMaterial({color:0x8795a8,metalness:.9,roughness:.18});
+        [-cylLength/2,cylLength/2].forEach(x=>{
+            const rim=new THREE.Mesh(new THREE.TorusGeometry(tubeRadius,0.12,16,64),rimMaterial);
+            rim.position.x=x; rim.rotation.y=Math.PI/2; glassTubeGroup.add(rim);
+        });
+        glassTubeGroup.position.set((rodLeft.position.x+rodRight.position.x)/2,8,0); scene.add(glassTubeGroup);
+        const edgeMat=new THREE.MeshBasicMaterial({color:0x88ddff,wireframe:true,transparent:true,opacity:0.06}); const edgeCyl=new THREE.Mesh(new THREE.CylinderGeometry(tubeRadius*1.001,tubeRadius*1.001,cylLength,32),edgeMat); edgeCyl.rotation.z=Math.PI/2; glassTubeGroup.add(edgeCyl);
+
+        // Thick L-shaped conductors: vertical descent, rounded 90° bend and
+        // horizontal run to the battery terminals integrated into the bench.
+        const positiveMaterial=new THREE.MeshStandardMaterial({color:0xe84a5f,metalness:.55,roughness:.26});
+        const negativeMaterial=new THREE.MeshStandardMaterial({color:0x3478df,metalness:.55,roughness:.26});
+        function addTerminal(x,material){
+            const terminal=new THREE.Mesh(new THREE.CylinderGeometry(.30,.30,.42,32),material);
+            terminal.position.set(x,1.52,4.7); terminal.castShadow=true; scene.add(terminal);
+        }
+        function addCable(points,material){
+            const cable=new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points),64,.19,16,false),material);
+            cable.castShadow=true; scene.add(cable);
+        }
+        addTerminal(-7.4,negativeMaterial); addTerminal(7.4,positiveMaterial);
+        addCable([
+            new THREE.Vector3(-10.3,7.0,0),
+            new THREE.Vector3(-10.3,3.0,0),
+            new THREE.Vector3(-10.3,2.0,0.10),
+            new THREE.Vector3(-10.3,1.72,0.55),
+            new THREE.Vector3(-10.0,1.72,1.15),
+            new THREE.Vector3(-8.8,1.72,3.1),
+            new THREE.Vector3(-7.4,1.72,4.7)
+        ],negativeMaterial);
+        addCable([
+            new THREE.Vector3(10.3,7.0,0),
+            new THREE.Vector3(10.3,3.0,0),
+            new THREE.Vector3(10.3,2.0,0.10),
+            new THREE.Vector3(10.3,1.72,0.55),
+            new THREE.Vector3(10.0,1.72,1.15),
+            new THREE.Vector3(8.8,1.72,3.1),
+            new THREE.Vector3(7.4,1.72,4.7)
+        ],positiveMaterial);
+        const grid=new THREE.GridHelper(32,32,0x243044,0x151c29); grid.position.y=0.01; scene.add(grid);
+
+        // ----- OSCILLATING BAR MAGNET -----
+        // The magnet stays parallel to the tube and slides laterally over the bench.
+        // Its two stacked halves represent the magnetic poles: S (blue) below, N (red) above.
+        const benchTopY = benchTop.position.y + 0.08;
+        const magnetLength = 18;
+        const magnetWidth = tubeDiameter;
+        const magnetHeight = (glassTubeGroup.position.y - benchTopY) / 3;
+        const magnetHalfHeight = magnetHeight / 2;
+        const magnetTravelAmplitude = Math.min(3.0, (20 - magnetWidth) / 2 - 0.25);
+        const magnetGroup = new THREE.Group();
+        magnetGroup.position.set(0, benchTopY, 0);
+
+        const southMaterial = new THREE.MeshPhongMaterial({
+            color: 0x1455d9, shininess: 75, specular: 0x88bbff
+        });
+        const northMaterial = new THREE.MeshPhongMaterial({
+            color: 0xe32636, shininess: 75, specular: 0xffaaaa
+        });
+        const magnetHalfGeometry = new THREE.BoxGeometry(magnetLength, magnetHalfHeight, magnetWidth);
+        const southPole = new THREE.Mesh(magnetHalfGeometry, southMaterial);
+        southPole.position.y = magnetHalfHeight / 2;
+        southPole.castShadow = true;
+        southPole.receiveShadow = true;
+        magnetGroup.add(southPole);
+
+        const northPole = new THREE.Mesh(magnetHalfGeometry, northMaterial);
+        northPole.position.y = magnetHalfHeight + magnetHalfHeight / 2;
+        northPole.castShadow = true;
+        northPole.receiveShadow = true;
+        magnetGroup.add(northPole);
+
+        const poleSeam = new THREE.Mesh(
+            new THREE.BoxGeometry(magnetLength * 1.002, 0.025, magnetWidth * 1.01),
+            new THREE.MeshBasicMaterial({color:0xf2f2f2})
+        );
+        poleSeam.position.y = magnetHalfHeight;
+        magnetGroup.add(poleSeam);
+        scene.add(magnetGroup);
+
+        // ----- STATE VARIABLES (must be before plasma) -----
+        let comphalphas=[]; 
+        let amplitude=20*Math.PI/180; // in radians
+        let frequency=1.0;
+        let gammaDamping=0; 
+        let envelope=1; 
+        let envelopeAtChange=1; 
+        let lastGammaChangeTime=0; 
+        let sumR2=9;
+        let oscillationPhase = 0;
+        let lastFrameTime = performance.now()*0.001;
+        // Visibility states
+        let comphalphasVisible = true;
+        let plasmaVisible = false;
+        let vacuumTubeVisible = true;
+        let magnetVisible = false;
+        magnetGroup.visible = magnetVisible;
+        // Polarization filter states
+        let polFilters = {V:false, O:false, H:false};
+
+        // ----- PLASMA BEAM (MACROSCOPIC LIGHT) -----
+        const plasmaGroup = new THREE.Group();
+        plasmaGroup.position.set(0,8,0);
+        const plasmaLength = 18; // between electrode tips -9 to +9
+        // Three concentric cylindrical layers form one long plasma filament.
+        const plasmaCoreGeo = new THREE.CylinderGeometry(0.04,0.04,plasmaLength,32);
+        const plasmaCoreMat = new THREE.MeshBasicMaterial({color:0xff0000});
+        const plasmaCore = new THREE.Mesh(plasmaCoreGeo, plasmaCoreMat);
+        plasmaCore.rotation.z = Math.PI/2;
+        plasmaGroup.add(plasmaCore);
+        // Inner glow
+        const plasmaGlowGeo = new THREE.CylinderGeometry(0.14,0.14,plasmaLength,48);
+        const plasmaGlowMat = new THREE.MeshBasicMaterial({color:0xff0000, transparent:true, opacity:0.45, blending:THREE.AdditiveBlending, depthWrite:false});
+        const plasmaGlow = new THREE.Mesh(plasmaGlowGeo, plasmaGlowMat);
+        plasmaGlow.rotation.z = Math.PI/2;
+        plasmaGroup.add(plasmaGlow);
+        // Outer glow
+        const plasmaOuterGeo = new THREE.CylinderGeometry(0.32,0.32,plasmaLength,64);
+        const plasmaOuterMat = new THREE.MeshBasicMaterial({color:0xff0000, transparent:true, opacity:0.18, blending:THREE.AdditiveBlending, depthWrite:false});
+        const plasmaOuter = new THREE.Mesh(plasmaOuterGeo, plasmaOuterMat);
+        plasmaOuter.rotation.z = Math.PI/2;
+        plasmaGroup.add(plasmaOuter);
+        // A row of overlapping lights approximates an extended luminous filament,
+        // avoiding the central hotspot produced by a single point light.
+        const plasmaLights = [];
+        const plasmaLightCount = 11;
+        for(let i=0;i<plasmaLightCount;i++){
+            const light = new THREE.PointLight(0xff0000,0.5,7);
+            light.position.set(-plasmaLength/2 + i*(plasmaLength/(plasmaLightCount-1)),0,0);
+            plasmaLights.push(light);
+            plasmaGroup.add(light);
+        }
+        plasmaGroup.visible = plasmaVisible;
+        scene.add(plasmaGroup);
+
+        const PLASMA_COLORS = [0xff0000, 0xff8000, 0xffff00, 0x00ff00, 0x0080ff, 0x8a2be2, 0xffffff];
+        const PLASMA_COLOR_NAMES = ["RED","ORANGE","YELLOW","GREEN","BLUE","VIOLET","WHITE"];
+        const PLASMA_BANDS = ["0-12.8°","12.8-25.7°","25.7-38.6°","38.6-51.4°","51.4-64.3°","64.3-77.1°","77.1-90°"];
+
+        function getPlasmaColorForAmplitude(deg){
+            const clamped = Math.max(0, Math.min(deg, 89.999));
+            const bandSize = 90/7; // ~12.857
+            const idx = Math.min(6, Math.floor(clamped / bandSize));
+            const tInBand = (clamped - idx*bandSize)/bandSize; // 0-1 inside band
+            return {hex: PLASMA_COLORS[idx], name: PLASMA_COLOR_NAMES[idx], band: PLASMA_BANDS[idx], index: idx, t: tInBand, clamped: clamped};
+        }
+
+        function updatePlasmaVisuals(ampEffDeg, angularFreq, sinW, cosW, Etotal, Enorm){
+            const {hex, name, band, index, t, clamped} = getPlasmaColorForAmplitude(ampEffDeg);
+            plasmaCoreMat.color.setHex(hex);
+            plasmaGlowMat.color.setHex(hex);
+            plasmaOuterMat.color.setHex(hex);
+            plasmaLights.forEach(light=>light.color.setHex(hex));
+
+            const absSin = Math.abs(sinW);
+            const ampNorm = Math.min(1, ampEffDeg/90);
+            const freqNorm = Math.min(1, frequency/15);
+
+            // RADIAL ONLY: length fixed at 18 ( -9 to +9 ), only diameter pulses
+            // Synchronized with Compalpha frequency via |sinW|
+            let radialPulse = 1.0 + absSin*1.2 + freqNorm*0.4 + ampNorm*0.3;
+
+            let whiteBoost = 0;
+            if(index === 6){
+                const whiteProgress = t;
+                whiteBoost = 0.8 + whiteProgress*2.0;
+                plasmaCoreMat.color.setHex(0xffffff);
+                plasmaLights.forEach(light=>light.color.setHex(0xffffff));
+                radialPulse += whiteBoost*0.5;
+            }
+
+            // Clamp to tube diameter - never exceed glass wall
+            // tubeRadius ~0.975, tubeDiameter ~1.95
+            const maxCore = (tubeRadius*0.50)/0.04;
+            const maxGlow = (tubeRadius*0.85)/0.14;
+            const maxOuter = (tubeRadius*0.95)/0.32;
+
+            let coreR = Math.min(radialPulse*0.9, maxCore);
+            let glowR = Math.min(radialPulse*1.2, maxGlow);
+            let outerR = Math.min(radialPulse*1.5 + whiteBoost*0.6, maxOuter);
+
+            // Cylinder length is local Y (rotated onto world X); keep Y fixed
+            // and pulse only the two radial axes.
+            plasmaCore.scale.set(coreR,1,coreR);
+            plasmaGlow.scale.set(glowR,1,glowR);
+            plasmaOuter.scale.set(outerR,1,outerR);
+
+            // Intensity based on energy
+            let baseI = 0.5 + ampNorm*1.0 + freqNorm*0.6;
+            let lightI = 1.0 + baseI*3.0 + whiteBoost*5.0 + absSin*1.5;
+            plasmaLights.forEach(light=>{
+                light.intensity = lightI*0.24;
+                light.distance = 6.5 + baseI*2.2 + whiteBoost*1.8;
+            });
+
+            plasmaGlowMat.opacity = Math.min(0.9, 0.3 + baseI*0.4 + whiteBoost*0.3);
+            plasmaOuterMat.opacity = Math.min(0.6, 0.15 + baseI*0.25 + whiteBoost*0.25);
+
+            // UI
+            const lbl = document.getElementById('plasmaColorLabel');
+            if(lbl){ lbl.textContent = name + (index===6?' ★':'' ); lbl.style.color = '#'+hex.toString(16).padStart(6,'0'); }
+            const bnd = document.getElementById('plasmaBandLabel');
+            if(bnd) bnd.textContent = band + ` | RADIAL x${radialPulse.toFixed(2)} | FIXED LEN`;
+            const ampEl = document.getElementById('plasmaAmpLabel');
+            if(ampEl) ampEl.textContent = ampEffDeg.toFixed(1)+'°';
+            const eEl = document.getElementById('plasmaEnergyLabel');
+            if(eEl) eEl.textContent = `I:${lightI.toFixed(1)} Ø:${(outerR*0.64).toFixed(2)}/${tubeDiameter.toFixed(2)}`;
+        }
+
+
+        function createMeridianLayer(group,radius,numMeridians,numSegments,material){ for(let i=0;i<numMeridians;i++){ const u=(i/numMeridians)*Math.PI*2; const pts=[]; for(let j=0;j<=numSegments;j++){ const v=(j/numSegments)*Math.PI*2; pts.push(new THREE.Vector3(radius*(1+Math.cos(v))*Math.cos(u), radius*Math.sin(v), radius*(1+Math.cos(v))*Math.sin(u))); } group.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), material)); } }
+        function createAlphaStructure(name,dir,pos,radius){ const g=new THREE.Group(); g.position.copy(pos); g.name=name; const sph=new THREE.Mesh(new THREE.SphereGeometry(0.05,16,16), new THREE.MeshBasicMaterial({color:0xFF0000})); g.add(sph); const cg=new THREE.Group(); g.add(cg); createMeridianLayer(cg, radius,36,48,new THREE.LineBasicMaterial({color:0x1270ff})); createMeridianLayer(cg, radius*0.5,36,48,new THREE.LineBasicMaterial({color:0xffffff, transparent:true, opacity:0.95})); /* Plano Alpha circular: diâmetro igual ao diâmetro externo azul do Compalpha. */ const plane=new THREE.Mesh(new THREE.CircleGeometry(radius*2,96), new THREE.MeshBasicMaterial({color:0x00ff00, transparent:true, opacity:0.28, side:THREE.DoubleSide, depthWrite:false})); plane.rotation.x=Math.PI/2; plane.name=name+'_AlphaPlane'; g.add(plane); const arrow=new THREE.ArrowHelper(dir, new THREE.Vector3(0,-dir.y*2.5,0), 5, 0xff0000,1,0.25); g.add(arrow); return g; }
+        function createComphalphas(mode){ 
+            comphalphas.forEach(c=>scene.remove(c)); 
+            comphalphas=[]; 
+            let cfgs=[]; 
+            const L=-8,R=8; 
+            if(mode===1){ cfgs=[{pos:L,radius:8,dir:new THREE.Vector3(0,1,0)},{pos:R,radius:8,dir:new THREE.Vector3(0,-1,0)}]; sumR2=128; document.getElementById('modeVal').textContent='2×R=8'; } 
+            else if(mode===2){ cfgs=[{pos:L,radius:4,dir:new THREE.Vector3(0,1,0)},{pos:0,radius:4,dir:new THREE.Vector3(0,-1,0)},{pos:R,radius:4,dir:new THREE.Vector3(0,1,0)}]; sumR2=48; document.getElementById('modeVal').textContent='3×R=4'; } 
+            else if(mode===4){ 
+                // Triple stack: 3 positions (A, middle, B) each with 3 Compalphas rotated 0°,45°,90° on X
+                // V=0°, O=45°, H=90°
+                const baseCfgs=[
+                    {pos:L, dir:new THREE.Vector3(0,1,0), group:'A'},
+                    {pos:0, dir:new THREE.Vector3(0,-1,0), group:'M'},
+                    {pos:R, dir:new THREE.Vector3(0,1,0), group:'B'}
+                ];
+                const xAngles=[
+                    {rad:0, deg:0, pol:'V', label:'V'},
+                    {rad:45*Math.PI/180, deg:45, pol:'O', label:'O'},
+                    {rad:90*Math.PI/180, deg:90, pol:'H', label:'H'}
+                ];
+                let idx=0;
+                // Reset filters when recreating
+                polFilters = {V:false, O:false, H:false};
+                updatePolButtonsUI();
+                baseCfgs.forEach(base=>{
+                    xAngles.forEach(xAng=>{
+                        const ca=createAlphaStructure('Ca_'+base.group+'_'+xAng.label+'_'+xAng.deg, base.dir.clone(), new THREE.Vector3(base.pos,8,0), 4);
+                        ca.userData.baseDir = base.dir.clone();
+                        ca.userData.xRot = xAng.rad;
+                        ca.userData.polarization = xAng.pol;
+                        ca.userData.group = base.group;
+                        ca.userData.isFrozen = false;
+                        ca.rotation.x = xAng.rad;
+                        ca.visible = comphalphasVisible;
+                        comphalphas.push(ca);
+                        scene.add(ca);
+                        idx++;
+                    });
+                });
+                sumR2=9*16; // 9 comps * R^2=16
+                document.getElementById('modeVal').textContent='9×R=4 [3pos×3rot 0/45/90 X]';
+                document.getElementById('inertiaVal').textContent=sumR2;
+                return;
+            }
+            else { for(let i=0;i<9;i++) cfgs.push({pos:L+i*2,radius:1,dir:(i%2===0)?new THREE.Vector3(0,1,0):new THREE.Vector3(0,-1,0)}); sumR2=9; document.getElementById('modeVal').textContent='9×R=1'; } 
+            document.getElementById('inertiaVal').textContent=sumR2; 
+            cfgs.forEach((cfg,idx)=>{ 
+                const ca=createAlphaStructure('Ca'+(idx+1),cfg.dir,new THREE.Vector3(cfg.pos,8,0),cfg.radius); 
+                ca.visible = comphalphasVisible; // respect current hide/show state
+                comphalphas.push(ca); 
+                scene.add(ca); 
+            }); 
+        }
+        function updateUI(mode){ document.querySelectorAll('#controls button').forEach(b=>b.classList.remove('active')); const b=document.getElementById('btnMode'+mode); if(b) b.classList.add('active'); }
+        document.getElementById('btnMode1').addEventListener('click',()=>{ createComphalphas(1); updateUI(1); });
+        document.getElementById('btnMode2').addEventListener('click',()=>{ createComphalphas(2); updateUI(2); });
+        document.getElementById('btnMode3').addEventListener('click',()=>{ createComphalphas(3); updateUI(3); });
+        document.getElementById('btnMode4').addEventListener('click',()=>{ createComphalphas(4); updateUI(4); });
+        document.getElementById('togglePlanoAlpha').addEventListener('click',()=>{ comphalphas.forEach(c=>{ const p=c.getObjectByName(c.name+'_AlphaPlane'); if(p) p.visible=!p.visible; }); });
+        document.getElementById('amplitudeSlider').addEventListener('input',(e)=>{ const deg=parseFloat(e.target.value); amplitude=deg*Math.PI/180; document.getElementById('amplitudeValue').textContent=deg+'°'; document.getElementById('amplitudeRadValue').textContent=amplitude.toFixed(3)+' rad'; });
+        // --- FIXED FREQUENCY LISTENER ---
+        document.getElementById('frequencySlider').addEventListener('input',(e)=>{ 
+            frequency=parseFloat(e.target.value); 
+            document.getElementById('frequencyValue').textContent=frequency.toFixed(1)+'Hz'; 
+        });
+        document.getElementById('gammaSlider').addEventListener('input',(e)=>{ const now=performance.now()*0.001; envelopeAtChange=envelope; lastGammaChangeTime=now; gammaDamping=parseFloat(e.target.value); document.getElementById('gammaValue').textContent=gammaDamping.toFixed(2); });
+        document.getElementById('btnReenergize').addEventListener('click',()=>{ 
+            envelope=1; envelopeAtChange=1; lastGammaChangeTime=performance.now()*0.001; 
+            oscillationPhase = 0; // reset phase on re-energize
+            lastFrameTime = performance.now()*0.001;
+            document.getElementById('gammaSlider').value=0; gammaDamping=0; document.getElementById('gammaValue').textContent='0.00'; 
+        });
+
+        // ----- NEW TOGGLE BUTTONS -----
+        document.getElementById('btnToggleComphalphas').addEventListener('click',()=>{
+            comphalphasVisible = !comphalphasVisible;
+            comphalphas.forEach(c=>{ c.visible = comphalphasVisible; });
+            const btn = document.getElementById('btnToggleComphalphas');
+            if(comphalphasVisible){
+                btn.textContent = '👁 Hide Comphalphas';
+                btn.style.borderColor = '#ff4444';
+            } else {
+                btn.textContent = '👁 Show Comphalphas';
+                btn.style.borderColor = '#00ff88';
+                // When hiding comphalphas, automatically show plasma for macroscopic view
+                if(!plasmaVisible){
+                    plasmaVisible = true;
+                    plasmaGroup.visible = true;
+                    document.getElementById('btnTogglePlasma').textContent = '👁 Hide Plasma';
+                }
+            }
+        });
+
+        document.getElementById('btnTogglePlasma').addEventListener('click',()=>{
+            plasmaVisible = !plasmaVisible;
+            plasmaGroup.visible = plasmaVisible;
+            document.getElementById('btnTogglePlasma').textContent = plasmaVisible ? '👁 Hide Plasma' : '👁 Show Plasma';
+        });
+
+        document.getElementById('btnToggleVacuum').addEventListener('click',()=>{
+            vacuumTubeVisible = !vacuumTubeVisible;
+            glassTubeGroup.visible = vacuumTubeVisible;
+            document.getElementById('btnToggleVacuum').textContent = vacuumTubeVisible ? '👁 Hide Vacuum Tube' : '👁 Show Vacuum Tube';
+        });
+
+        document.getElementById('btnToggleMagnet').addEventListener('click',()=>{
+            magnetVisible = !magnetVisible;
+            magnetGroup.visible = magnetVisible;
+            const btn = document.getElementById('btnToggleMagnet');
+            btn.textContent = magnetVisible ? '👁 Hide Bar Magnet' : '👁 Show Bar Magnet';
+            btn.style.borderColor = magnetVisible ? '#ff5577' : '#00ff88';
+            btn.style.color = magnetVisible ? '#ffb3c1' : '#aaffcc';
+        });
+
+        // ----- POLARIZATION FILTER LOGIC -----
+        function updatePolButtonsUI(){
+            const btnV=document.getElementById('btnPV');
+            const btnO=document.getElementById('btnPO');
+            const btnH=document.getElementById('btnPH');
+            if(btnV){
+                btnV.classList.toggle('active', polFilters.V);
+                btnV.textContent = polFilters.V ? '◼ PV — Vertical BLOQUEADO (Meio+B)' : '◧ PV — Vertical (0°) Meio→B';
+                btnV.style.backgroundColor = polFilters.V ? '#004422' : '';
+            }
+            if(btnO){
+                btnO.classList.toggle('active', polFilters.O);
+                btnO.textContent = polFilters.O ? '◼ PO — Oblíqua BLOQUEADA (Meio+B)' : '◧ PO — Oblíqua (45°) Meio→B';
+                btnO.style.backgroundColor = polFilters.O ? '#442200' : '';
+            }
+            if(btnH){
+                btnH.classList.toggle('active', polFilters.H);
+                btnH.textContent = polFilters.H ? '◼ PH — Horizontal BLOQUEADO (Meio+B)' : '◧ PH — Horizontal (90°) Meio→B';
+                btnH.style.backgroundColor = polFilters.H ? '#002244' : '';
+            }
+        }
+
+        function applyPolarizationFilter(pol){
+            // pol = 'V','O','H'
+            // Toggle
+            polFilters[pol] = !polFilters[pol];
+            const freeze = polFilters[pol];
+            // Apply to middle (M) and B (B) groups with same polarization
+            comphalphas.forEach(c=>{
+                if(c.userData.polarization === pol && (c.userData.group === 'M' || c.userData.group === 'B')){
+                    c.userData.isFrozen = freeze;
+                }
+            });
+            updatePolButtonsUI();
+        }
+
+        function resetPolFilters(){
+            polFilters = {V:false, O:false, H:false};
+            comphalphas.forEach(c=>{
+                if(c.userData.isFrozen !== undefined) c.userData.isFrozen = false;
+            });
+            updatePolButtonsUI();
+        }
+
+        document.getElementById('btnPV').addEventListener('click',()=>{ applyPolarizationFilter('V'); });
+        document.getElementById('btnPO').addEventListener('click',()=>{ applyPolarizationFilter('O'); });
+        document.getElementById('btnPH').addEventListener('click',()=>{ applyPolarizationFilter('H'); });
+        document.getElementById('btnResetPol').addEventListener('click',()=>{ resetPolFilters(); });
+
+        createComphalphas(3);
+        document.getElementById('amplitudeValue').textContent='20°'; document.getElementById('amplitudeRadValue').textContent=(20*Math.PI/180).toFixed(3)+' rad';
+
+        // ----- CYCLICAL INTERACTION DIAGRAM - EXACT GEOMETRY -----
+        const icCanvas = document.getElementById('icCanvas');
+        const icCtx = icCanvas.getContext('2d');
+
+        function drawICDiagram(ampEff, sinW) {
+            const W = icCanvas.width, H = icCanvas.height;
+            const cx = W/2, cy = H/2;
+            icCtx.clearRect(0,0,W,H);
+
+            const theta = ampEff * sinW;
+            const thetaDeg = theta * 180 / Math.PI;
+            const tanTheta = Math.tan(theta);
+
+            const D0 = 320;
+            const Ax = cx - D0/2; const Ay = cy;
+            const Bx = cx + D0/2; const By = cy;
+
+            // CCI Center = intersection of Alpha Planes - PURE RULE no clipping
+            let Px = cx;
+            let Py = cy - (D0/2) * tanTheta;
+
+            const dxPA = Px - Ax; const dyPA = Py - Ay;
+            const radius = Math.sqrt(dxPA*dxPA + dyPA*dyPA);
+            const diam = radius * 2;
+
+            // grid
+            icCtx.strokeStyle = 'rgba(255,255,255,0.04)';
+            icCtx.lineWidth = 1;
+            for(let i=-4;i<=4;i++){ icCtx.beginPath(); icCtx.moveTo(cx + i*80, 0); icCtx.lineTo(cx + i*80, H); icCtx.stroke(); icCtx.beginPath(); icCtx.moveTo(0, cy + i*80); icCtx.lineTo(W, cy + i*80); icCtx.stroke(); }
+
+            icCtx.save();
+            icCtx.strokeStyle = '#00aa88';
+            icCtx.setLineDash([10,8]);
+            icCtx.lineWidth = 1;
+            icCtx.beginPath(); icCtx.moveTo(0, cy); icCtx.lineTo(W, cy); icCtx.stroke();
+            icCtx.setLineDash([]);
+            icCtx.restore();
+            icCtx.fillStyle = '#00aa88';
+            icCtx.font = '14px monospace';
+            icCtx.fillText('Common Interaction Plane', 10, cy - 8);
+
+            icCtx.save();
+            icCtx.strokeStyle = 'rgba(255,100,100,0.35)';
+            icCtx.setLineDash([4,6]);
+            icCtx.lineWidth = 1;
+            icCtx.beginPath(); icCtx.moveTo(Ax, 0); icCtx.lineTo(Ax, H); icCtx.stroke();
+            icCtx.beginPath(); icCtx.moveTo(Bx, 0); icCtx.lineTo(Bx, H); icCtx.stroke();
+            icCtx.beginPath(); icCtx.moveTo(Px, Py); icCtx.lineTo(Px, cy); icCtx.stroke();
+            icCtx.setLineDash([]);
+            icCtx.restore();
+
+            icCtx.strokeStyle = '#2a9df4';
+            icCtx.lineWidth = 2.5;
+            icCtx.shadowColor = '#2a9df4';
+            icCtx.shadowBlur = 12;
+            icCtx.beginPath();
+            icCtx.arc(Px, Py, radius, 0, Math.PI*2);
+            icCtx.stroke();
+            icCtx.shadowBlur = 0;
+
+            function drawInfiniteLine(x0,y0, slope, color, w=2) {
+                icCtx.strokeStyle = color;
+                icCtx.lineWidth = w;
+                const len = 900;
+                const dx = len / Math.sqrt(1 + slope*slope);
+                const dy = slope * dx;
+                icCtx.beginPath();
+                icCtx.moveTo(x0 - dx, y0 - dy);
+                icCtx.lineTo(x0 + dx, y0 + dy);
+                icCtx.stroke();
+            }
+            function drawFiniteAxisFixed(x0,y0, slope, length, color, shouldPointUp) {
+                icCtx.strokeStyle = color;
+                icCtx.lineWidth = 3.5;
+                const half = length/2;
+                let dx = half / Math.sqrt(1 + slope*slope);
+                let dy = slope * dx;
+                // enforce constant direction: A always up (dy<0), B always down (dy>0)
+                if (shouldPointUp && dy > 0) { dx = -dx; dy = -dy; }
+                if (!shouldPointUp && dy < 0) { dx = -dx; dy = -dy; }
+                icCtx.beginPath();
+                icCtx.moveTo(x0 - dx, y0 - dy);
+                icCtx.lineTo(x0 + dx, y0 + dy);
+                icCtx.stroke();
+                // arrow at fixed tip
+                const tipX = x0 + dx;
+                const tipY = y0 + dy;
+                const ang = Math.atan2(dy, dx);
+                icCtx.fillStyle = color;
+                icCtx.beginPath();
+                icCtx.moveTo(tipX, tipY);
+                icCtx.lineTo(tipX - 12*Math.cos(ang - Math.PI/6), tipY - 12*Math.sin(ang - Math.PI/6));
+                icCtx.lineTo(tipX - 12*Math.cos(ang + Math.PI/6), tipY - 12*Math.sin(ang + Math.PI/6));
+                icCtx.closePath();
+                icCtx.fill();
+            }
+
+            // Planes - correct synchrony: A = -tan, B = +tan
+            drawInfiniteLine(Ax, Ay, -tanTheta, '#00ff88', 2);
+            drawInfiniteLine(Bx, By, tanTheta, '#00ff88', 2);
+
+            // Alpha Axes - FINITE SIZE and CONSTANT DIRECTION
+            const cotTheta = Math.abs(tanTheta) < 0.0005 ? 2000 : 1 / tanTheta;
+            const axisLength = 320;
+            // Axis A always up, Axis B always down
+            drawFiniteAxisFixed(Ax, Ay, cotTheta, axisLength, '#ff2222', true);
+            drawFiniteAxisFixed(Bx, By, -cotTheta, axisLength, '#ff2222', false);
+
+            icCtx.fillStyle = '#000';
+            icCtx.strokeStyle = '#fff';
+            icCtx.lineWidth = 2;
+            [ [Ax,Ay,'Compalpha A'], [Bx,By,'Compalpha B'] ].forEach(([x,y,label])=>{
+                icCtx.beginPath(); icCtx.arc(x,y,4,0,Math.PI*2); icCtx.fill(); icCtx.stroke();
+                icCtx.fillStyle = '#fff';
+                icCtx.font = '13px monospace';
+                icCtx.fillText(label, x + (label.includes('A') ? -95 : 12), y + 4);
+                icCtx.fillStyle = '#000';
+            });
+
+            icCtx.fillStyle = '#ffcc00';
+            icCtx.shadowColor = '#ffcc00';
+            icCtx.shadowBlur = 10;
+            icCtx.beginPath(); icCtx.arc(Px, Py, 5, 0, Math.PI*2); icCtx.fill();
+            icCtx.shadowBlur = 0;
+            icCtx.fillStyle = '#000';
+            icCtx.beginPath(); icCtx.arc(Px, Py, 3, 0, Math.PI*2); icCtx.fill();
+
+            function drawAngleArcCorrected(x,y, fromAngle, toAngle, r, color, label) {
+                // always draw the smaller arc between from and to
+                let a1 = fromAngle, a2 = toAngle;
+                let diff = a2 - a1;
+                while (diff <= -Math.PI) diff += 2*Math.PI;
+                while (diff > Math.PI) diff -= 2*Math.PI;
+                if (Math.abs(diff) > Math.PI) { a1 = toAngle; a2 = fromAngle; }
+                // ensure start = min for short arc
+                const start = Math.min(a1,a2);
+                const end = Math.max(a1,a2);
+                icCtx.strokeStyle = color;
+                icCtx.lineWidth = 1.5;
+                icCtx.beginPath();
+                icCtx.arc(x, y, r, start, end);
+                icCtx.stroke();
+                if(label){
+                    const mid = (start+end)/2;
+                    const lx = x + Math.cos(mid)*(r+14);
+                    const ly = y + Math.sin(mid)*(r+14);
+                    icCtx.fillStyle = color;
+                    icCtx.font = 'bold 13px monospace';
+                    icCtx.fillText(label, lx-8, ly);
+                }
+            }
+            const vAngle = -Math.PI/2;
+            // ARC CORRECTION: A = v - theta (left), B = v + theta (right)
+            const axisAAngle = vAngle - theta;
+            const axisBAngle = vAngle + theta;
+            drawAngleArcCorrected(Ax, Ay, vAngle, axisAAngle, 80, '#ff4444', `${(-thetaDeg).toFixed(0)}°`);
+            drawAngleArcCorrected(Bx, By, vAngle, axisBAngle, 80, '#ff4444', `${thetaDeg.toFixed(0)}°`);
+
+            icCtx.fillStyle = 'rgba(0,0,0,0.7)';
+            icCtx.fillRect(8,8, W-16, 68);
+            icCtx.fillStyle = '#00ffcc';
+            icCtx.font = 'bold 22px monospace';
+            icCtx.fillText(`Axis A ↑ always up ${(-thetaDeg).toFixed(1)}° | Axis B ↓ always down ${thetaDeg.toFixed(1)}°`, 14, 26);
+            icCtx.fillStyle = '#fff';
+            icCtx.font = '20px monospace';
+            icCtx.fillText(`CCI center Y=${(cy-Py).toFixed(0)}px ${Py<cy?'above':'below'} | diam=${diam.toFixed(0)}px = D0/cosθ`, 14, 46);
+            icCtx.fillStyle = '#aaa';
+            icCtx.font = '20px monospace';
+            icCtx.fillText(`A ↑ fixed, B ↓ fixed | arc A measures A, arc B measures B | D0=${D0}px`, 14, 64);
+
+            document.getElementById('icThetaA').textContent = `${(-thetaDeg).toFixed(1)}°`;
+            document.getElementById('icThetaB').textContent = `${thetaDeg.toFixed(1)}°`;
+            document.getElementById('icDelta').textContent = `${(Math.abs(thetaDeg*2)).toFixed(1)}°`;
+            document.getElementById('icDiam').textContent = diam.toFixed(0);
+            document.getElementById('icRaio').textContent = radius.toFixed(0);
+            document.getElementById('icCentroY').textContent = (cy-Py).toFixed(0);
+        }
+
+        function animate(){ 
+            requestAnimationFrame(animate); 
+            const currentTime=performance.now()*0.001; 
+            const deltaTime = Math.min(0.05, currentTime - lastFrameTime);
+            lastFrameTime = currentTime;
+
+            if(gammaDamping>0){ 
+                const elapsed=currentTime-lastGammaChangeTime; 
+                envelope=envelopeAtChange*Math.exp(-gammaDamping*elapsed); 
+                if(envelope<0.001) envelope=0.001; 
+            } else { 
+                envelope=1; envelopeAtChange=1; 
+            } 
+            const ampEff=amplitude*envelope; 
+            // FIXED FREQUENCY CONTROL: phase accumulator instead of omega * time
+            const angularFreq=2*Math.PI*frequency; 
+            oscillationPhase += angularFreq * deltaTime;
+            // prevent numeric overflow
+            if(oscillationPhase > Math.PI * 1000) oscillationPhase %= (Math.PI*2);
+
+            const sinW=Math.sin(oscillationPhase); 
+            const cosW=Math.cos(oscillationPhase); 
+            
+            comphalphas.forEach((c,i)=>{ 
+                // Keep oscillation physics running even when hidden
+                // Preserve X rotation for triple-stack mode
+                const xRot = c.userData.xRot !== undefined ? c.userData.xRot : 0;
+                c.rotation.x = xRot;
+                // If frozen by polarization filter, stop oscillating (hold at 0)
+                if(c.userData.isFrozen){
+                    c.rotation.z = 0;
+                    return;
+                }
+                // Alternate Z oscillation direction based on position index and stack
+                const baseIdx = Math.floor(i/3);
+                const parity = (baseIdx % 2 === 0) ? 1 : -1;
+                if(c.userData.xRot !== undefined){
+                    c.rotation.z = parity * ampEff * sinW;
+                } else {
+                    c.rotation.z=(i%2===0?1:-1)*ampEff*sinW; 
+                }
+            }); 
+            // Linear oscillation driven by the exact same phase and frequency as the Compalphas.
+            // Motion continues while hidden, preserving synchronization when shown again.
+            magnetGroup.position.z = magnetTravelAmplitude * sinW;
+
+            // --- ENERGY FOR PLASMA ---
+            const Itot=sumR2; 
+            const ampEffDeg = ampEff * 180 / Math.PI; // effective amplitude in degrees
+            // compute energy norm for white boost
+            const maxEref=2*Math.PI*Math.PI*128*Math.pow(Math.PI,2)*900;
+            const EtotalForPlasma=2*Math.PI*Math.PI*Itot*ampEff*ampEff*frequency*frequency;
+            const EnormPlasma=Math.min(1, EtotalForPlasma/maxEref*2.5); // scaled for visibility
+
+            // Update plasma beam with strong pulsation and white intensity
+            if(plasmaVisible){
+                updatePlasmaVisuals(ampEffDeg, angularFreq, sinW, cosW, EtotalForPlasma, EnormPlasma);
+            } else {
+                // Still update UI labels even when plasma hidden
+                const {name, band} = getPlasmaColorForAmplitude(ampEffDeg);
+                const lbl = document.getElementById('plasmaColorLabel');
+                if(lbl){ lbl.textContent = name; }
+                const bnd = document.getElementById('plasmaBandLabel');
+                if(bnd){ bnd.textContent = band; }
+                const ampLbl = document.getElementById('plasmaAmpLabel');
+                if(ampLbl){ ampLbl.textContent = ampEffDeg.toFixed(1)+'°'; }
+            }
+            
+            const Etotal=2*Math.PI*Math.PI*Itot*ampEff*ampEff*frequency*frequency; 
+            const Ekin=0.5*Itot*Math.pow(ampEff*angularFreq*cosW,2); 
+            const Epot=0.5*Itot*Math.pow(ampEff*angularFreq*sinW,2); 
+            const maxE=2*Math.PI*Math.PI*128*Math.pow(Math.PI,2)*900;
+            const normTotal=Math.min(100,(Etotal/maxE)*100); 
+            document.getElementById('eTotal').textContent=Etotal.toFixed(2)+' ('+normTotal.toFixed(1)+'%)'; 
+            document.getElementById('eKin').textContent=Ekin.toFixed(2); 
+            document.getElementById('ePot').textContent=Epot.toFixed(2); 
+            document.getElementById('envelopeVal').textContent=(envelope*100).toFixed(1)+'%'; 
+            document.getElementById('gammaT').textContent=(gammaDamping*(currentTime-lastGammaChangeTime)).toFixed(2); 
+            const totalBar=Ekin+Epot>0.0001?Ekin+Epot:1; 
+            document.getElementById('eKinBar').style.width=(Ekin/totalBar*100)+'%'; 
+            document.getElementById('ePotBar').style.width=(Epot/totalBar*100)+'%';
+
+            drawICDiagram(ampEff, sinW);
+
+            controls.update(); renderer.render(scene,camera); 
+        } 
+        animate();
+        window.addEventListener('resize',()=>{ camera.aspect=window.innerWidth/window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth,window.innerHeight); });
+    </script>
+</body>
+</html>
