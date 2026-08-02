@@ -1,0 +1,1248 @@
+<!doctype html>
+<html lang="en" data-visualize-standalone>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>IC 2D Laboratory — TUIDG</title>
+<style>:root {
+  color-scheme: light dark;
+  background-color: transparent !important;
+
+  /* Agent-facing contract; keep in sync with SKILL.md. */
+  --background: var(
+    --main-surface-primary,
+    light-dark(rgb(255 255 255), rgb(24 24 24))
+  );
+  --foreground: light-dark(rgb(26 28 31), rgb(255 255 255));
+  --card: color-mix(in oklab, var(--foreground) 5%, transparent);
+  --card-foreground: var(--foreground);
+  --popover: light-dark(rgb(255 255 255), rgb(45 45 45));
+  --popover-foreground: var(--foreground);
+  --primary: light-dark(rgb(51 156 255), rgb(131 195 255));
+  --primary-foreground: light-dark(rgb(255 255 255), rgb(13 13 13));
+  --secondary: light-dark(rgb(255 255 255 / 96%), rgb(54 54 54 / 96%));
+  --secondary-foreground: var(--foreground);
+  --muted: color-mix(in srgb, var(--foreground) 10%, transparent);
+  --muted-foreground: light-dark(
+    rgb(26 28 31 / 49.4%),
+    rgb(255 255 255 / 49.8%)
+  );
+  --accent: light-dark(rgb(229 242 255), rgb(13 39 63));
+  --accent-foreground: var(--primary);
+  --destructive: light-dark(rgb(226 85 7), rgb(255 133 73));
+  --border: light-dark(rgb(26 28 31 / 8%), rgb(255 255 255 / 8.2%));
+  --input: light-dark(
+    rgb(26 28 31 / 11.8%),
+    color-mix(in oklab, rgb(0 0 0) 10%, transparent)
+  );
+  --ring: light-dark(rgb(51 156 255), rgb(131 195 255 / 76%));
+  --font-size-base: 14px;
+  --red: light-dark(rgb(186 38 35), rgb(250 66 62));
+  --green: light-dark(rgb(0 162 64), rgb(64 201 119));
+
+  /* Internal implementation variables; not part of the agent contract. */
+  --font-sans: -apple-system, system-ui, "Segoe UI", sans-serif;
+  --font-mono:
+    ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono",
+    monospace;
+  --font-size-normal: max(11px, var(--font-size-base));
+  --font-size-tooltip: calc(var(--font-size-base) - 1px);
+  --font-size-small: max(11px, calc(var(--font-size-base) - 2px));
+  --font-size-h1: calc(var(--font-size-normal) * 1.7142857143);
+  --font-size-h2: calc(var(--font-size-normal) * 1.4285714286);
+  --font-size-h3: calc(var(--font-size-normal) * 1.2857142857);
+  --font-weight-normal: 430;
+  --font-weight-medium: 500;
+  --line-height-normal: calc(var(--font-size-normal) * 1.5);
+  --line-height-tooltip: calc(var(--font-size-tooltip) * 1.4285714286);
+  --line-height-small: calc(var(--font-size-small) + 4px);
+  --radius: 10px;
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-2xl: calc(var(--radius) * 1.6);
+  --radius-full: 9999px;
+  --shadow-sm: 0 1px 2px -1px rgb(0 0 0 / 8%);
+  --checkmark-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 17 17'%3E%3Cpath d='M12.8961 3.64101C13.1297 3.41418 13.4984 3.37523 13.7779 3.56581C14.0571 3.75635 14.1554 4.11331 14.0299 4.41347L13.9615 4.53847L7.71151 13.7045C7.59411 13.8767 7.4063 13.9877 7.19881 14.0072C6.99136 14.0267 6.78564 13.9533 6.63826 13.806L2.88826 10.056L2.79842 9.9457C2.6192 9.67407 2.64927 9.30496 2.88826 9.06581C3.12738 8.82669 3.49647 8.79676 3.76815 8.97597L3.8785 9.06581L7.03084 12.2182L12.8053 3.74941L12.8961 3.64101Z'/%3E%3C/svg%3E");
+
+  /* Legacy aliases; not part of the current agent contract. */
+  --viz-bg: transparent;
+  --viz-panel: var(--card);
+  --viz-border: var(--border);
+  --viz-text: var(--foreground);
+  --viz-muted: var(--muted-foreground);
+  --viz-accent: var(--primary);
+  --viz-accent-text: var(--primary-foreground);
+  --viz-accent-bg: var(--accent);
+  --viz-font-size: var(--font-size-base);
+  --viz-warning: var(--destructive);
+  --color-background-primary: var(--background);
+  --color-text-primary: var(--foreground);
+  --color-border-secondary: var(--border);
+}
+
+:root[data-visualize-standalone] {
+  background-color: var(--background) !important;
+}
+
+/* Generic mobile code-block hosts provide light/dark mode but no series palette.
+   AppBlock hosts set all six variables themselves. */
+:root:not([data-app-block-surface]) {
+  --viz-series-1: var(--primary);
+  --viz-series-2: light-dark(#f3883b, #f59a56);
+  --viz-series-3: light-dark(#5dc977, #74d58b);
+  --viz-series-4: light-dark(#eb77b1, #f08fc0);
+  --viz-series-5: light-dark(#9b79ec, #aa91ef);
+  --viz-series-6: light-dark(#3ab9b1, #5acbc2);
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html > body {
+  margin: 0;
+  padding: 5px;
+  color: var(--foreground);
+  background: transparent !important;
+  font-family: var(--font-sans);
+  font-size: var(--font-size-normal);
+  font-weight: var(--font-weight-normal);
+  line-height: var(--line-height-normal);
+}
+
+:root:not([data-app-block-surface]) > body {
+  padding: 12px;
+}
+
+a {
+  color: color-mix(in srgb, var(--viz-accent) 80%, var(--viz-text) 20%);
+  cursor: pointer;
+  font-weight: var(--font-weight-medium);
+  text-decoration: none;
+  text-underline-offset: 2px;
+}
+
+a:is(:hover, :focus-visible) {
+  text-decoration-line: underline;
+  text-decoration-style: dashed;
+  text-decoration-thickness: 0.5px;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p {
+  margin-block: 0;
+}
+
+h1 {
+  font-size: var(--font-size-h1);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.25;
+}
+
+h2 {
+  font-size: var(--font-size-h2);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.25;
+}
+
+h3,
+h4,
+h5,
+h6 {
+  font-size: var(--font-size-h3);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.3;
+}
+
+b,
+strong,
+th {
+  font-weight: var(--font-weight-medium);
+}
+
+code:not(pre code) {
+  display: inline;
+  padding: 1px 6px;
+  border-radius: var(--radius-sm);
+  background: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+  overflow-wrap: anywhere;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  word-break: break-word;
+}
+
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  color: var(--foreground);
+  font: inherit;
+  text-align: start;
+}
+
+.table :is(th, td) {
+  padding-block: 10px;
+  padding-inline: 0 24px;
+  overflow-wrap: anywhere;
+  border-bottom: 1px solid var(--border);
+  text-align: start;
+  vertical-align: top;
+}
+
+.table-responsive > .table :is(th, td) {
+  overflow-wrap: break-word;
+}
+
+.table :is(th, td):last-child {
+  padding-inline-end: 0;
+}
+
+.table :is(caption, thead th) {
+  font-weight: 600;
+}
+
+.table thead th {
+  padding-block: 8px;
+  border-bottom-color: color-mix(in srgb, var(--foreground) 16%, transparent);
+}
+
+.table tbody tr:last-child :is(th, td) {
+  border-bottom: 0;
+}
+
+.table.table-sm :is(th, td) {
+  padding-block: 6px;
+}
+
+.table.table-sm :is(th, td):not(:last-child) {
+  padding-inline-end: 16px;
+}
+
+.table :is(.text-end, [align="right"]) {
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+}
+
+.table :is(.text-center, [align="center"]) {
+  text-align: center;
+}
+
+.table .text-nowrap {
+  white-space: nowrap;
+}
+
+#widget {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  padding: 0;
+  background: transparent !important;
+}
+
+.card {
+  min-width: 0;
+  padding: 12px;
+  overflow: hidden;
+  overflow-wrap: break-word;
+  border-radius: var(--radius-2xl);
+  color: var(--card-foreground);
+  background: var(--card);
+}
+
+#widget > :not(.card) {
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.tooltip {
+  position: fixed;
+  z-index: 50;
+  top: 0;
+  left: 0;
+  width: max-content;
+  max-width: min(
+    20rem,
+    var(--tooltip-available-width, calc(100vw - 10px)),
+    calc(100vw - 10px)
+  );
+  max-height: min(
+    var(--tooltip-available-height, calc(100vh - 10px)),
+    calc(100vh - 10px)
+  );
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  color: var(--popover-foreground);
+  background: var(--popover);
+  box-shadow: none;
+  font-size: var(--font-size-tooltip);
+  line-height: var(--line-height-tooltip);
+  overflow-wrap: break-word;
+  white-space: normal;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* The bundled tooltip runtime owns [data-tooltip]. AppBlock's CSS-only
+   pseudo-tooltip can widen dense grids even while hidden. */
+main [data-tooltip]::after {
+  content: none;
+}
+
+.viz-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(max(180px, 24%), 1fr));
+  gap: 10px;
+}
+
+.viz-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.viz-stat-value {
+  font-size: var(--font-size-h2);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.25;
+}
+
+.viz-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.viz-badge {
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+  color: var(--accent-foreground);
+  background: var(--accent);
+  font-weight: var(--font-weight-medium);
+}
+
+small,
+.text-small,
+.viz-badge {
+  font-size: var(--font-size-small);
+  line-height: var(--line-height-small);
+}
+
+.text-muted {
+  color: var(--muted-foreground);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.viz-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.viz-controls > .form-label {
+  display: grid;
+  min-width: min(100%, 260px);
+  flex: 1 1 280px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 2px 12px;
+  margin-bottom: 0;
+}
+
+.viz-controls > .form-label > :is(.form-control, .form-range, .form-select) {
+  grid-column: 1 / -1;
+}
+
+.btn,
+.form-check-input,
+.form-control,
+.form-range,
+.form-select {
+  font: inherit;
+}
+
+.btn {
+  appearance: button;
+  display: inline-flex;
+  inline-size: fit-content;
+  max-inline-size: 100%;
+  min-height: 28px;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  margin: 0;
+  padding: 0 8px;
+  -webkit-app-region: no-drag;
+  border: 1px solid var(--input);
+  border-radius: var(--radius-lg);
+  color: var(--secondary-foreground);
+  background: var(--secondary);
+  cursor: var(--cursor-interaction, pointer);
+  text-align: center;
+  text-decoration: none;
+  white-space: nowrap;
+  user-select: none;
+  -webkit-font-smoothing: antialiased;
+}
+
+.btn:is(.btn-block, .viz-tile) {
+  inline-size: 100%;
+}
+
+.btn.viz-tile {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+a.btn {
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.btn:not(:disabled):hover {
+  background: color-mix(in srgb, var(--foreground) 6%, var(--secondary));
+}
+
+.btn-primary {
+  border-color: transparent;
+  color: var(--interactive-label-primary-default, var(--primary-foreground));
+  background: var(--interactive-bg-primary-default, var(--foreground));
+  background-clip: padding-box;
+}
+
+.btn-primary .text-muted {
+  color: color-mix(
+    in srgb,
+    var(--interactive-label-primary-default, var(--primary-foreground)) 50%,
+    transparent
+  );
+}
+
+.btn-primary:not(:disabled):hover {
+  background: color-mix(in srgb, var(--foreground) 80%, transparent);
+  background-clip: padding-box;
+}
+
+.btn-ghost {
+  border-color: transparent;
+  color: var(--muted-foreground);
+  background: transparent;
+}
+
+.btn-ghost:not(:disabled):hover {
+  color: var(--foreground);
+  background: color-mix(in srgb, var(--foreground) 6%, var(--secondary));
+}
+
+.btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+[data-lucide] {
+  stroke-width: 1.6;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--foreground);
+}
+
+.form-control {
+  display: block;
+  width: 100%;
+  min-height: 28px;
+  padding: 0 8px;
+  outline: none;
+  border: 1px solid var(--input);
+  border-radius: var(--radius-lg);
+  color: var(--foreground);
+  background: var(--secondary);
+}
+
+.form-control::placeholder {
+  color: var(--muted-foreground);
+}
+
+.form-control[type="file"] {
+  padding: 0;
+  overflow: hidden;
+  cursor: var(--cursor-interaction, pointer);
+}
+
+.form-control[type="file"]::file-selector-button {
+  min-height: 26px;
+  margin-right: 8px;
+  padding: 0 8px;
+  border: 0;
+  border-right: 1px solid var(--input);
+  color: var(--secondary-foreground);
+  background: var(--secondary);
+  cursor: inherit;
+  font: inherit;
+}
+
+.form-control[type="file"]:not(:disabled):hover::file-selector-button {
+  background: color-mix(in srgb, var(--foreground) 6%, var(--secondary));
+}
+
+.form-control-color[type="color"] {
+  width: 40px;
+  height: 28px;
+  padding: 3px;
+  cursor: var(--cursor-interaction, pointer);
+}
+
+.form-control-color[type="color"]::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.form-control-color[type="color"]::-webkit-color-swatch {
+  border: 0;
+  border-radius: calc(var(--radius-lg) - 4px);
+}
+
+textarea.form-control {
+  height: auto;
+  min-height: 72px;
+  padding: 8px 10px;
+  resize: vertical;
+}
+
+.form-control:focus-visible {
+  border-color: var(--ring);
+  box-shadow: inset 0 0 0 1px var(--ring);
+}
+
+.form-control:disabled,
+.form-select:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+.form-select {
+  appearance: none;
+  display: block;
+  width: 100%;
+  min-height: 28px;
+  margin: 0;
+  padding: 0 32px 0 8px;
+  outline: none;
+  border: 1px solid var(--input);
+  border-radius: var(--radius-lg);
+  color: var(--foreground);
+  background-color: var(--secondary);
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--muted-foreground) 50%),
+    linear-gradient(135deg, var(--muted-foreground) 50%, transparent 50%);
+  background-position:
+    calc(100% - 14px) 50%,
+    calc(100% - 10px) 50%;
+  background-repeat: no-repeat;
+  background-size: 4px 4px;
+  cursor: var(--cursor-interaction, default);
+}
+
+.form-select:not(:disabled):hover {
+  background-color: color-mix(in srgb, var(--foreground) 6%, var(--secondary));
+}
+
+.form-select:focus-visible {
+  border-color: var(--ring);
+  box-shadow: inset 0 0 0 1px var(--ring);
+}
+
+.form-check {
+  display: flex;
+  min-height: 20px;
+  align-items: center;
+  gap: 6px;
+}
+
+.form-check-input {
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  flex: 0 0 auto;
+  margin: 0;
+  border: 1px solid var(--input);
+  color: var(--primary-foreground);
+  background-color: transparent;
+  cursor: var(--cursor-interaction, default);
+  transition:
+    background-color 150ms,
+    border-color 150ms,
+    box-shadow 150ms;
+}
+
+.form-check:not(.form-switch) .form-check-input[type="checkbox"] {
+  border-color: var(--input);
+  border-radius: var(--radius-sm);
+  background-color: var(--secondary);
+  box-shadow: var(--shadow-sm);
+}
+
+.form-check:not(.form-switch)
+  .form-check-input:not(:disabled):not(:checked):hover {
+  background-color: var(--card);
+}
+
+.form-check:not(.form-switch) .form-check-input[type="checkbox"]:checked {
+  border-color: var(--primary);
+  background-color: var(--primary);
+}
+
+.form-check:not(.form-switch)
+  .form-check-input[type="checkbox"]:checked::before {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: var(--primary-foreground);
+  content: "";
+  mask: var(--checkmark-image) center / 12px 12px no-repeat;
+}
+
+.form-check-input[type="radio"] {
+  width: 14px;
+  height: 14px;
+  border-radius: var(--radius-full);
+}
+
+.form-check-input[type="radio"]:checked {
+  border: 2px solid var(--primary);
+  background:
+    radial-gradient(circle, var(--primary-foreground) 0 2.5px, transparent 3px),
+    var(--primary);
+}
+
+.form-check:not(.form-switch) .form-check-input:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.form-check:not(.form-switch) .form-check-input:disabled {
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.form-check:not(.form-switch) .form-check-input:disabled + .form-check-label {
+  cursor: not-allowed;
+}
+
+.form-switch .form-check-input:disabled,
+.form-switch .form-check-input:disabled + .form-check-label {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.form-check-label {
+  color: var(--foreground);
+  cursor: var(--cursor-interaction, default);
+}
+
+.form-switch .form-check-input {
+  position: relative;
+  width: 32px;
+  height: 20px;
+  border: 0;
+  border-radius: var(--radius-full);
+  background: var(--muted);
+  box-shadow: none;
+  transition: background-color 200ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+.form-switch .form-check-input::before {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 16px;
+  height: 16px;
+  box-sizing: border-box;
+  border: 1px solid light-dark(var(--primary-foreground), var(--foreground));
+  border-radius: var(--radius-full);
+  background: light-dark(var(--primary-foreground), var(--foreground));
+  box-shadow: var(--shadow-sm);
+  content: "";
+  transform: translate(2px, -50%);
+  transition: transform 200ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+.form-switch .form-check-input:checked {
+  background: var(--primary);
+}
+
+.form-switch .form-check-input:checked::before {
+  transform: translate(14px, -50%);
+}
+
+.form-switch .form-check-input:focus-visible {
+  box-shadow: 0 0 0 2px var(--ring);
+}
+
+.form-range {
+  appearance: none;
+  display: block;
+  width: 100%;
+  height: 28px;
+  flex: 1;
+  margin: 0;
+  padding: 0;
+  outline: none;
+  border: 0;
+  accent-color: var(--primary);
+  background: linear-gradient(
+      color-mix(in srgb, var(--foreground) 7%, transparent),
+      color-mix(in srgb, var(--foreground) 7%, transparent)
+    )
+    center / 100% 2px no-repeat;
+}
+
+.form-range::-webkit-slider-runnable-track {
+  height: 28px;
+  background: transparent;
+}
+
+.form-range::-webkit-slider-thumb {
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  margin-top: 4px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: light-dark(var(--primary-foreground), var(--foreground));
+}
+
+.form-range:focus-visible::-webkit-slider-thumb {
+  border-color: var(--ring);
+  box-shadow: inset 0 0 0 1px var(--ring);
+}
+
+.form-range::-moz-range-track {
+  height: 28px;
+  background: transparent;
+}
+
+.form-range::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: light-dark(var(--primary-foreground), var(--foreground));
+}
+
+.form-range:focus-visible::-moz-range-thumb {
+  border-color: var(--ring);
+  box-shadow: inset 0 0 0 1px var(--ring);
+}
+
+.form-range:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+.btn:not(.btn-primary, .viz-tile):is(
+    [aria-pressed="true"],
+    [aria-selected="true"],
+    .is-selected
+  ) {
+  border-color: var(--primary);
+  color: var(--primary-foreground);
+  background: var(--primary);
+}
+
+.btn.viz-tile:is([aria-pressed="true"], [aria-selected="true"], .is-selected) {
+  border-color: var(--primary);
+  box-shadow: inset 0 0 0 1px var(--primary);
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+#widget > svg {
+  width: 100%;
+}
+
+.text-warning,
+.text-destructive {
+  color: var(--destructive);
+}
+</style>
+<style>html,body{width:100%;height:100%;overflow:hidden}html>body,:root:not([data-app-block-surface])>body{padding:0!important;background:#020208!important}</style>
+</head>
+<body>
+<div id="ic2d-lab" aria-label="Integrated Cyclical Interaction 2D laboratory">
+  <aside class="ic2d-panel">
+    <button class="ic2d-panel-toggle" type="button" aria-label="Minimize control panel">X</button>
+    <div class="ic2d-panel-inner">
+      <header class="ic2d-heading">
+        <div class="ic2d-eyebrow">Meronic Model · IC 2D Laboratory</div>
+        <h2>Cyclical Interaction</h2>
+        <p class="ic2d-subtitle">Interaction Circles between two or three Alpha structures.</p>
+      </header>
+
+      <section class="ic2d-section" aria-labelledby="ic2d-mode-label">
+        <div class="ic2d-section-title" id="ic2d-mode-label">Interaction mode</div>
+        <div class="ic2d-mode-grid" role="group" aria-label="Interaction mode">
+          <button type="button" class="ic2d-mode active" data-mode="compalphas">A–B<br><span>Compalphas</span></button>
+          <button type="button" class="ic2d-mode" data-mode="magnets">A–B<br><span>Magnets</span></button>
+          <button type="button" class="ic2d-mode" data-mode="triad">A–B–C<br><span>Alpha Triad</span></button>
+        </div>
+      </section>
+
+      <section class="ic2d-section">
+        <div class="ic2d-control-head"><label for="ic2d-amplitude" id="ic2d-amp-label">Oscillatory amplitude</label><output id="ic2d-amp-value">20°</output></div>
+        <input id="ic2d-amplitude" type="range" min="0" max="70" value="20" step="1">
+
+        <div class="ic2d-control-head"><label for="ic2d-frequency">Oscillatory frequency</label><output id="ic2d-freq-value">0.60 Hz</output></div>
+        <input id="ic2d-frequency" type="range" min="0.1" max="2.5" value="0.6" step="0.05">
+
+        <div class="ic2d-actions">
+          <button type="button" id="ic2d-play">Pause</button>
+          <button type="button" id="ic2d-reset">Reset</button>
+        </div>
+      </section>
+
+      <section class="ic2d-section ic2d-state" aria-live="polite">
+        <div class="ic2d-section-title">Current state</div>
+        <div class="ic2d-state-value" id="ic2d-state-value">Coupled oscillation</div>
+        <p id="ic2d-state-copy">Alpha Axes A and B oscillate by equal angles in opposite directions while conserving the center of the Common Interaction Circle.</p>
+      </section>
+
+      <section class="ic2d-legend" aria-label="Diagram legend">
+        <span><i class="cic"></i>Common Interaction Circle</span>
+        <span><i class="plane"></i>Alpha Planes</span>
+        <span><i class="axis"></i>Alpha Axes</span>
+        <span><i class="point"></i>Alpha Points</span>
+      </section>
+    </div>
+  </aside>
+
+  <section class="ic2d-stage" aria-label="Animated Cyclical Interaction diagram">
+    <canvas id="ic2d-canvas" width="1040" height="1040" role="img" aria-label="Cyclical Interaction between Compalphas A and B"></canvas>
+    <div class="ic2d-mode-caption" id="ic2d-mode-caption">Compalphas A–B · Common Interaction Circle</div>
+  </section>
+</div>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fragment+Mono&family=Instrument+Sans:wght@400;500;600;700&display=swap');
+#ic2d-lab{
+  --ic-ink:#020208;--ic-panel:rgba(12,16,25,.74);--ic-panel2:#151c29;--ic-stroke:#243044;
+  --ic-text:#dde6f6;--ic-soft:#a6b2ca;--ic-muted:#71829f;--ic-accent:#7aa8ff;
+  --ic-blue:#3a9bff;--ic-green:#00df82;--ic-red:#ff5050;--ic-yellow:#ffe06b;
+  position:relative;display:grid;grid-template-columns:376px minmax(0,1fr);gap:20px;
+  width:100%;height:min(1040px,calc(100vh - 16px));min-height:700px;padding:20px;
+  overflow:hidden;background:var(--ic-ink);color:var(--ic-text);font-family:"Instrument Sans",system-ui,sans-serif;
+}
+#ic2d-lab *{box-sizing:border-box}
+#ic2d-lab .ic2d-panel{position:relative;height:100%;overflow-y:auto;padding:22px 20px 26px;border:1px solid rgba(255,255,255,.075);border-radius:22px;background:var(--ic-panel);box-shadow:0 24px 80px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.045);backdrop-filter:blur(18px) saturate(1.25);transition:width .2s,padding .2s}
+#ic2d-lab .ic2d-panel::-webkit-scrollbar{width:8px}
+#ic2d-lab .ic2d-panel::-webkit-scrollbar-thumb{background:var(--ic-stroke);border-radius:8px}
+#ic2d-lab .ic2d-panel-toggle{position:absolute;right:10px;top:10px;z-index:3;padding:5px 10px;border:1px solid rgba(255,255,255,.2);border-radius:8px;background:rgba(255,255,255,.1);color:#fff;font:600 12px "Fragment Mono",monospace;cursor:pointer}
+#ic2d-lab.panel-collapsed{grid-template-columns:60px minmax(0,1fr)}
+#ic2d-lab.panel-collapsed .ic2d-panel{width:60px;height:60px;padding:0;overflow:hidden;display:grid;place-items:center}
+#ic2d-lab.panel-collapsed .ic2d-panel-inner{display:none}
+#ic2d-lab.panel-collapsed .ic2d-panel-toggle{position:static}
+#ic2d-lab .ic2d-heading{padding-right:24px}
+#ic2d-lab .ic2d-eyebrow,#ic2d-lab .ic2d-section-title{color:#7d8caa;font:700 10px "Fragment Mono",monospace;letter-spacing:.13em;text-transform:uppercase}
+#ic2d-lab h2{margin:6px 0 4px;color:#f0f4ff;font-size:20px;line-height:1.15}
+#ic2d-lab .ic2d-subtitle{margin:0;color:#8d9bb7;font-size:14px;line-height:1.45}
+#ic2d-lab .ic2d-section{margin-top:20px;padding-top:18px;border-top:1px solid rgba(122,168,255,.15)}
+#ic2d-lab .ic2d-mode-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:11px}
+#ic2d-lab button{border:1px solid #2a374e;background:#141d2d;color:#b9c7e2;border-radius:10px;padding:8px 10px;cursor:pointer;font:600 11px "Fragment Mono",monospace;transition:.15s}
+#ic2d-lab button:hover{background:#1b273d;color:#fff;border-color:#3b5788}
+#ic2d-lab button.active{background:#1a2842;border-color:#3a5d9e;color:#dbe8ff}
+#ic2d-lab .ic2d-mode span{font-size:9px;color:#71829f;font-weight:400}
+#ic2d-lab .ic2d-control-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:13px 0 2px;color:#c3cee1;font-size:12px}
+#ic2d-lab output{color:#a8c0ff;font:600 12px "Fragment Mono",monospace}
+#ic2d-lab input[type=range]{-webkit-appearance:none;width:100%;height:28px;background:transparent}
+#ic2d-lab input[type=range]::-webkit-slider-runnable-track{height:4px;background:#253247;border-radius:99px}
+#ic2d-lab input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;margin-top:-6px;border-radius:50%;background:#e9f0ff;box-shadow:0 0 0 4px rgba(124,167,255,.14);cursor:pointer}
+#ic2d-lab .ic2d-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+#ic2d-lab .ic2d-state{padding:14px;border:1px solid #26334a;border-radius:14px;background:rgba(15,22,36,.86)}
+#ic2d-lab .ic2d-state-value{margin-top:8px;color:#dbe8ff;font:600 13px "Fragment Mono",monospace}
+#ic2d-lab .ic2d-state p{margin:7px 0 0;color:#9baacc;font-size:12px;line-height:1.5}
+#ic2d-lab .ic2d-legend{display:grid;gap:8px;margin-top:18px;color:#8796b2;font:10px "Fragment Mono",monospace}
+#ic2d-lab .ic2d-legend span{display:flex;align-items:center;gap:8px}
+#ic2d-lab .ic2d-legend i{display:inline-block;width:18px;height:2px;background:currentColor;box-shadow:0 0 7px currentColor}
+#ic2d-lab .ic2d-legend .cic{color:var(--ic-blue)}#ic2d-lab .ic2d-legend .plane{color:var(--ic-green)}#ic2d-lab .ic2d-legend .axis{color:var(--ic-red)}
+#ic2d-lab .ic2d-legend .point{width:8px;height:8px;margin-left:5px;margin-right:5px;border-radius:50%;color:#fff}
+#ic2d-lab .ic2d-stage{position:relative;min-width:0;height:100%;display:grid;place-items:center;overflow:hidden;border:1px solid rgba(255,255,255,.06);border-radius:22px;background:radial-gradient(circle at center,#0d1722 0%,#020208 76%);box-shadow:inset 0 0 80px #000}
+#ic2d-lab canvas{display:block;width:min(100%,1040px);height:min(100%,1040px);object-fit:contain;aspect-ratio:1;background:transparent}
+#ic2d-lab .ic2d-mode-caption{position:absolute;left:16px;bottom:14px;padding:7px 10px;border:1px solid #26334a;border-radius:10px;background:rgba(12,16,25,.8);color:#8fa0bd;font:10px "Fragment Mono",monospace;backdrop-filter:blur(10px)}
+@media(max-width:900px){#ic2d-lab{grid-template-columns:1fr;height:auto;min-height:0;overflow:visible}#ic2d-lab .ic2d-panel{height:auto;max-height:520px}#ic2d-lab .ic2d-stage{aspect-ratio:1;height:auto}#ic2d-lab.panel-collapsed{grid-template-columns:1fr}#ic2d-lab.panel-collapsed .ic2d-panel{position:absolute;z-index:5}}
+</style>
+
+<script>
+(() => {
+  const root=document.getElementById('ic2d-lab');
+  const canvas=document.getElementById('ic2d-canvas');
+  const ctx=canvas.getContext('2d');
+  const amp=document.getElementById('ic2d-amplitude');
+  const freq=document.getElementById('ic2d-frequency');
+  const ampValue=document.getElementById('ic2d-amp-value');
+  const ampLabel=document.getElementById('ic2d-amp-label');
+  const freqValue=document.getElementById('ic2d-freq-value');
+  const playButton=document.getElementById('ic2d-play');
+  const resetButton=document.getElementById('ic2d-reset');
+  const stateValue=document.getElementById('ic2d-state-value');
+  const stateCopy=document.getElementById('ic2d-state-copy');
+  const caption=document.getElementById('ic2d-mode-caption');
+  const panelToggle=root.querySelector('.ic2d-panel-toggle');
+  const modes=[...root.querySelectorAll('.ic2d-mode')];
+  let mode='compalphas',playing=true,tabActive=true,time=0,last=performance.now();
+  const settings={compalphas:{amp:20,freq:.6},magnets:{amp:20,freq:.6},triad:{amp:45,freq:.6}};
+  const modeMeta={
+    compalphas:{title:'Compalphas A–B · Common Interaction Circle',aria:'Cyclical Interaction between Compalphas A and B'},
+    magnets:{title:'Magnets A–B · Toroidal magnetic fields',aria:'Cyclical Interaction between magnets A and B'},
+    triad:{title:'Alpha Triad A–B–C · 120° geometric fission',aria:'Cyclical Interaction and geometric fission of Alpha Triad A B C'}
+  };
+
+  function line(x1,y1,x2,y2,color,width=2,dash=[]){ctx.save();ctx.strokeStyle=color;ctx.lineWidth=width;ctx.setLineDash(dash);ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();ctx.restore()}
+  function infiniteLine(x,y,angle,color,width=2){const L=1500;line(x-Math.cos(angle)*L,y-Math.sin(angle)*L,x+Math.cos(angle)*L,y+Math.sin(angle)*L,color,width)}
+  function point(x,y,label,color='#fff',side=1){ctx.save();ctx.fillStyle='#020208';ctx.strokeStyle=color;ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(x,y,6,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle=color;ctx.font='600 17px Fragment Mono, monospace';ctx.textAlign=side<0?'right':'left';ctx.fillText(label,x+side*14,y-12);ctx.restore()}
+  function arrowAxis(x,y,angle,length,label){const dx=Math.cos(angle)*length/2,dy=Math.sin(angle)*length/2;line(x-dx,y-dy,x+dx,y+dy,'#ff5050',3);const tx=x+dx,ty=y+dy,s=14;ctx.save();ctx.fillStyle='#ff5050';ctx.beginPath();ctx.moveTo(tx,ty);ctx.lineTo(tx-s*Math.cos(angle-.48),ty-s*Math.sin(angle-.48));ctx.lineTo(tx-s*Math.cos(angle+.48),ty-s*Math.sin(angle+.48));ctx.closePath();ctx.fill();ctx.font='600 13px Fragment Mono, monospace';ctx.fillText(label,tx+8,ty+4);ctx.restore()}
+  function circle(x,y,r,color='#3a9bff',width=3){if(!Number.isFinite(r)||r>5000)return;ctx.save();ctx.strokeStyle=color;ctx.lineWidth=width;ctx.shadowColor=color;ctx.shadowBlur=16;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.stroke();ctx.restore()}
+  function grid(){ctx.save();ctx.strokeStyle='rgba(255,255,255,.045)';ctx.lineWidth=1;for(let p=0;p<=1040;p+=80){line(p,0,p,1040,'rgba(255,255,255,.045)',1);line(0,p,1040,p,'rgba(255,255,255,.045)',1)}ctx.restore()}
+  function info(lines,warning=false){ctx.save();ctx.fillStyle='rgba(5,8,14,.82)';ctx.fillRect(16,16,700,92);ctx.strokeStyle='rgba(122,168,255,.18)';ctx.strokeRect(16,16,700,92);ctx.font='600 16px Fragment Mono, monospace';lines.forEach((text,i)=>{ctx.fillStyle=i===0?(warning?'#ffe06b':'#7aa8ff'):i===1?'#dde6f6':'#8d9bb7';ctx.fillText(text,28,43+i*25)});ctx.restore()}
+  function drawMagnet(x,y,angle){const length=126,width=30;ctx.save();ctx.translate(x,y);ctx.rotate(angle);ctx.fillStyle='#ef4343';ctx.fillRect(0,-width/2,length/2,width);ctx.fillStyle='#2387df';ctx.fillRect(-length/2,-width/2,length/2,width);ctx.strokeStyle='#e9f0ff';ctx.lineWidth=3;ctx.strokeRect(-length/2,-width/2,length,width);line(0,-width/2,0,width/2,'#e9f0ff',2);ctx.fillStyle='#fff';ctx.font='700 14px Fragment Mono, monospace';ctx.textAlign='center';ctx.fillText('N',length/4,5);ctx.fillText('S',-length/4,5);ctx.restore()}
+
+  function drawPair(isMagnet){
+    const cx=520,cy=545,D0=430,theta=(+amp.value)*Math.PI/180*Math.sin(time),tan=Math.tan(theta);
+    const Ax=cx-D0/2,Bx=cx+D0/2,Py=cy-D0/2*tan,r=Math.hypot(D0/2,Py-cy);
+    line(0,cy,1040,cy,'#2a6a8a',2.5,[12,10]);circle(cx,Py,r);
+    infiniteLine(Ax,cy,-theta,'#00df82',2.5);infiniteLine(Bx,cy,theta,'#00df82',2.5);
+    const angleA=Math.atan2(-1,-tan),angleB=Math.atan2(1,-tan);
+    if(isMagnet){drawMagnet(Ax,cy,angleA);drawMagnet(Bx,cy,angleB)}else{arrowAxis(Ax,cy,angleA,390,'αA');arrowAxis(Bx,cy,angleB,390,'αB');point(Ax,cy,'Compalpha A','#fff',-1);point(Bx,cy,'Compalpha B')}
+    ctx.save();ctx.fillStyle='#ffe06b';ctx.beginPath();ctx.arc(cx,Py,5,0,Math.PI*2);ctx.fill();ctx.restore();
+    const deg=theta*180/Math.PI;
+    info([`AMPLITUDE  A ${(-deg).toFixed(1)}°  ·  B ${deg.toFixed(1)}°`,`CIC DIAMETER  ${(r*2).toFixed(0)} px  =  D₀ / cos θ`,isMagnet?'Fixed polarity · red North · blue South':'Equal oscillation · opposite directions · conserved CIC center']);
+    stateValue.textContent=isMagnet?'Constant magnetic polarity':'Coupled oscillation';
+    stateCopy.textContent=isMagnet?'The two magnetic axes oscillate without reversing their North–South polarity. Their toroidal field geometry follows the same Cyclical Interaction rule.':'Alpha Axes A and B oscillate by equal angles in opposite directions while conserving the center of the Common Interaction Circle.';
+  }
+
+  function drawTriad(){
+    const baseX=355,cy=520,D0=400,excursion=+amp.value;
+    const displacement=playing?excursion*Math.sin(time):excursion;
+    const thetaDeg=30+displacement,theta=thetaDeg*Math.PI/180;
+    const safeCos=Math.abs(Math.cos(theta))<.018?Math.sign(Math.cos(theta)||1)*.018:Math.cos(theta);
+    const centerX=baseX+D0/2*Math.tan(theta),r=Math.abs(D0/2/safeCos),Cx=centerX+r;
+    const Ay=cy-D0/2,By=cy+D0/2;
+    circle(centerX,cy,r);
+    line(baseX,Ay,baseX,By,'rgba(255,255,255,.5)',1.5,[8,8]);
+    if(Cx<1800&&Cx>-600){line(baseX,Ay,Cx,cy,'rgba(255,255,255,.55)',1.4,[8,8]);line(baseX,By,Cx,cy,'rgba(255,255,255,.55)',1.4,[8,8])}
+    const vertices=[[baseX,Ay,'A'],[baseX,By,'B']];if(Cx<1800&&Cx>-600)vertices.push([Cx,cy,'C']);
+    vertices.forEach(([x,y,label])=>{const radial=Math.atan2(y-cy,x-centerX);infiniteLine(x,y,radial,'#00df82',1.8);arrowAxis(x,y,radial+Math.PI/2,220,`α${label}`);point(x,y,label,label==='C'?'#ffe06b':'#fff')});
+    ctx.save();ctx.fillStyle='#7aa8ff';ctx.beginPath();ctx.arc(centerX,cy,5,0,Math.PI*2);ctx.fill();ctx.restore();
+    const fission=excursion>=59.5&&(!playing||displacement>59);
+    if(Cx>=1030||!Number.isFinite(Cx)){ctx.save();ctx.fillStyle='#ffe06b';ctx.font='700 18px Fragment Mono, monospace';ctx.textAlign='right';ctx.fillText('C  →  ∞',1005,cy-18);ctx.beginPath();ctx.moveTo(1000,cy);ctx.lineTo(978,cy-12);ctx.lineTo(978,cy+12);ctx.closePath();ctx.fill();ctx.restore()}
+    info([`AXIS DISPLACEMENT  αA ${displacement.toFixed(1)}°  ·  αB ${(-displacement).toFixed(1)}°`,`RANGE  −${excursion.toFixed(1)}° ↔ +${excursion.toFixed(1)}°  ·  PEAK-TO-PEAK ${(2*excursion).toFixed(1)}°`,`θ TOTAL  ${thetaDeg.toFixed(1)}°  ·  C ${Cx>1800?'→ ∞':`x = ${Cx.toFixed(0)} px`}`],fission);
+    stateValue.textContent=fission?'120° peak-to-peak · meronic fission':excursion<.5?'0° oscillation · structural equilibrium':displacement<0?'Negative excursion · compression':'Positive excursion · expansion';
+    stateCopy.textContent=fission?'At the positive +60° extreme, θ reaches 90°, the Common Interaction Circle tends to infinite radius and Compalpha C is projected to the right.':excursion<.5?'Each axis has zero displacement from its own equilibrium direction, while the three structural directions remain separated by 120°.':displacement<0?'The axes are in the negative half-cycle. In this chosen projection the Triad contracts; the singular fission limit lies at the opposite, positive extreme.':'The axes are in the positive half-cycle. Compalpha C moves horizontally to the right as the Common Interaction Circle expands.';
+    if(fission){ctx.save();ctx.fillStyle='rgba(2,2,8,.78)';ctx.fillRect(320,470,650,100);ctx.strokeStyle='rgba(255,224,107,.45)';ctx.strokeRect(320,470,650,100);ctx.fillStyle='#ffe06b';ctx.font='700 32px Fragment Mono, monospace';ctx.textAlign='center';ctx.fillText('FISSION  ·  C → ∞',645,530);ctx.restore()}
+  }
+
+  function draw(){ctx.clearRect(0,0,1040,1040);grid();if(mode==='triad')drawTriad();else drawPair(mode==='magnets')}
+  function animate(now){const dt=Math.min((now-last)/1000,.05);last=now;if(tabActive){if(playing)time+=dt*(+freq.value)*Math.PI*.9;draw()}requestAnimationFrame(animate)}
+  function sync(){const value=+amp.value;ampValue.textContent=mode==='triad'?`±${value.toFixed(1)}° · ${(2*value).toFixed(1)}° p-p`:`${value.toFixed(0)}°`;freqValue.textContent=`${(+freq.value).toFixed(2)} Hz`;settings[mode]={amp:value,freq:+freq.value}}
+  function selectMode(next){settings[mode]={amp:+amp.value,freq:+freq.value};mode=next;modes.forEach(button=>button.classList.toggle('active',button.dataset.mode===mode));amp.max=mode==='triad'?60:70;amp.step=mode==='triad'?.5:1;ampLabel.textContent=mode==='triad'?'Maximum individual excursion':'Oscillatory amplitude';amp.value=settings[mode].amp;freq.value=settings[mode].freq;caption.textContent=modeMeta[mode].title;canvas.setAttribute('aria-label',modeMeta[mode].aria);time=mode==='triad'?Math.PI/2:0;sync();draw()}
+  modes.forEach(button=>button.addEventListener('click',()=>selectMode(button.dataset.mode)));
+  amp.addEventListener('input',sync);freq.addEventListener('input',sync);
+  playButton.addEventListener('click',()=>{playing=!playing;playButton.textContent=playing?'Pause':'Play';if(!playing&&mode==='triad')time=Math.PI/2});
+  resetButton.addEventListener('click',()=>{settings[mode]=mode==='triad'?{amp:45,freq:.6}:{amp:20,freq:.6};amp.value=settings[mode].amp;freq.value=settings[mode].freq;time=mode==='triad'?Math.PI/2:0;playing=true;playButton.textContent='Pause';sync()});
+  panelToggle.addEventListener('click',()=>{root.classList.toggle('panel-collapsed');const collapsed=root.classList.contains('panel-collapsed');panelToggle.textContent=collapsed?'UI':'X';panelToggle.setAttribute('aria-label',collapsed?'Expand control panel':'Minimize control panel')});
+  addEventListener('message',event=>{if(event.data?.type==='TUIDG_TAB_ACTIVE')tabActive=!!event.data.active});
+  sync();requestAnimationFrame(animate);
+})();
+</script>
+
+<script id="codex-visualization-floating-ui-core" src="https://unpkg.com/@floating-ui/core@1.7.3/dist/floating-ui.core.umd.min.js"></script>
+<script id="codex-visualization-floating-ui-dom" src="https://unpkg.com/@floating-ui/dom@1.7.4/dist/floating-ui.dom.umd.min.js"></script>
+<script id="codex-visualization-lucide" async src="https://unpkg.com/lucide@1.17.0/dist/umd/lucide.js"></script>
+<script id="codex-visualization-tooltip">/* oxlint-disable typescript/no-unsafe-argument, typescript/no-unsafe-call, typescript/no-unsafe-return */
+// Runs inside the visualization sandbox, not the host webview.
+(() => {
+  if (window.FloatingUIDOM == null) {
+    return;
+  }
+  const { autoUpdate, computePosition, flip, offset, shift, size } =
+    window.FloatingUIDOM;
+  const tooltipPlacements = new Set(["top", "right", "bottom", "left"]);
+  const tooltipId = `codex-visualization-tooltip-${
+    window.crypto?.randomUUID?.() ?? Date.now().toString(36)
+  }`;
+  const tooltipGap = 5;
+  const hoverDelay = 700;
+  const skipDelay = 300;
+  let activeTrigger = null;
+  let pendingTrigger = null;
+  let tooltip = null;
+  let openTimeout = null;
+  let autoUpdateCleanup = null;
+  let positionRequest = 0;
+  let skipDelayUntil = 0;
+
+  const getTrigger = (target) =>
+    target?.nodeType === Node.ELEMENT_NODE
+      ? target.closest("[data-tooltip]")
+      : null;
+  const containsTarget = (trigger, target) =>
+    target?.nodeType != null && trigger.contains(target);
+  const getContent = (trigger) =>
+    trigger.getAttribute("data-tooltip")?.trim() ?? "";
+  const getPlacement = (trigger) => {
+    const placement = trigger.getAttribute("data-tooltip-placement");
+    return tooltipPlacements.has(placement) ? placement : "top";
+  };
+  const getTooltip = () => {
+    if (tooltip == null) {
+      tooltip = document.createElement("div");
+      tooltip.id = tooltipId;
+      tooltip.className = "tooltip";
+      tooltip.setAttribute("role", "tooltip");
+    }
+    return tooltip;
+  };
+  const setDescribedBy = (trigger, described) => {
+    const ids = new Set(
+      (trigger.getAttribute("aria-describedby") ?? "")
+        .split(/\s+/)
+        .filter(Boolean),
+    );
+    if (described) {
+      ids.add(tooltipId);
+    } else {
+      ids.delete(tooltipId);
+    }
+    if (ids.size === 0) {
+      trigger.removeAttribute("aria-describedby");
+    } else {
+      trigger.setAttribute("aria-describedby", [...ids].join(" "));
+    }
+  };
+  const clearOpenTimeout = () => {
+    if (openTimeout != null) {
+      window.clearTimeout(openTimeout);
+      openTimeout = null;
+    }
+    pendingTrigger = null;
+  };
+  const closeTooltip = (activateSkipDelay = true) => {
+    clearOpenTimeout();
+    positionRequest += 1;
+    autoUpdateCleanup?.();
+    autoUpdateCleanup = null;
+    if (activeTrigger == null) {
+      return;
+    }
+    setDescribedBy(activeTrigger, false);
+    activeTrigger = null;
+    tooltip?.remove();
+    if (activateSkipDelay) {
+      skipDelayUntil = Date.now() + skipDelay;
+    }
+  };
+  const updatePosition = (trigger, floating) => {
+    const request = ++positionRequest;
+    void computePosition(trigger, floating, {
+      middleware: [
+        offset(tooltipGap),
+        flip({ padding: tooltipGap }),
+        shift({ padding: tooltipGap }),
+        size({
+          padding: tooltipGap,
+          apply({ availableHeight, availableWidth, elements }) {
+            elements.floating.style.setProperty(
+              "--tooltip-available-width",
+              `${Math.max(0, availableWidth)}px`,
+            );
+            elements.floating.style.setProperty(
+              "--tooltip-available-height",
+              `${Math.max(0, availableHeight)}px`,
+            );
+          },
+        }),
+      ],
+      placement: getPlacement(trigger),
+      strategy: "fixed",
+    })
+      .then(({ x, y }) => {
+        if (activeTrigger !== trigger || request !== positionRequest) {
+          return;
+        }
+        const scale = window.devicePixelRatio || 1;
+        floating.style.transform = `translate(${Math.round(x * scale) / scale}px, ${Math.round(y * scale) / scale}px)`;
+        floating.style.visibility = "visible";
+      })
+      .catch(() => {
+        if (activeTrigger === trigger && request === positionRequest) {
+          closeTooltip(false);
+        }
+      });
+  };
+  const openTooltip = (trigger) => {
+    const content = getContent(trigger);
+    if (!trigger.isConnected || content.length === 0) {
+      return;
+    }
+    clearOpenTimeout();
+    if (activeTrigger === trigger) {
+      return;
+    }
+    closeTooltip();
+    const floating = getTooltip();
+    floating.textContent = content;
+    floating.style.visibility = "hidden";
+    floating.style.transform = "translate(0, 0)";
+    document.body.appendChild(floating);
+    activeTrigger = trigger;
+    setDescribedBy(trigger, true);
+    autoUpdateCleanup = autoUpdate(trigger, floating, () => {
+      updatePosition(trigger, floating);
+    });
+  };
+  const requestOpen = (trigger, immediate = false) => {
+    if (
+      getContent(trigger).length === 0 ||
+      activeTrigger === trigger ||
+      pendingTrigger === trigger
+    ) {
+      return;
+    }
+    clearOpenTimeout();
+    pendingTrigger = trigger;
+    const delay =
+      immediate || activeTrigger != null || Date.now() < skipDelayUntil
+        ? 0
+        : hoverDelay;
+    if (delay === 0) {
+      openTooltip(trigger);
+      return;
+    }
+    openTimeout = window.setTimeout(() => {
+      openTimeout = null;
+      pendingTrigger = null;
+      openTooltip(trigger);
+    }, delay);
+  };
+  const handlePointerOpen = (event) => {
+    if (event.pointerType === "touch") {
+      return;
+    }
+    const trigger = getTrigger(event.target);
+    if (trigger == null || containsTarget(trigger, event.relatedTarget)) {
+      return;
+    }
+    requestOpen(trigger);
+  };
+  const handleLeave = (event) => {
+    const trigger = getTrigger(event.target);
+    if (trigger == null || containsTarget(trigger, event.relatedTarget)) {
+      return;
+    }
+    if (activeTrigger === trigger || pendingTrigger === trigger) {
+      closeTooltip();
+    }
+  };
+  const handleFocusIn = (event) => {
+    const trigger = getTrigger(event.target);
+    if (trigger?.matches(":focus-visible")) {
+      requestOpen(trigger, true);
+    }
+  };
+  const handleKeyDown = (event) => {
+    if (event.key === "Escape") {
+      closeTooltip();
+    }
+  };
+  const handleContextMenu = (event) => {
+    const trigger = getTrigger(event.target);
+    if (activeTrigger === trigger || pendingTrigger === trigger) {
+      closeTooltip();
+    }
+  };
+  const destroy = () => {
+    closeTooltip(false);
+    document.removeEventListener("pointerover", handlePointerOpen);
+    document.removeEventListener("pointerout", handleLeave);
+    document.removeEventListener("focusin", handleFocusIn);
+    document.removeEventListener("focusout", handleLeave);
+    document.removeEventListener("keydown", handleKeyDown);
+    document.removeEventListener("contextmenu", handleContextMenu);
+    tooltip = null;
+  };
+
+  document.addEventListener("pointerover", handlePointerOpen);
+  document.addEventListener("pointerout", handleLeave);
+  document.addEventListener("focusin", handleFocusIn);
+  document.addEventListener("focusout", handleLeave);
+  document.addEventListener("keydown", handleKeyDown);
+  document.addEventListener("contextmenu", handleContextMenu);
+  window.addEventListener("pagehide", destroy, { once: true });
+})();
+</script>
+<script id="codex-visualization-lucide-initialization">(() => {
+  const initialize = () => {
+    globalThis.lucide?.createIcons({ attrs: { width: 16, height: 16 } });
+  };
+  if (globalThis.lucide != null) {
+    initialize();
+    return;
+  }
+  document
+    .getElementById("codex-visualization-lucide")
+    ?.addEventListener("load", initialize, { once: true });
+})();
+</script>
+</body>
+</html>
