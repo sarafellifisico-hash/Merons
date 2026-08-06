@@ -1509,7 +1509,7 @@ function applyRIState() {
 
   const button = document.getElementById('runRIBtn');
   if (button) {
-    button.textContent = riRunning ? 'Stop Rotating Interaction' : 'Run Rotating Interaction';
+    button.textContent = riRunning ? 'Stop RI' : 'Run RI';
     button.classList.toggle('running', riRunning);
     button.setAttribute('aria-pressed', String(riRunning));
   }
