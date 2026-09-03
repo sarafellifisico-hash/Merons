@@ -948,7 +948,7 @@ svg {
     triad:{title:'Alpha Triad A–B–C · 120° geometric fission',aria:'Cyclical Interaction and geometric fission of Alpha Triad A B C'}
   };
   const interactionCircleRadii=[28,44,62,83,108,138,172,211,255];
-  const interactionCircleOpacity=.13; // 0 = invisible; 1 = fully opaque
+  const interactionCircleOpacity=.25; // 0 = invisible; 1 = fully opaque
 
   function line(x1,y1,x2,y2,color,width=2,dash=[]){ctx.save();ctx.strokeStyle=color;ctx.lineWidth=width;ctx.setLineDash(dash);ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();ctx.restore()}
   function infiniteLine(x,y,angle,color,width=2){const L=1500;line(x-Math.cos(angle)*L,y-Math.sin(angle)*L,x+Math.cos(angle)*L,y+Math.sin(angle)*L,color,width)}
