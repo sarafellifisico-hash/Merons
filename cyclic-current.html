@@ -96,7 +96,7 @@
     const host=document.querySelector('#scene'),scene=new THREE.Scene();scene.background=new THREE.Color(0x030609);scene.fog=new THREE.FogExp2(0x030609,.018);
     const camera=new THREE.PerspectiveCamera(40,innerWidth/innerHeight,.1,100);camera.position.set(-10,16,22);
     const renderer=new THREE.WebGLRenderer({antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(innerWidth,innerHeight);renderer.outputColorSpace=THREE.SRGBColorSpace;host.append(renderer.domElement);
-    const controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.target.set(2,0,0);controls.minDistance=8;controls.maxDistance=48;
+    const controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.target.set(0,4,0);controls.minDistance=8;controls.maxDistance=48;
     scene.add(new THREE.HemisphereLight(0xb8ddff,0x080b0f,1.8));const key=new THREE.DirectionalLight(0xffffff,3.4);key.position.set(5,10,8);scene.add(key);const fill=new THREE.PointLight(0x327dff,18,22);fill.position.set(-7,-3,-5);scene.add(fill);
     const copper=new THREE.MeshStandardMaterial({color:0xd96d20,metalness:.82,roughness:.2,emissive:0x4b1502,emissiveIntensity:.38});
     function openTube(points,r=.075,segments=180){const curve=new THREE.CatmullRomCurve3(points,false,'centripetal');const mesh=new THREE.Mesh(new THREE.TubeGeometry(curve,segments,r,12,false),copper);mesh.castShadow=true;return mesh}
@@ -305,7 +305,7 @@
     toggle.onclick=()=>{running=!running;toggle.textContent=running?'Pause':'Start'};document.querySelector('#labels').onchange=e=>labels.forEach(v=>v.visible=e.target.checked);
     const fieldButton=document.querySelector('#field');fieldButton.onclick=()=>{fieldLines.visible=!fieldLines.visible;fieldButton.classList.toggle('active',fieldLines.visible);fieldButton.textContent=fieldLines.visible?'Hide flux':'Show flux'};
     const microButton=document.querySelector('#micro');microButton.onclick=()=>{microView=!microView;microButton.classList.toggle('active',microView);microButton.textContent=microView?'Overview':'Microscopic view';if(microView){controls.target.set(.45,0,1.55);camera.position.set(2.35,1.35,3.35)}else{controls.target.set(2,0,0);camera.position.set(-13.37,10.44,21.17)}};
-    document.querySelector('#reset').onclick=()=>{microView=false;microButton.classList.remove('active');microButton.textContent='Microscopic view';camera.position.set(-13.37,10.44,21.17);controls.target.set(2,0,0)};
+    document.querySelector('#reset').onclick=()=>{microView=false;microButton.classList.remove('active');microButton.textContent='Microscopic view';camera.position.set(-18.4,16.5,25.3);controls.target.set(2,0,0)};
     function shortestTurn(from,to){return Math.atan2(Math.sin(to-from),Math.cos(to-from))}
     function inductionEnvelope(phase,totalDegrees){
       // Peaks at 90° and 270°. acos(abs(sin)) gives the nearest angular separation.
