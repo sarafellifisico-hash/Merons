@@ -1530,21 +1530,21 @@
 
         <div class="panel-body">
           <section class="control-group" aria-labelledby="distance-heading">
-            <div class="group-heading" id="distance-heading"><span>αP separation</span><output id="panel-distance">96 Dm</output></div>
+            <div class="group-heading" id="distance-heading"><span>αP separation</span><output id="panel-distance">96 Md</output></div>
             <div class="preset-grid">
               <button class="preset-button" type="button" data-distance="1">
-                <span>Meronic Distance</span><small>Med · 1 Dm</small>
+                <span>Meronic Distance</span><small>Med · 1 Md</small>
               </button>
               <button class="preset-button" type="button" data-distance="24">
-                <span>Molecular Distance</span><small>Mod · 24 Dm</small>
+                <span>Molecular Distance</span><small>Mod · 24 Md</small>
               </button>
               <button class="preset-button active" type="button" data-distance="96">
-                <span>Exomolecular Distance</span><small>Exd · 96 Dm</small>
+                <span>Exomolecular Distance</span><small>Exd · 96 Md</small>
               </button>
             </div>
             <div class="range-wrap" style="margin-top: 10px;">
               <input id="distance-range" type="range" min="0" max="1" step="0.001" value="1" aria-label="Continuous Alpha Point separation from 1 to 96 Meronic Distance units">
-              <span class="range-value">1–96 Dm</span>
+              <span class="range-value">1–96 Md</span>
             </div>
           </section>
 
@@ -1604,12 +1604,12 @@
           <div class="force-law" aria-label="Coulomb-type relative RI law">
             <span class="force-law-label">Coulomb-type RI mapping</span>
             <div class="force-equation">Coulomb: |F| = k|q<sub>A</sub>q<sub>B</sub>| / d<sup>2</sup></div>
-            <div class="force-equation secondary">RI magnitude: |F<sub>RI</sub>| / F<sub>0</sub> = (1 Dm / d)<sup>2</sup></div>
+            <div class="force-equation secondary">RI magnitude: |F<sub>RI</sub>| / F<sub>0</sub> = (1 Md / d)<sup>2</sup></div>
             <div class="force-result">
               <span id="force-sign">Direction: attraction · inward</span>
               <output id="force-panel-value">1.085 × 10⁻⁴ F₀</output>
             </div>
-            <p class="force-law-note">F₀ is the RI reference magnitude at the didactic separation of 1 Dm. At 24 and 96 Dm, this inverse-square mapping yields F₀/576 and F₀/9216. It is a normalized visualization—not a value in newtons or an experimental calibration.</p>
+            <p class="force-law-note">F₀ is the RI reference magnitude at the didactic separation of 1 Dm. At 24 and 96 Md, this inverse-square mapping yields F₀/576 and F₀/9216. It is a normalized visualization—not a value in newtons or an experimental calibration.</p>
           </div>
         </div>
       </aside>
@@ -1648,7 +1648,7 @@
             </div>
           </div>
           <p>These designations identify different scales of one and the same geometric interaction—<strong>RI</strong>—rather than distinct mechanisms or different kinds of material entity.</p>
-          <p class="scale-note" role="note"><strong>Didactic-scale note.</strong> The separations used in this presentation—Med = 1 Dm, Mod = 24 Dm and Exd = 96 Dm—and their displayed relative force magnitudes are normalized visualization parameters. They are not experimentally calibrated lengths or measured force strengths. In conventional physics, the strong, quantum-electromagnetic and gravitational regimes have different ranges, coupling behavior and mathematical descriptions; molecular binding is not classified as a separate fundamental force, and gravity is not included in the Standard Model. The animation therefore communicates TUIDG’s proposed geometric hierarchy qualitatively. Its real distance ratios and interaction intensities may differ and require quantitative definition and experimental comparison.</p>
+          <p class="scale-note" role="note"><strong>Didactic-scale note.</strong> The separations used in this presentation—Med = 1 Md, Mod = 24 Md and Exd = 96 Md—and their displayed relative force magnitudes are normalized visualization parameters. They are not experimentally calibrated lengths or measured force strengths. In conventional physics, the strong, quantum-electromagnetic and gravitational regimes have different ranges, coupling behavior and mathematical descriptions; molecular binding is not classified as a separate fundamental force, and gravity is not included in the Standard Model. The animation therefore communicates TUIDG’s proposed geometric hierarchy qualitatively. Its real distance ratios and interaction intensities may differ and require quantitative definition and experimental comparison.</p>
         </div>
       </aside>
 
@@ -1666,7 +1666,7 @@
 
       <section class="distance-hud" aria-label="Current Compalpha separation">
         <div class="distance-topline">
-          <div class="distance-readout"><strong id="distance-value">96</strong><span>Dm between Alpha Points</span></div>
+          <div class="distance-readout"><strong id="distance-value">96</strong><span>Md between Alpha Points</span></div>
           <div class="force-readout attraction" id="force-readout"><span>|F<sub>RI</sub>| / F₀</span><strong id="force-hud-value">1.085 × 10⁻⁴</strong></div>
           <div class="ci-layer-readout" id="ci-layer-readout"><i id="ci-layer-swatch" aria-hidden="true"></i><span>Active CI</span><strong id="ci-layer-name">CEx red · CiEx orange</strong></div>
           <div class="motion-status" id="motion-status">Exomolecular Distance · automatic hold 2.0 s</div>
@@ -1678,9 +1678,9 @@
           <input class="distance-hud-range" id="distance-hud-range" type="range" min="1" max="96" step="0.1" value="96" aria-label="Change the distance between the two Compalphas">
         </div>
         <div class="track-labels" aria-hidden="true">
-          <span style="left: 0%;">Meronic · 1 Dm</span>
-          <span style="left: 24.2105%;">Molecular · 24 Dm</span>
-          <span style="left: 100%;">Exomolecular · 96 Dm</span>
+          <span style="left: 0%;">Meronic · 1 Md</span>
+          <span style="left: 24.2105%;">Molecular · 24 Md</span>
+          <span style="left: 100%;">Exomolecular · 96 Md</span>
         </div>
       </section>
 
@@ -2130,7 +2130,7 @@
       if (Math.abs(value - 96) < 1) return "Exd";
       if (Math.abs(value - 24) < 0.5) return "Mod";
       if (Math.abs(value - 1) < 0.12) return "Med";
-      return formatDistance(value) + " Dm";
+      return formatDistance(value) + " Md";
     }
 
     function synchronizeDistanceSequence(value) {
@@ -2992,7 +2992,7 @@
     function updateInterface() {
       var formatted = formatDistance(state.distance);
       document.getElementById("distance-value").textContent = formatted;
-      document.getElementById("panel-distance").textContent = formatted + " Dm";
+      document.getElementById("panel-distance").textContent = formatted + " Md";
       var normalized = (state.distance - DISTANCE_MIN) / (DISTANCE_MAX - DISTANCE_MIN);
       document.getElementById("distance-range").value = normalized;
       document.getElementById("distance-hud-range").value = state.distance;
@@ -3028,11 +3028,11 @@
           ? distanceName(state.distance) + " · automatic hold " + state.distanceHoldRemaining.toFixed(1) + " s"
           : distanceName(state.distance) + " · " + state.mode + " mode · stabilized";
       } else if (state.cameraPhase === 'framing-out') {
-        movement = "◍ Framing the Camera to " + formatDistance(state.pendingDistance).replace('.',',') + " Dm → then Cα diverging · " + state.mode;
+        movement = "◍ Framing the Camera to " + formatDistance(state.pendingDistance).replace('.',',') + " Md → then Cα diverging · " + state.mode;
       } else if (delta > 0) {
-        movement = "↗ DIVERGING Cα A ⟷ Cα B · " + formatDistance(state.distance).replace('.',',') + " → " + formatDistance(effectiveTarget).replace('.',',') + " Dm · " + state.mode;
+        movement = "↗ DIVERGING Cα A ⟷ Cα B · " + formatDistance(state.distance).replace('.',',') + " → " + formatDistance(effectiveTarget).replace('.',',') + " Md · " + state.mode;
       } else {
-        movement = "↙ CONVERGING Cα A ⟷ Cα B · " + formatDistance(state.distance).replace('.',',') + " → " + formatDistance(effectiveTarget).replace('.',',') + " Dm · " + state.mode;
+        movement = "↙ CONVERGING Cα A ⟷ Cα B · " + formatDistance(state.distance).replace('.',',') + " → " + formatDistance(effectiveTarget).replace('.',',') + " Md · " + state.mode;
       }
       document.getElementById("motion-status").textContent = movement;
 
