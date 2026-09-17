@@ -1,0 +1,350 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <script>
+  (() => {
+    const nativeRAF = window.requestAnimationFrame.bind(window);
+    let paused = false;
+    window.requestAnimationFrame = callback => {
+      const runner = time => paused ? nativeRAF(runner) : callback(time);
+      return nativeRAF(runner);
+    };
+    addEventListener('message', event => {
+      if (event.data?.type === 'TUIDG_TAB_ACTIVE') paused = !event.data.active;
+    });
+  })();
+  </script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Permanent Magnet Electric Generator</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Fragment+Mono&family=Instrument+Sans:wght@400;500;600;700&display=swap');
+    :root{color-scheme:dark;--ink:#dde6f6;--muted:#71829f;--panel:rgba(5,12,19,.91);--line:rgba(135,205,229,.2);--cyan:#35d9ff;--copper:#d8752f}
+    *{box-sizing:border-box}html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#020208;color:var(--ink);font:14px/1.45 "Instrument Sans",system-ui,sans-serif}
+    #scene{position:fixed;inset:0}canvas{display:block}
+    .top{position:static;margin:0 28px 18px 0;pointer-events:none}.eyebrow{color:#7d8caa;font:700 10px "Fragment Mono",monospace;letter-spacing:.14em;text-transform:uppercase}.top h1{margin:5px 0 4px;font-size:20px;line-height:1.15;letter-spacing:-.02em;color:#f0f4ff}.top p{margin:0;color:#8d9bb7;font-size:14px;max-width:320px}
+    .panel{position:fixed;z-index:3;left:12px;top:12px;bottom:12px;width:312px;max-width:calc(100vw - 24px);padding:14px 14px 20px;overflow-y:auto;border:1px solid rgba(132,204,229,.22);border-radius:16px;background:var(--panel);box-shadow:0 20px 70px rgba(0,0,0,.48);backdrop-filter:blur(13px);transition:width .2s,height .2s,padding .2s,bottom .2s}
+    .panel::-webkit-scrollbar{width:8px}.panel::-webkit-scrollbar-thumb{background:#243044;border-radius:8px}.panel-inner{min-width:0}
+    .panel h2{font-size:12px;letter-spacing:.12em;text-transform:uppercase;margin:0 0 14px;color:#bcd0dd}.row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:12px 0}.row label{color:#bfd0da}.value{font-variant-numeric:tabular-nums;color:var(--cyan)}
+    input[type=range]{-webkit-appearance:none;width:100%;height:28px;background:transparent}input[type=range]::-webkit-slider-runnable-track{height:4px;background:#253247;border-radius:99px}input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;margin-top:-6px;border-radius:50%;background:#e9f0ff;box-shadow:0 0 0 4px rgba(124,167,255,.14);cursor:pointer}select{border:1px solid #2a374e;background:#141d2d;color:#b9c7e2;border-radius:10px;padding:7px 9px;font:12px "Fragment Mono",monospace}button{border:1px solid #2a374e;background:#141d2d;color:#b9c7e2;border-radius:10px;padding:8px 12px;cursor:pointer;font:600 12px "Fragment Mono",monospace}button:hover{background:#1b273d;color:#fff;border-color:#3b5788}button.active{border-color:#3a5d9e;background:#1a2842;color:#dbe8ff}.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}.legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:14px;color:var(--muted);font-size:12px}.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px}.n{background:#ef4343}.s{background:#2387df}
+    #panelToggle{position:absolute;top:10px;right:10px;z-index:5;width:30px;min-width:30px;height:30px;min-height:30px;display:grid;place-items:center;background:rgba(255,255,255,.07);border:1px solid rgba(132,204,229,.24);color:#edf7fb;padding:0;border-radius:9px;font:700 16px/1 "Fragment Mono",monospace}.panel.minimized{width:52px!important;height:52px!important;bottom:auto!important;padding:0!important;overflow:hidden;display:flex;align-items:center;justify-content:center}.panel.minimized .panel-inner{display:none}.panel.minimized #panelToggle{position:static}
+    .note{position:fixed;left:24px;bottom:20px;color:#78909f;font-size:12px;z-index:2;pointer-events:none}.badge{position:fixed;bottom:20px;right:20px;z-index:2;padding:7px 10px;border:1px solid #294451;border-radius:999px;background:#08151dcc;color:#9fb4c1;font-size:11px}
+    @media(max-width:720px){.panel{left:8px;top:auto;bottom:8px;width:calc(100vw - 16px);max-width:none;max-height:calc(100vh - 16px)}.panel.minimized{left:8px;bottom:8px}.note,.badge{display:none}}
+
+    .explanation{position:fixed;inset:12px 12px 12px 336px;margin:0;width:auto;max-width:none;height:fit-content;max-height:calc(100dvh - 24px);padding:0;overflow:hidden;border:1px solid rgba(132,204,229,.28);border-radius:16px;background:rgba(3,9,14,.97);color:#d9e7ed;box-shadow:0 24px 90px rgba(0,0,0,.7);font-family:"Instrument Sans",system-ui,sans-serif}
+    .explanation[open]{display:flex;flex-direction:column}.explanation::backdrop{background:rgba(0,0,0,.35)}
+    .explanation-head{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;padding:18px 20px;border-bottom:1px solid var(--line);flex-shrink:0}
+    .explanation-head h2{margin:0;font-size:20px;line-height:1.3;color:#edf7fb}.explanation-head p{margin:6px 0 0;color:#8d9bb7;font-size:14px}.explanation-head button{flex-shrink:0}
+    .explanation-body{overflow-y:auto;min-height:0;padding:18px 22px 26px;scrollbar-width:thin;scrollbar-color:#24414f transparent}
+    .explanation-body article{max-width:880px;margin:auto;font-size:16px;line-height:1.72}.explanation-body p{margin:0 0 1em}.explanation-body p:last-child{margin-bottom:0}
+    @media(max-width:820px){.explanation{inset:8px;max-height:calc(100dvh - 16px)}.explanation-head{padding:15px;gap:10px}.explanation-head h2{font-size:20px}.explanation-body{padding:16px}.explanation-body article{font-size:16px}}
+  </style>
+</head>
+<body>
+  <div id="scene"></div>
+  <aside class="panel">
+    <button id="panelToggle" title="Minimize control panel" aria-label="Minimize control panel" aria-expanded="true">−</button>
+    <div class="panel-inner">
+    <header class="top"><div class="eyebrow">Meronic Model · Cyclic Current</div><h1>Permanent Magnet Electric Generator</h1><p>Two nested transparent cups: outer magnetic rotor and inner fixed stator.</p></header>
+    <button id="explainOpen" type="button" aria-haspopup="dialog" aria-controls="explanation" style="width:100%;margin:0 0 18px">Read the presentation text</button>
+    <h2>Generator Controls</h2>
+    <div class="row"><label for="speed">Rotor speed</label><span class="value" id="rpm">36 rpm</span></div>
+    <input id="speed" type="range" min="0" max="120" value="36" step="1" aria-label="Rotor speed">
+    <div class="row"><label for="mode">Cyclic Current</label><select id="mode"><option value="ac">Alternating (AC)</option><option value="dc+">Direct (+)</option><option value="dc-">Direct (−)</option></select></div>
+    <div class="row"><label for="amplitude">Maximum amplitude</label><span class="value" id="ampValue">45°</span></div>
+    <input id="amplitude" type="range" min="0" max="90" value="45" step="1" aria-label="Maximum Alpha Axis amplitude">
+    <div class="row"><label for="inductionWindow">Induction window</label><span class="value" id="windowValue">16° (±8°)</span></div>
+    <input id="inductionWindow" type="range" min="12" max="20" value="16" step="1" aria-label="Total angular induction window">
+    <div class="actions"><button id="toggle">Start</button><button id="reset">Reset view</button></div>
+    <div class="actions"><button id="field">Show flux</button><button id="micro">Microscopic view</button></div>
+    <div class="row"><label for="meterAuto">Voltmeter follows camera</label><input id="meterAuto" type="checkbox" checked></div>
+    <div class="row"><label for="meterAngle">Voltmeter orientation</label><span class="value" id="meterAngleValue">−35°</span></div>
+    <input id="meterAngle" type="range" min="-180" max="180" value="-35" step="1" aria-label="Voltmeter orientation">
+    <div class="row"><label for="housing">Transparent supports</label><input id="housing" type="checkbox" checked></div>
+    <div class="row"><label for="labels">Identify poles</label><input id="labels" type="checkbox" checked></div>
+    <div class="legend"><span><i class="dot n"></i>North</span><span><i class="dot s"></i>South</span><span><i class="dot" style="background:#d8752f"></i>Copper</span><span><i class="dot" style="background:#ff4545"></i>Flux</span></div>
+    </div>
+  </aside>
+  <div class="note">Drag to rotate the camera · scroll to zoom</div><div class="badge">LED + voltmeter · illustrative voltage scale</div>
+  <dialog class="explanation" id="explanation" aria-labelledby="explanationTitle">
+    <div class="explanation-head">
+      <div><h2 id="explanationTitle">Electricity Generation and the Mechanism of Cyclic Interaction</h2><p>Explanatory text for the interactive presentation</p></div>
+      <button id="explainClose" type="button" autofocus>Close</button>
+    </div>
+    <div class="explanation-body"><article>
+      <p><strong>How can a rotating magnet generate electricity in a copper loop?</strong></p>
+      <p>In conventional physics, which recognizes the existence of particles, this phenomenon is described by electromagnetic induction: a change in the magnetic flux through the loop produces a voltage that drives electrons through a closed circuit, establishing a current of these particles. The mechanical energy used to turn the rotor is thus converted into electrical energy.</p>
+      <p>TUIDG proposes a geometric interpretation of this process. In this description, conductors and magnets are not made up of particles such as protons and electrons, but of toroidal fields called Compalphas, interconnected through their Interaction Circles. Here, magnetism corresponds to the collective orientation of the Alpha Axes of these Compalphas, and electric current corresponds to the transmission of the oscillations of these Alpha Axes through this geometric network.</p>
+      <p>Thus, when the magnets pass close to the loop, their interaction causes the Alpha Axes of the Compalphas represented in the copper to twist. As the magnets move away, these axes return to their initial orientations. The repetition of this movement represents the excitation of Cyclic Interaction, whose transmission through the circuit is interpreted, in TUIDG, as Cyclic Current.</p>
+      <p>In this simulation, the induction window makes visible the angular interval during which the Compalphas twist and return. The LED flashes and the voltmeter pulses follow this movement. The window is a demonstration parameter, and the voltage values are illustrative.</p>
+      <p>This presentation makes it possible to visualize the mechanism proposed by TUIDG and compare it with the conventional description of electromagnetic induction. The animation expresses this geometric proposal, whose physical validation still requires quantitative relationships and comparison with experiments.</p>
+    </article></div>
+  </dialog>
+  <script>
+    // The reading panel works independently of the 3D module and its remote imports.
+    (()=>{
+      const presentation=document.querySelector('#explanation'),open=document.querySelector('#explainOpen'),close=document.querySelector('#explainClose');
+      open.addEventListener('click',()=>{if(!presentation.open){presentation.showModal();presentation.querySelector('.explanation-body').scrollTop=0}});
+      close.addEventListener('click',()=>presentation.close());
+      presentation.addEventListener('close',()=>open.focus());
+    })();
+  </script>
+  <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"}}</script>
+  <script type="module">
+    import * as THREE from 'three';
+    import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+    const host=document.querySelector('#scene'),scene=new THREE.Scene();scene.background=new THREE.Color(0x030609);scene.fog=new THREE.FogExp2(0x030609,.018);
+    // INITIAL OVERVIEW — edit only these two arrays to change all overview/reset views.
+    // Approximate framing of the approved reference image: front view from the output side.
+    const INITIAL_VIEW={position:[11.75,7,21.1],target:[1.65,-2.1,0]};
+    const camera=new THREE.PerspectiveCamera(40,innerWidth/innerHeight,.1,100);
+    camera.position.fromArray(INITIAL_VIEW.position);
+    const renderer=new THREE.WebGLRenderer({antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(innerWidth,innerHeight);renderer.outputColorSpace=THREE.SRGBColorSpace;host.append(renderer.domElement);
+    const controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.target.fromArray(INITIAL_VIEW.target);controls.minDistance=8;controls.maxDistance=48;
+    function restoreOverview(){
+      // Flush pending orbit motion before applying the shared initial pose.
+      const damping=controls.enableDamping;controls.enableDamping=false;controls.update();
+      camera.position.fromArray(INITIAL_VIEW.position);controls.target.fromArray(INITIAL_VIEW.target);
+      camera.up.set(0,1,0);controls.update();controls.enableDamping=damping;
+    }
+    restoreOverview();
+    scene.add(new THREE.HemisphereLight(0xb8ddff,0x080b0f,1.8));const key=new THREE.DirectionalLight(0xffffff,3.4);key.position.set(5,10,8);scene.add(key);const fill=new THREE.PointLight(0x327dff,18,22);fill.position.set(-7,-3,-5);scene.add(fill);
+    const copper=new THREE.MeshStandardMaterial({color:0xd96d20,metalness:.82,roughness:.2,emissive:0x4b1502,emissiveIntensity:.38});
+    function openTube(points,r=.075,segments=180){const curve=new THREE.CatmullRomCurve3(points,false,'centripetal');const mesh=new THREE.Mesh(new THREE.TubeGeometry(curve,segments,r,12,false),copper);mesh.castShadow=true;return mesh}
+    function closedTube(points,r=.105){const curve=new THREE.CatmullRomCurve3(points,true,'catmullrom',.04);const mesh=new THREE.Mesh(new THREE.TubeGeometry(curve,260,r,14,true),copper);mesh.castShadow=true;return mesh}
+    // Espira única aberta à direita: as duas extremidades tornam-se os terminais da lâmpada.
+    const loop=openTube([
+      new THREE.Vector3(5.7,0,1.55),new THREE.Vector3(5.35,0,1.55),new THREE.Vector3(-5.35,0,1.55),
+      new THREE.Vector3(-5.62,0,1.48),new THREE.Vector3(-5.75,0,1.2),new THREE.Vector3(-5.75,0,-1.2),
+      new THREE.Vector3(-5.62,0,-1.48),new THREE.Vector3(-5.35,0,-1.55),new THREE.Vector3(5.35,0,-1.55),new THREE.Vector3(5.7,0,-1.55)
+    ],.105,280);scene.add(loop);
+    // Duas filas de 12 Compalphas, coplanares ao plano XZ da espira.
+    const compalphas=[];
+    const whiteLine=new THREE.LineBasicMaterial({color:0xf4f7ff,transparent:true,opacity:.9});
+    const blueLine=new THREE.LineBasicMaterial({color:0x247cff,transparent:true,opacity:.48,blending:THREE.AdditiveBlending,depthWrite:false});
+    const axisMat=new THREE.LineBasicMaterial({color:0xff4747,transparent:true,opacity:.98});
+    // Shared indexed geometry: exactly the same 24 meridians and 48 segments each.
+    // One draw per layer instead of one per meridian; all 24 Ca reuse these buffers.
+    const meridianGeometryCache=new Map();
+    function meridianLayer(radius,material,count=24){
+      const key=radius+':'+count;
+      let geometry=meridianGeometryCache.get(key);
+      if(!geometry){
+        const positions=[],indices=[];
+        for(let m=0;m<count;m++){
+          const u=m/count*Math.PI*2,base=m*49;
+          for(let j=0;j<=48;j++){
+            const v=j/48*Math.PI*2,rr=radius*(1+Math.cos(v));
+            positions.push(rr*Math.cos(u),rr*Math.sin(u),radius*Math.sin(v));
+            if(j<48)indices.push(base+j,base+j+1);
+          }
+        }
+        geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));geometry.setIndex(indices);
+        meridianGeometryCache.set(key,geometry);
+      }
+      return new THREE.LineSegments(geometry,material);
+    }
+    const alphaAxisGeometry=new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,-.82),new THREE.Vector3(0,0,.82)]);
+    function createCompalpha(x,z,index,row){const group=new THREE.Group();group.position.set(x,0,z);group.add(meridianLayer(.13,whiteLine,24),meridianLayer(.65,blueLine,24));
+      const axis=new THREE.Line(alphaAxisGeometry,axisMat);group.add(axis);
+      const alpha=((index*137.508+row*43.7+17)%360)*Math.PI/180;group.rotation.y=alpha;scene.add(group);compalphas.push({group,initial:alpha,current:alpha,row});
+    }
+    for(const row of [-1,1])for(let i=0;i<12;i++)createCompalpha(-4.95+i*(9.9/11),row*1.55,i,row);
+    // Duas barras longas e opostas, fixas à parede interna do copo do rotor.
+    const magnets=new THREE.Group();scene.add(magnets);const labels=[];
+    const redMat=new THREE.MeshStandardMaterial({color:0xe5353f,metalness:.48,roughness:.24,emissive:0x390307,emissiveIntensity:.35});
+    const blueMat=new THREE.MeshStandardMaterial({color:0x1676d2,metalness:.5,roughness:.24,emissive:0x021a38,emissiveIntensity:.4});
+    function sprite(text,color){const c=document.createElement('canvas');c.width=128;c.height=128;const q=c.getContext('2d');q.fillStyle=color;q.font='bold 76px Arial';q.textAlign='center';q.textBaseline='middle';q.fillText(text,64,68);const s=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),transparent:true,depthTest:false}));s.scale.set(.72,.72,.72);labels.push(s);return s}
+    function addMagnet(side){const y=side*2.75,th=.44;const north=new THREE.Mesh(new THREE.BoxGeometry(10.7,th,.82),redMat);const south=new THREE.Mesh(new THREE.BoxGeometry(10.7,th,.82),blueMat);
+      // Mesma orientação polar global nas duas barras: entre elas, N fica diante de S.
+      north.position.set(0,y+th/2,0);south.position.set(0,y-th/2,0);north.castShadow=south.castShadow=true;magnets.add(north,south);
+      const n=sprite('N','#ffe4e4'),s=sprite('S','#e1f2ff');n.position.set(0,y+.28,.43);s.position.set(0,y-.28,.43);magnets.add(n,s)}addMagnet(1);addMagnet(-1);
+    // Straight red flux arrows: soft edges, translucent core, and rotor-relative direction.
+    const fieldLines=new THREE.Group();fieldLines.name='Soft red flux arrows';fieldLines.visible=false;magnets.add(fieldLines);
+    const fluxCanvas=document.createElement('canvas');fluxCanvas.width=128;fluxCanvas.height=512;
+    const fq=fluxCanvas.getContext('2d');
+    function fluxSilhouette(){fq.beginPath();fq.moveTo(64,24);fq.lineTo(111,112);fq.lineTo(76,104);fq.lineTo(76,478);fq.lineTo(52,478);fq.lineTo(52,104);fq.lineTo(17,112);fq.closePath()}
+    // A blurred halo surrounding a softer, legible arrow. No opaque outline.
+    fq.save();fq.filter='blur(12px)';fq.fillStyle='rgba(255,45,45,0.48)';fluxSilhouette();fq.fill();fq.restore();
+    fq.save();fq.filter='blur(2px)';
+    const fluxGradient=fq.createLinearGradient(0,24,0,478);fluxGradient.addColorStop(0,'rgba(255,65,65,.94)');fluxGradient.addColorStop(.65,'rgba(255,45,45,.78)');fluxGradient.addColorStop(1,'rgba(255,45,45,.22)');
+    fq.fillStyle=fluxGradient;fluxSilhouette();fq.fill();fq.restore();
+    const fluxTexture=new THREE.CanvasTexture(fluxCanvas);fluxTexture.colorSpace=THREE.SRGBColorSpace;
+    // Opacity controls the overall transparency of the red arrows.
+    const fieldMat=new THREE.MeshBasicMaterial({map:fluxTexture,transparent:true,opacity:.66,depthWrite:false,side:THREE.DoubleSide});
+    const fluxGeometry=new THREE.PlaneGeometry(.56,4.5),fluxArrows=[];
+    for(let i=0;i<12;i++){
+      const arrow=new THREE.Mesh(fluxGeometry,fieldMat);arrow.position.x=-4.95+i*(9.9/11);fieldLines.add(arrow);fluxArrows.push(arrow);
+    }
+    const fluxCameraLocal=new THREE.Vector3();
+    function faceFluxArrows(){
+      if(!fieldLines.visible)return;
+      magnets.updateWorldMatrix(true,false);fluxCameraLocal.copy(camera.position);magnets.worldToLocal(fluxCameraLocal);
+      // Turn only around the arrow's longitudinal axis so its physical direction stays fixed.
+      for(const arrow of fluxArrows)arrow.rotation.y=Math.atan2(fluxCameraLocal.x-arrow.position.x,fluxCameraLocal.z);
+    }
+    // Two coaxial cups open in opposite directions, matching the sectional sketch.
+    // Rotor: closed at -X, open at +X. Stator: open at -X, closed at +X.
+    const mechanics=new THREE.Group();mechanics.name='Fixed inner stator cup';scene.add(mechanics);
+    const rotorCup=new THREE.Group();rotorCup.name='Rotating outer magnet cup';magnets.add(rotorCup);
+    // Independent opacities for the two transparent supports.
+    const ghost=new THREE.MeshStandardMaterial({color:0x79b9d3,metalness:.22,roughness:.3,transparent:true,opacity:.09,depthWrite:false,side:THREE.DoubleSide});
+    const statorGlass=ghost.clone();statorGlass.color.setHex(0xb5d9c9);statorGlass.opacity=.07;
+    const frameMat=new THREE.MeshStandardMaterial({color:0x83bbd0,metalness:.45,roughness:.3,transparent:true,opacity:.32,depthWrite:false});
+    const statorEdge=frameMat.clone();statorEdge.color.setHex(0xb5d9c9);
+    const contactMat=new THREE.MeshStandardMaterial({color:0xc1d3df,metalness:.9,roughness:.22});
+    const darkMat=new THREE.MeshStandardMaterial({color:0x13232e,metalness:.5,roughness:.36});
+    function box(w,h,d,x,y,z,mat,parent=mechanics){const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat);m.position.set(x,y,z);parent.add(m);return m}
+    function rod(a,b,r,mat,parent=mechanics){a=new THREE.Vector3(...a);b=new THREE.Vector3(...b);const m=new THREE.Mesh(new THREE.CylinderGeometry(r,r,a.distanceTo(b),24),mat);m.position.copy(a).add(b).multiplyScalar(.5);m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),b.sub(a).normalize());parent.add(m);return m}
+    function ring(x,r,t,mat,parent=mechanics){const m=new THREE.Mesh(new THREE.TorusGeometry(r,t,12,80),mat);m.rotation.y=Math.PI/2;m.position.x=x;parent.add(m);return m}
+    function cup(radius,left,right,closedX,material,edge,parent){
+      const wall=new THREE.Mesh(new THREE.CylinderGeometry(radius,radius,right-left,96,1,true),material);
+      wall.rotation.z=Math.PI/2;wall.position.x=(left+right)/2;parent.add(wall);
+      const bottom=new THREE.Mesh(new THREE.CylinderGeometry(radius,radius,.12,96),material);
+      bottom.rotation.z=Math.PI/2;bottom.position.x=closedX;parent.add(bottom);
+      ring(left,radius,.035,edge,parent);ring(right,radius,.035,edge,parent);
+    }
+    cup(3.28,-6.15,5.95,-6.15,ghost,frameMat,rotorCup);
+    cup(2.05,-5.95,6.3,6.3,statorGlass,statorEdge,mechanics);
+    // Drive shaft exists only at the left rear of the rotor, opposite the wires.
+    rod([-8.1,0,0],[-6.15,0,0],.24,frameMat,rotorCup);
+    rod([-6.4,0,0],[-6.08,0,0],.48,frameMat,rotorCup);
+    // Small mounting shoes attach the bars to the outer cup, without crossing the stator.
+    for(const side of [-1,1]){
+      box(10.7,.1,.68,0,side*3.23,0,frameMat,rotorCup);
+      // A subtle seam makes the transparent cylinder's rotation perceptible.
+      rod([-6.08,side*3.28,0],[5.9,side*3.28,0],.018,frameMat,rotorCup);
+    }
+    // Short saddles carry the fixed copper runs on the inside of the inner cup.
+    for(const x of [-4.8,0,4.8])for(const side of [-1,1]){
+      box(.22,.24,.44,x,0,side*1.83,statorEdge,mechanics);
+    }
+    document.querySelector('#housing').onchange=e=>{mechanics.visible=rotorCup.visible=e.target.checked};
+    // One fixed laboratory bench, using the IC bench's metal finish.
+    const bench=new THREE.Group();bench.name='Fixed bench and bearing supports';scene.add(bench);
+    const baseMaterial=new THREE.MeshStandardMaterial({color:0x343b46,metalness:.55,roughness:.36});
+    const supportMaterial=new THREE.MeshStandardMaterial({color:0x24566c,metalness:.6,roughness:.32});
+    box(23,.8,8.6,2.4,-4.33,0,baseMaterial,bench);
+    box(23.2,.16,8.8,2.4,-3.85,0,darkMat,bench);
+    for(const x of [-7.8,12.6])for(const z of [-3.4,3.4])box(1,.22,1,x,-4.84,z,darkMat,bench);
+    // The widened stator plate has two real apertures aligned with the copper ends.
+    function upright(x,isRotor){
+      const w=isRotor?.95:2.05;
+      const sh=new THREE.Shape();sh.moveTo(-w,-3.77);sh.lineTo(w,-3.77);sh.lineTo(w,.35);
+      sh.quadraticCurveTo(w,.7,w-.35,.7);sh.lineTo(-w+.35,.7);sh.quadraticCurveTo(-w,.7,-w,.35);sh.closePath();
+      for(const z of isRotor?[0]:[-1.55,1.55]){const hole=new THREE.Path();hole.absarc(z,0,isRotor?.27:.245,0,Math.PI*2,true);sh.holes.push(hole)}
+      const m=new THREE.Mesh(new THREE.ExtrudeGeometry(sh,{depth:.34,bevelEnabled:false,curveSegments:24}),supportMaterial);
+      m.rotation.y=Math.PI/2;m.position.x=x-.17;bench.add(m);
+      box(1.1,.15,2*w+.6,x,-3.695,0,supportMaterial,bench);
+      if(!isRotor)for(const z of [-.55,.55])rod([6.29,-1,z],[x-.17,-1,z],.16,contactMat,bench);
+    }
+    upright(-7.1,true);upright(6.65,false);
+    // Insulated output sockets and exposed metal pins.
+    for(const z of [-1.55,1.55]){
+      rod([5.7,0,z],[6.48,0,z],.105,copper,scene);
+      rod([6.38,0,z],[6.88,0,z],.23,darkMat,scene);
+      rod([6.88,0,z],[7.22,0,z],.10,contactMat,scene);
+    }
+    const redWire=new THREE.MeshStandardMaterial({color:0xf43e4e,roughness:.48});
+    const blueWire=new THREE.MeshStandardMaterial({color:0x258cff,roughness:.48});
+    // Straight orthogonal runs; only the immediate 90-degree elbow is rounded.
+    function wire(points,mat){
+      const pts=points.map(p=>new THREE.Vector3(...p)),path=new THREE.CurvePath();let start=pts[0];
+      for(let i=1;i<pts.length-1;i++){
+        const p=pts[i],before=pts[i-1],after=pts[i+1];
+        const r=Math.min(.14,p.distanceTo(before)*.25,p.distanceTo(after)*.25);
+        const entry=p.clone().add(before.clone().sub(p).normalize().multiplyScalar(r));
+        const leave=p.clone().add(after.clone().sub(p).normalize().multiplyScalar(r));
+        path.add(new THREE.LineCurve3(start,entry));path.add(new THREE.QuadraticBezierCurve3(entry,p,leave));start=leave;
+      }
+      path.add(new THREE.LineCurve3(start,pts[pts.length-1]));
+      const mesh=new THREE.Mesh(new THREE.TubeGeometry(path,180,.065,12,false),mat);scene.add(mesh);
+    }
+    // The two colors stay on separate parallel routes and share the LED's two output nodes.
+    // Wiring inside the fixed voltmeter pedestal reaches its rotating body through the pivot.
+    for(const sign of [-1,1]){
+      const mat=sign>0?redWire:blueWire,z=sign*1.55;
+      wire([[7.22,0,z],[7.8,0,z],[7.8,-3.2,z],[8.8,-3.2,z],[8.8,-3.2,sign*.38]],mat);
+      wire([[8.8,-3.2,sign*.38],[9.35,-3.2,sign*.38],[9.35,-3.45,sign*.38],[10.65,-3.45,sign*.38]],mat);
+      wire([[8.8,-3.2,sign*.38],[8.8,-2.88,sign*.38],[8.8,-2.88,sign*.18]],contactMat);
+      rod([10.65,-3.45,sign*.38],[11.1,-3.45,sign*.38],.08,contactMat,scene);
+    }
+    box(1.25,.18,1.15,8.8,-3.68,0,darkMat,bench);
+    rod([8.8,-3.59,0],[8.8,-3.05,0],.22,contactMat,bench);
+    box(.8,.16,.8,8.8,-3.05,0,darkMat,bench);
+    const glassMat=new THREE.MeshStandardMaterial({color:0x254b38,emissive:0x55ff9b,emissiveIntensity:0,transparent:true,opacity:.85,roughness:.22});
+    const bulb=new THREE.Mesh(new THREE.SphereGeometry(.32,32,24),glassMat);bulb.scale.set(1,1.35,1);bulb.position.set(8.8,-2.68,0);scene.add(bulb);
+    const glow=new THREE.PointLight(0x65ffad,0,4);glow.position.copy(bulb.position);scene.add(glow);
+    const haloCanvas=document.createElement('canvas');haloCanvas.width=haloCanvas.height=128;
+    const hc=haloCanvas.getContext('2d'),gradient=hc.createRadialGradient(64,64,0,64,64,64);gradient.addColorStop(0,'rgba(150,255,196,.9)');gradient.addColorStop(.25,'rgba(65,255,140,.4)');gradient.addColorStop(1,'rgba(65,255,140,0)');hc.fillStyle=gradient;hc.fillRect(0,0,128,128);
+    const halo=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(haloCanvas),transparent:true,opacity:0,depthWrite:false,blending:THREE.AdditiveBlending}));halo.position.copy(bulb.position);halo.scale.set(1.8,1.8,1);scene.add(halo);
+    // Fixed plinth and rotating upper turntable, both physically on the bench.
+    box(2.2,.18,2.1,11.1,-3.68,0,darkMat,bench);
+    rod([11.1,-3.59,0],[11.1,-3.38,0],.77,contactMat,bench);
+    const meterSwivel=new THREE.Group();meterSwivel.position.set(11.1,-3.38,0);scene.add(meterSwivel);
+    rod([0,0,0],[0,.16,0],.72,supportMaterial,meterSwivel);
+    rod([0,.16,0],[0,.62,0],.2,contactMat,meterSwivel);
+    box(3.6,2.1,.48,0,1.64,0,darkMat,meterSwivel);
+    const meterAngle=document.querySelector('#meterAngle'),meterAngleValue=document.querySelector('#meterAngleValue');
+    function orientMeter(){meterSwivel.rotation.y=THREE.MathUtils.degToRad(+meterAngle.value);meterAngleValue.textContent=meterAngle.value+'°'}
+    const meterAuto=document.querySelector('#meterAuto');
+    function updateMeterFacing(){
+      if(!meterAuto.checked)return;
+      const dx=camera.position.x-meterSwivel.position.x,dz=camera.position.z-meterSwivel.position.z;
+      if(Math.hypot(dx,dz)>.001)meterSwivel.rotation.y=Math.atan2(dx,dz);
+      const degrees=Math.round(THREE.MathUtils.radToDeg(meterSwivel.rotation.y));if(meterAngle.value!==String(degrees)){meterAngle.value=degrees;meterAngleValue.textContent=degrees+'°'}
+    }
+    meterAuto.onchange=()=>{meterAngle.disabled=meterAuto.checked;if(meterAuto.checked)updateMeterFacing()};
+    meterAngle.oninput=orientMeter;orientMeter();meterAuto.onchange();
+    const meterCanvas=document.createElement('canvas');meterCanvas.width=640;meterCanvas.height=360;
+    const meterContext=meterCanvas.getContext('2d'),meterTexture=new THREE.CanvasTexture(meterCanvas);
+    const meter=new THREE.Mesh(new THREE.PlaneGeometry(3.4,1.91),new THREE.MeshBasicMaterial({map:meterTexture}));meter.position.set(0,1.64,.245);meterSwivel.add(meter);
+    let lastMeterText='',outputVoltage=0,outputPulse=0;
+    function drawMeter(voltage){const text=(voltage<-.005?'−':voltage>.005?'+':'')+Math.abs(voltage).toFixed(2),key=text+mode.value;
+      if(key===lastMeterText)return;lastMeterText=key;const q=meterContext;
+      q.fillStyle='#101f2b';q.fillRect(0,0,640,360);q.strokeStyle='#52717c';q.lineWidth=8;q.strokeRect(4,4,632,352);
+      q.textAlign='center';q.fillStyle='#a9bac5';q.font='24px sans-serif';q.fillText('OUTPUT VOLTMETER · '+(mode.value==='ac'?'AC':'DC'),320,53);
+      q.fillStyle='#63ffc2';q.font='bold 92px monospace';q.fillText(text+' V',320,170);
+      q.fillStyle='#223a43';q.fillRect(55,215,530,17);q.fillStyle='#63ffc2';q.fillRect(320,215,Math.min(Math.abs(voltage)/12,1)*265,17);if(voltage<0){q.fillStyle='#223a43';q.fillRect(320,215,265,17);q.fillStyle='#55baff';q.fillRect(320-Math.min(Math.abs(voltage)/12,1)*265,215,Math.min(Math.abs(voltage)/12,1)*265,17)}
+      q.fillStyle='#92abb7';q.font='21px sans-serif';q.fillText('−12              0              +12',320,265);q.font='22px sans-serif';q.fillText('Illustrative scale · synchronized pulses',320,319);meterTexture.needsUpdate=true;
+    }
+    let running=false,rpm=36,maxAmplitude=Math.PI/4,inductionDegrees=16,last=performance.now(),microView=false;const speed=document.querySelector('#speed'),rpmOut=document.querySelector('#rpm'),toggle=document.querySelector('#toggle'),mode=document.querySelector('#mode'),amplitude=document.querySelector('#amplitude'),ampValue=document.querySelector('#ampValue');
+    const generatorPanel=document.querySelector('.panel'),panelToggle=document.querySelector('#panelToggle');panelToggle.onclick=()=>{generatorPanel.classList.toggle('minimized');const minimized=generatorPanel.classList.contains('minimized');panelToggle.textContent=minimized?'+':'−';panelToggle.title=minimized?'Expand panel':'Minimize control panel';panelToggle.setAttribute('aria-label',panelToggle.title);panelToggle.setAttribute('aria-expanded',String(!minimized))};
+    speed.oninput=()=>{rpm=+speed.value;rpmOut.textContent=rpm+' rpm'};amplitude.oninput=()=>{maxAmplitude=THREE.MathUtils.degToRad(+amplitude.value);ampValue.textContent=amplitude.value+'°'};
+    const inductionWindow=document.querySelector('#inductionWindow'),windowValue=document.querySelector('#windowValue');
+    inductionWindow.oninput=()=>{inductionDegrees=+inductionWindow.value;windowValue.textContent=inductionDegrees+'° (±'+(inductionDegrees/2)+'°)'};
+    toggle.onclick=()=>{running=!running;toggle.textContent=running?'Pause':'Start'};document.querySelector('#labels').onchange=e=>labels.forEach(v=>v.visible=e.target.checked);
+    const fieldButton=document.querySelector('#field');fieldButton.onclick=()=>{fieldLines.visible=!fieldLines.visible;fieldButton.classList.toggle('active',fieldLines.visible);fieldButton.textContent=fieldLines.visible?'Hide flux':'Show flux'};
+    const microButton=document.querySelector('#micro');microButton.onclick=()=>{microView=!microView;microButton.classList.toggle('active',microView);microButton.textContent=microView?'Overview':'Microscopic view';if(microView){controls.target.set(.45,0,1.55);camera.position.set(2.35,1.35,3.35)}else{restoreOverview()}};
+    document.querySelector('#reset').onclick=()=>{microView=false;microButton.classList.remove('active');microButton.textContent='Microscopic view';restoreOverview()};
+    function shortestTurn(from,to){return Math.atan2(Math.sin(to-from),Math.cos(to-from))}
+    function inductionEnvelope(phase,totalDegrees){
+      // Peaks at 90° and 270°. acos(abs(sin)) gives the nearest angular separation.
+      const distance=Math.acos(Math.min(1,Math.abs(Math.sin(phase))));
+      const half=totalDegrees*Math.PI/360,edge=half*.2;
+      if(distance>=half)return 0;
+      if(distance<=half-edge)return 1;
+      const t=(half-distance)/edge;return t*t*(3-2*t);
+    }
+    function animate(now){requestAnimationFrame(animate);const dt=Math.min((now-last)/1000,.05);last=now;if(running){magnets.rotation.x+=rpm*Math.PI*2/60*dt}
+      // Geometric visualization rule: a narrow window around each passage through XZ.
+      // No longitudinal lag: both long bars pass all twelve positions at the same angle.
+      const phase=magnets.rotation.x,carrier=Math.sin(phase);
+      const pulse=running&&rpm>0?inductionEnvelope(phase,inductionDegrees):0;
+      for(const c of compalphas){let flux;
+        if(mode.value==='ac')flux=c.row>0?(carrier>=0?0:Math.PI):(carrier>=0?Math.PI:0);else flux=mode.value==='dc+'?0:Math.PI;
+        let allowed=THREE.MathUtils.clamp(shortestTurn(c.initial,flux),-maxAmplitude,maxAmplitude);if(mode.value==='dc+')allowed=Math.abs(allowed);if(mode.value==='dc-')allowed=-Math.abs(allowed);
+        // Direct angular response: no damping tail outside the induction window.
+        c.current=c.initial+allowed*pulse;c.group.rotation.y=c.current;
+      }
+      // LED and illustrative voltage use exactly the same angular envelope as the Ca.
+      outputPulse=running&&rpm>0?pulse*(rpm/120)*(maxAmplitude/(Math.PI/2)):0;
+      outputVoltage=12*outputPulse*(mode.value==='ac'?Math.sign(carrier):mode.value==='dc+'?1:-1);
+      const brightness=Math.min(1,outputPulse*2.8);
+      glassMat.emissiveIntensity=brightness*4;glow.intensity=brightness*8;halo.material.opacity=brightness*.8;
+      drawMeter(outputVoltage);
+      controls.update();updateMeterFacing();faceFluxArrows();renderer.render(scene,camera)}requestAnimationFrame(animate);
+    addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
+  </script>
+</body>
+</html>
