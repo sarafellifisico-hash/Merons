@@ -1,0 +1,3238 @@
+<!doctype html>
+<!-- TUIDG Rotating Interaction — integrated build 2026-09-16-r2 -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="tuidg-build" content="rotating-interaction-2026-09-16-r2">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#030711">
+  <meta name="description" content="An interactive 3D visualization of TUIDG's Rotating Interaction between two Compalphas.">
+  <title>TUIDG — Rotating Interaction</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23030711'/%3E%3Cellipse cx='32' cy='32' rx='23' ry='10' fill='none' stroke='%235ee7f2' stroke-width='4'/%3E%3Cellipse cx='32' cy='32' rx='10' ry='23' fill='none' stroke='%23ff5277' stroke-width='4'/%3E%3Ccircle cx='32' cy='32' r='4' fill='%23ffffff'/%3E%3C/svg%3E">
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #030711;
+      --panel: rgba(7, 14, 29, 0.86);
+      --panel-solid: #07101f;
+      --line: rgba(169, 206, 230, 0.16);
+      --line-strong: rgba(169, 206, 230, 0.28);
+      --text: #f3f8fb;
+      --muted: #91a7b8;
+      --cyan: #5ee7f2;
+      --cyan-soft: rgba(94, 231, 242, 0.14);
+      --coral: #ff5277;
+      --coral-soft: rgba(255, 82, 119, 0.14);
+      --violet: #9f8cff;
+      --gold: #e9c46a;
+      --axis-red: #ff405d;
+      --axis-blue: #3d8bff;
+      --plane-green: #4fe18a;
+      --ci-blue: #3d8bff;
+      --ci-yellow: #ffd84d;
+      --ci-red: #ff405d;
+      --radius: 14px;
+      --shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    button {
+      color: inherit;
+    }
+
+    button:focus-visible,
+    input:focus-visible {
+      outline: 2px solid var(--cyan);
+      outline-offset: 2px;
+    }
+
+    .app {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      isolation: isolate;
+      background:
+        radial-gradient(circle at 50% 43%, rgba(24, 69, 91, 0.16), transparent 37%),
+        radial-gradient(circle at 73% 37%, rgba(255, 82, 119, 0.055), transparent 28%),
+        linear-gradient(180deg, #050b17 0%, #02050b 100%);
+    }
+
+    .app::before {
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      content: "";
+      opacity: 0.42;
+      background-image:
+        radial-gradient(circle, rgba(190, 226, 244, 0.44) 0 0.6px, transparent 0.8px),
+        radial-gradient(circle, rgba(94, 231, 242, 0.3) 0 0.5px, transparent 0.75px);
+      background-position: 0 0, 37px 29px;
+      background-size: 71px 71px, 113px 113px;
+      mask-image: linear-gradient(to bottom, black 0%, transparent 78%);
+      pointer-events: none;
+    }
+
+    .topbar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 30;
+      min-height: 76px;
+      display: grid;
+      grid-template-columns: minmax(150px, 1fr) auto minmax(150px, 1fr);
+      align-items: center;
+      gap: 18px;
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(3, 7, 17, 0.94), rgba(3, 7, 17, 0.62));
+      backdrop-filter: blur(18px);
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .brand-mark {
+      width: 36px;
+      height: 36px;
+      flex: 0 0 36px;
+      position: relative;
+      border: 1px solid rgba(94, 231, 242, 0.35);
+      border-radius: 11px;
+      background: rgba(94, 231, 242, 0.055);
+      box-shadow: inset 0 0 20px rgba(94, 231, 242, 0.06);
+    }
+
+    .brand-mark::before,
+    .brand-mark::after {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 24px;
+      height: 10px;
+      content: "";
+      border: 1.5px solid var(--cyan);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .brand-mark::after {
+      border-color: var(--coral);
+      transform: translate(-50%, -50%) rotate(90deg);
+    }
+
+    .brand-copy {
+      min-width: 0;
+    }
+
+    .brand-copy strong,
+    .brand-copy span {
+      display: block;
+    }
+
+    .brand-copy strong {
+      font-size: 0.82rem;
+      letter-spacing: 0.18em;
+    }
+
+    .brand-copy span {
+      margin-top: 2px;
+      overflow: hidden;
+      color: var(--muted);
+      font-size: 0.72rem;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .title-block {
+      text-align: center;
+    }
+
+    .eyebrow {
+      color: var(--cyan);
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 4px 0 0;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(1.2rem, 2vw, 1.78rem);
+      font-weight: 400;
+      letter-spacing: -0.025em;
+      white-space: nowrap;
+    }
+
+    .top-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .ghost-button {
+      height: 38px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 0 12px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: rgba(12, 23, 41, 0.62);
+      cursor: pointer;
+      transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
+    }
+
+    .ghost-button:hover {
+      border-color: var(--line-strong);
+      background: rgba(18, 35, 57, 0.8);
+    }
+
+    .ghost-button:active {
+      transform: translateY(1px);
+    }
+
+    .ghost-button svg {
+      width: 16px;
+      height: 16px;
+      fill: none;
+      stroke: currentColor;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-width: 1.8;
+    }
+
+    .stage {
+      position: absolute;
+      inset: 76px 0 0;
+      overflow: hidden;
+      touch-action: none;
+    }
+
+    #underlay,
+    #gl-canvas,
+    #hud-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    #underlay {
+      z-index: 1;
+    }
+
+    #gl-canvas {
+      z-index: 2;
+      cursor: grab;
+    }
+
+    #gl-canvas:active {
+      cursor: grabbing;
+    }
+
+    #hud-canvas {
+      z-index: 3;
+      pointer-events: none;
+    }
+
+    .control-panel {
+      position: absolute;
+      top: 18px;
+      left: 18px;
+      z-index: 20;
+      width: 304px;
+      max-height: calc(100% - 146px);
+      overflow: hidden;
+      border: 1px solid var(--line-strong);
+      border-radius: var(--radius);
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(18px);
+      transition: width 220ms ease, border-color 220ms ease;
+    }
+
+    .panel-header {
+      min-height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 0 10px 0 16px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .panel-title {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      min-width: 0;
+      color: #dcebf3;
+      font-size: 0.76rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .live-dot {
+      width: 7px;
+      height: 7px;
+      flex: 0 0 7px;
+      border-radius: 50%;
+      background: var(--cyan);
+      box-shadow: 0 0 14px var(--cyan);
+      animation: live 1.8s ease-in-out infinite;
+    }
+
+    @keyframes live {
+      50% { opacity: 0.4; }
+    }
+
+    .collapse-button {
+      width: 32px;
+      height: 32px;
+      display: grid;
+      flex: 0 0 32px;
+      place-items: center;
+      border: 1px solid transparent;
+      border-radius: 9px;
+      background: transparent;
+      cursor: pointer;
+    }
+
+    .collapse-button:hover {
+      border-color: var(--line);
+      background: rgba(255, 255, 255, 0.035);
+    }
+
+    .collapse-button svg {
+      width: 16px;
+      fill: none;
+      stroke: currentColor;
+      stroke-linecap: round;
+      stroke-width: 1.8;
+      transition: transform 220ms ease;
+    }
+
+    .panel-body {
+      max-height: calc(100vh - 244px);
+      overflow-x: hidden;
+      overflow-y: auto;
+      padding: 14px;
+      scrollbar-color: rgba(145, 167, 184, 0.35) transparent;
+      scrollbar-width: thin;
+      transition: opacity 140ms ease;
+    }
+
+    .control-panel.collapsed {
+      width: 52px;
+    }
+
+    .control-panel.collapsed .panel-header {
+      padding: 0 9px;
+      border-bottom-color: transparent;
+    }
+
+    .control-panel.collapsed .panel-title,
+    .control-panel.collapsed .panel-body {
+      display: none;
+    }
+
+    .control-panel.collapsed .collapse-button svg {
+      transform: rotate(180deg);
+    }
+
+    .theory-panel {
+      position: absolute;
+      top: 18px;
+      right: 18px;
+      z-index: 19;
+      width: min(400px, calc(100% - 372px));
+      max-height: calc(100% - 146px);
+      overflow: hidden;
+      border: 1px solid var(--line-strong);
+      border-radius: var(--radius);
+      background: rgba(8, 14, 24, 0.88);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(18px);
+      transition: width 220ms ease, border-color 220ms ease;
+    }
+
+    .theory-panel-header {
+      min-height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 0 10px 0 16px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .theory-panel-title {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      min-width: 0;
+      color: #dcebf3;
+      font-size: 0.76rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .theory-mark {
+      width: 24px;
+      height: 24px;
+      display: grid;
+      flex: 0 0 24px;
+      place-items: center;
+      border: 1px solid rgba(94, 231, 242, 0.32);
+      border-radius: 50%;
+      background: rgba(94, 231, 242, 0.08);
+      color: var(--cyan);
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 0.92rem;
+      text-transform: none;
+    }
+
+    .theory-collapse-button {
+      width: 32px;
+      height: 32px;
+      display: grid;
+      flex: 0 0 32px;
+      place-items: center;
+      border: 1px solid transparent;
+      border-radius: 9px;
+      background: transparent;
+      cursor: pointer;
+    }
+
+    .theory-collapse-button:hover {
+      border-color: var(--line);
+      background: rgba(255, 255, 255, 0.035);
+    }
+
+    .theory-collapse-button svg {
+      width: 16px;
+      fill: none;
+      stroke: currentColor;
+      stroke-linecap: round;
+      stroke-width: 1.8;
+      transition: transform 220ms ease;
+    }
+
+    .theory-panel-body {
+      max-height: calc(100vh - 244px);
+      overflow-x: hidden;
+      overflow-y: auto;
+      padding: 16px 17px 17px;
+      scrollbar-color: rgba(145, 167, 184, 0.35) transparent;
+      scrollbar-width: thin;
+    }
+
+    .theory-kicker {
+      margin-bottom: 6px;
+      color: var(--cyan);
+      font-size: 0.63rem;
+      font-weight: 750;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+    }
+
+    .theory-panel h2 {
+      margin: 0 0 11px;
+      color: #eef8fc;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 1.17rem;
+      font-weight: 400;
+      line-height: 1.22;
+    }
+
+    .theory-panel p {
+      margin: 0;
+      color: #aebdca;
+      font-size: 0.76rem;
+      line-height: 1.56;
+    }
+
+    .theory-panel p + p {
+      margin-top: 10px;
+    }
+
+    .theory-panel p strong {
+      color: #dcebf3;
+      font-weight: 650;
+    }
+
+    .ig-rules {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 7px;
+      margin: 13px 0;
+    }
+
+    .ig-rule {
+      padding: 9px 10px;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      background: rgba(255, 255, 255, 0.025);
+    }
+
+    .ig-rule strong,
+    .ig-rule span {
+      display: block;
+    }
+
+    .ig-rule strong {
+      color: var(--text);
+      font-size: 0.72rem;
+    }
+
+    .ig-rule span {
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 0.64rem;
+      line-height: 1.3;
+    }
+
+    .ig-rule.attraction {
+      border-color: rgba(94, 231, 242, 0.27);
+      box-shadow: inset 2px 0 0 rgba(94, 231, 242, 0.62);
+    }
+
+    .ig-rule.repulsion {
+      border-color: rgba(255, 82, 119, 0.27);
+      box-shadow: inset 2px 0 0 rgba(255, 82, 119, 0.62);
+    }
+
+    .theory-panel.collapsed {
+      width: 52px;
+    }
+
+    .theory-panel.collapsed .theory-panel-header {
+      padding: 0 9px;
+      border-bottom-color: transparent;
+    }
+
+    .theory-panel.collapsed .theory-panel-title,
+    .theory-panel.collapsed .theory-panel-body {
+      display: none;
+    }
+
+    .theory-panel.collapsed .theory-collapse-button svg {
+      transform: rotate(180deg);
+    }
+
+    .control-group + .control-group {
+      margin-top: 17px;
+      padding-top: 17px;
+      border-top: 1px solid var(--line);
+    }
+
+    .group-heading {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 9px;
+      color: var(--muted);
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+    }
+
+    .group-heading output {
+      color: var(--text);
+      font-size: 0.74rem;
+      letter-spacing: 0;
+      text-transform: none;
+    }
+
+    .preset-grid {
+      display: grid;
+      gap: 7px;
+    }
+
+    .preset-button {
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 8px 11px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.025);
+      cursor: pointer;
+      text-align: left;
+      transition: border-color 150ms ease, background 150ms ease, color 150ms ease;
+    }
+
+    .preset-button:hover {
+      border-color: rgba(94, 231, 242, 0.35);
+      background: rgba(94, 231, 242, 0.055);
+    }
+
+    .preset-button.active {
+      border-color: rgba(94, 231, 242, 0.58);
+      background: var(--cyan-soft);
+      box-shadow: inset 3px 0 0 var(--cyan);
+    }
+
+    .preset-button span {
+      font-size: 0.84rem;
+      font-weight: 650;
+    }
+
+    .preset-button small {
+      color: var(--muted);
+      font-size: 0.72rem;
+      white-space: nowrap;
+    }
+
+    .interaction-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 7px;
+    }
+
+    .presentation-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 7px;
+    }
+
+    .motion-toggle {
+      min-height: 58px;
+      padding: 9px 8px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.025);
+      cursor: pointer;
+      text-align: center;
+      transition: border-color 150ms ease, background 150ms ease, transform 150ms ease;
+    }
+
+    .motion-toggle:hover {
+      transform: translateY(-1px);
+      border-color: rgba(94, 231, 242, 0.38);
+    }
+
+    .motion-toggle strong,
+    .motion-toggle small {
+      display: block;
+    }
+
+    .motion-toggle strong {
+      color: var(--text);
+      font-size: 0.76rem;
+    }
+
+    .motion-toggle small {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 0.62rem;
+      line-height: 1.25;
+    }
+
+    .motion-toggle.running {
+      border-color: rgba(94, 231, 242, 0.5);
+      background: rgba(94, 231, 242, 0.085);
+      box-shadow: inset 0 0 0 1px rgba(94, 231, 242, 0.08);
+    }
+
+    .motion-toggle.paused {
+      border-color: rgba(255, 176, 88, 0.34);
+      background: rgba(255, 176, 88, 0.055);
+    }
+
+    .interaction-button {
+      min-height: 66px;
+      padding: 9px 7px;
+      border: 1px solid var(--line);
+      border-radius: 11px;
+      background: rgba(255, 255, 255, 0.025);
+      cursor: pointer;
+      text-align: center;
+      transition: transform 150ms ease, border-color 150ms ease, background 150ms ease;
+    }
+
+    .interaction-button:hover {
+      transform: translateY(-1px);
+    }
+
+    .interaction-button strong,
+    .interaction-button small {
+      display: block;
+    }
+
+    .interaction-button strong {
+      font-size: 0.82rem;
+    }
+
+    .interaction-button small {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 0.66rem;
+    }
+
+    .interaction-button[data-mode="attraction"].active {
+      border-color: rgba(94, 231, 242, 0.6);
+      background: var(--cyan-soft);
+    }
+
+    .interaction-button[data-mode="repulsion"].active {
+      border-color: rgba(255, 82, 119, 0.6);
+      background: var(--coral-soft);
+    }
+
+    .axis-direction-control {
+      margin-top: 9px;
+    }
+
+    .axis-direction-label {
+      display: block;
+      margin: 0 1px 6px;
+      color: var(--muted);
+      font-size: 0.64rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .segmented {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 5px;
+      padding: 4px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: rgba(0, 0, 0, 0.15);
+    }
+
+    .segment-button {
+      min-height: 34px;
+      border: 0;
+      border-radius: 7px;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+
+    .segment-button.active {
+      background: rgba(94, 231, 242, 0.13);
+      color: var(--text);
+      box-shadow: inset 0 0 0 1px rgba(94, 231, 242, 0.24);
+    }
+
+    .segment-button[data-repulsion-direction="up"].active {
+      background: rgba(255, 64, 93, 0.13);
+      color: #ffd8df;
+      box-shadow: inset 0 0 0 1px rgba(255, 64, 93, 0.34);
+    }
+
+    .segment-button[data-repulsion-direction="down"].active {
+      background: rgba(61, 139, 255, 0.14);
+      color: #d9e8ff;
+      box-shadow: inset 0 0 0 1px rgba(61, 139, 255, 0.36);
+    }
+
+    .range-wrap {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 10px;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      height: 4px;
+      margin: 7px 0;
+      accent-color: var(--cyan);
+      cursor: pointer;
+    }
+
+    .range-value {
+      min-width: 48px;
+      color: var(--text);
+      font-size: 0.74rem;
+      text-align: right;
+    }
+
+    .principle {
+      margin-top: 14px;
+      padding: 11px 12px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: rgba(3, 7, 17, 0.52);
+    }
+
+    .principle-label {
+      display: block;
+      margin-bottom: 4px;
+      color: var(--muted);
+      font-size: 0.64rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .principle strong {
+      display: block;
+      color: #dffcff;
+      font-size: 0.82rem;
+      line-height: 1.35;
+    }
+
+    .principle p {
+      margin: 5px 0 0;
+      color: var(--muted);
+      font-size: 0.72rem;
+      line-height: 1.45;
+    }
+
+    .force-law {
+      margin-top: 10px;
+      padding: 10px 12px;
+      border: 1px solid rgba(159, 140, 255, 0.24);
+      border-radius: 10px;
+      background: linear-gradient(135deg, rgba(94, 231, 242, 0.045), rgba(255, 82, 119, 0.05));
+    }
+
+    .force-law-label {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--muted);
+      font-size: 0.64rem;
+      font-weight: 700;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+    }
+
+    .force-equation {
+      color: #f1f8fb;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 0.88rem;
+      line-height: 1.5;
+    }
+
+    .force-equation.secondary {
+      color: #cbeef3;
+      font-size: 0.82rem;
+    }
+
+    .force-equation sub,
+    .force-equation sup {
+      font-size: 0.68em;
+    }
+
+    .force-result {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 8px;
+      margin-top: 7px;
+      padding-top: 7px;
+      border-top: 1px solid var(--line);
+    }
+
+    .force-result span {
+      color: var(--muted);
+      font-size: 0.66rem;
+    }
+
+    .force-result output {
+      color: #ffffff;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 0.8rem;
+      white-space: nowrap;
+    }
+
+    .force-law-note {
+      margin: 5px 0 0;
+      color: var(--muted);
+      font-size: 0.64rem;
+      line-height: 1.4;
+    }
+
+    .ca-badge,
+    .callout,
+    .interface-badge {
+      position: absolute;
+      z-index: 12;
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+      transition: opacity 150ms ease;
+    }
+
+    .ca-badge {
+      min-width: 0;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      box-shadow: none;
+      text-align: center;
+    }
+
+    .ca-badge strong,
+    .ca-badge span {
+      display: block;
+    }
+
+    .ca-badge strong {
+      font-size: 0.82rem;
+      letter-spacing: 0.045em;
+      text-transform: none;
+    }
+
+    .ca-badge span {
+      margin-top: 2px;
+      color: var(--muted);
+      font-size: 0.65rem;
+    }
+
+    .ca-badge.left strong,
+    .ca-badge.right strong {
+      color: #ffffff;
+      text-shadow: 0 0 12px rgba(255, 255, 255, 0.34);
+    }
+
+    .callout {
+      padding: 0;
+      border: 0;
+      background: transparent;
+      color: #dbeaf2;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.035em;
+      white-space: nowrap;
+      text-shadow: 0 1px 3px #02040a, 0 0 9px rgba(179, 215, 232, 0.34);
+    }
+
+    .callout.axis-up {
+      color: #ffd8df;
+      text-shadow: 0 1px 3px #02040a, 0 0 10px rgba(255, 64, 93, 0.48);
+    }
+
+    .callout.axis-down {
+      color: #d9e8ff;
+      text-shadow: 0 1px 3px #02040a, 0 0 10px rgba(61, 139, 255, 0.5);
+    }
+
+    .callout.plane-label {
+      color: #c9ffe0;
+      text-shadow: 0 1px 3px #02040a, 0 0 10px rgba(102, 255, 171, 0.46);
+    }
+
+    .callout.point-label {
+      color: #fff0bd;
+      text-shadow: 0 1px 3px #02040a, 0 0 10px rgba(242, 212, 125, 0.48);
+    }
+
+    .callout.contact-label {
+      color: #ffd59a;
+      font-size: 0.72rem;
+      text-shadow: 0 1px 3px #02040a, 0 0 11px rgba(255, 142, 45, 0.58);
+    }
+
+    .interface-badge {
+      min-width: 182px;
+      padding: 7px 10px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(3, 8, 17, 0.76);
+      color: #dcebf3;
+      font-size: 0.66rem;
+      font-weight: 750;
+      letter-spacing: 0.1em;
+      text-align: center;
+      text-transform: uppercase;
+      backdrop-filter: blur(8px);
+    }
+
+    .interface-badge.attraction {
+      border-color: rgba(94, 231, 242, 0.36);
+      color: #c7fbff;
+    }
+
+    .interface-badge.repulsion {
+      border-color: rgba(255, 82, 119, 0.38);
+      color: #ffd2dd;
+    }
+
+    .labels-hidden .ca-badge,
+    .labels-hidden .callout,
+    .labels-hidden .interface-badge {
+      opacity: 0;
+    }
+
+    .distance-hud {
+      position: absolute;
+      left: 50%;
+      bottom: 18px;
+      z-index: 21;
+      width: min(760px, calc(100% - 380px));
+      min-width: 480px;
+      transform: translateX(-50%);
+      padding: 14px 18px 15px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: rgba(4, 9, 19, 0.8);
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.28);
+      backdrop-filter: blur(14px);
+    }
+
+    .distance-topline {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 4px 16px;
+      margin-bottom: 8px;
+    }
+
+    .distance-readout {
+      display: flex;
+      align-items: baseline;
+      gap: 7px;
+    }
+
+    .distance-readout strong {
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 1.16rem;
+      font-weight: 400;
+    }
+
+    .distance-readout span,
+    .motion-status {
+      color: var(--muted);
+      font-size: 0.68rem;
+    }
+
+    .force-readout {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+      margin-left: auto;
+      white-space: nowrap;
+    }
+
+    .force-readout span {
+      color: var(--muted);
+      font-size: 0.64rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .force-readout strong {
+      color: var(--cyan);
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 0.82rem;
+      font-weight: 400;
+    }
+
+    .force-readout.repulsion strong {
+      color: var(--coral);
+    }
+
+    .ci-layer-readout {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+
+    .ci-layer-readout i {
+      width: 9px;
+      height: 9px;
+      flex: 0 0 9px;
+      border-radius: 50%;
+      background: var(--ci-blue);
+      box-shadow: 0 0 10px currentColor;
+    }
+
+    .ci-layer-readout span {
+      color: var(--muted);
+      font-size: 0.64rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .ci-layer-readout strong {
+      color: var(--text);
+      font-size: 0.74rem;
+      font-weight: 650;
+    }
+
+    .distance-track {
+      position: relative;
+      height: 28px;
+    }
+
+    .distance-track::before {
+      position: absolute;
+      top: 11px;
+      left: 0;
+      right: 0;
+      height: 3px;
+      content: "";
+      border-radius: 2px;
+      background: linear-gradient(90deg, rgba(94, 231, 242, 0.55), rgba(159, 140, 255, 0.5), rgba(255, 82, 119, 0.55));
+    }
+
+    .track-marker {
+      position: absolute;
+      top: 6px;
+      width: 12px;
+      height: 12px;
+      border: 2px solid #081321;
+      border-radius: 50%;
+      background: #8199aa;
+      transform: translateX(-50%);
+    }
+
+    .distance-hud-range {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      width: 100%;
+      height: 28px;
+      margin: 0;
+      appearance: none;
+      -webkit-appearance: none;
+      background: transparent;
+      cursor: ew-resize;
+      touch-action: none;
+    }
+
+    .distance-hud-range::-webkit-slider-runnable-track {
+      height: 3px;
+      background: transparent;
+    }
+
+    .distance-hud-range::-webkit-slider-thumb {
+      width: 18px;
+      height: 18px;
+      margin-top: -7px;
+      appearance: none;
+      -webkit-appearance: none;
+      border: 2px solid #081321;
+      border-radius: 50%;
+      background: #ffffff;
+      box-shadow: 0 0 14px rgba(255, 255, 255, 0.72);
+    }
+
+    .distance-hud-range::-moz-range-track {
+      height: 3px;
+      background: transparent;
+    }
+
+    .distance-hud-range::-moz-range-thumb {
+      width: 15px;
+      height: 15px;
+      border: 2px solid #081321;
+      border-radius: 50%;
+      background: #ffffff;
+      box-shadow: 0 0 14px rgba(255, 255, 255, 0.72);
+    }
+
+    .track-labels {
+      position: relative;
+      height: 16px;
+      color: var(--muted);
+      font-size: 0.64rem;
+    }
+
+    .track-labels span {
+      position: absolute;
+      transform: translateX(-50%);
+      white-space: nowrap;
+    }
+
+    .track-labels span:first-child {
+      transform: none;
+    }
+
+    .track-labels span:last-child {
+      transform: translateX(-100%);
+    }
+
+    .camera-tip {
+      position: absolute;
+      right: 18px;
+      bottom: 18px;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      background: rgba(4, 9, 19, 0.66);
+      color: var(--muted);
+      font-size: 0.66rem;
+      backdrop-filter: blur(10px);
+    }
+
+    .camera-tip svg {
+      width: 16px;
+      height: 16px;
+      fill: none;
+      stroke: var(--cyan);
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-width: 1.6;
+    }
+
+    .fallback {
+      position: absolute;
+      inset: 0;
+      z-index: 50;
+      display: none;
+      place-items: center;
+      padding: 24px;
+      background: var(--bg);
+      text-align: center;
+    }
+
+    .fallback.visible {
+      display: grid;
+    }
+
+    .fallback strong {
+      display: block;
+      margin-bottom: 8px;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 1.4rem;
+      font-weight: 400;
+    }
+
+    .fallback p {
+      max-width: 480px;
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    @media (max-width: 1050px) {
+      .distance-hud {
+        width: min(650px, calc(100% - 350px));
+      }
+
+      .theory-panel {
+        width: min(340px, calc(100% - 350px));
+      }
+
+      .theory-panel.collapsed {
+        width: 52px;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .topbar {
+        min-height: 68px;
+        grid-template-columns: auto 1fr auto;
+        gap: 10px;
+        padding: 10px 12px;
+      }
+
+      .stage {
+        inset: 68px 0 0;
+      }
+
+      .brand-copy,
+      .eyebrow,
+      .ghost-button span {
+        display: none;
+      }
+
+      h1 {
+        overflow: hidden;
+        font-size: 1.04rem;
+        text-overflow: ellipsis;
+      }
+
+      .top-actions {
+        gap: 5px;
+      }
+
+      .ghost-button {
+        width: 38px;
+        padding: 0;
+      }
+
+      .control-panel {
+        top: 10px;
+        left: 10px;
+        width: min(286px, calc(100% - 20px));
+        max-height: calc(100% - 154px);
+      }
+
+      .panel-body {
+        max-height: calc(100vh - 294px);
+      }
+
+      .theory-panel {
+        top: 10px;
+        right: 10px;
+        z-index: 22;
+        width: min(340px, calc(100% - 20px));
+        max-height: calc(100% - 154px);
+        background: rgba(8, 14, 24, 0.96);
+      }
+
+      .theory-panel.collapsed {
+        width: 52px;
+      }
+
+      .theory-panel-body {
+        max-height: calc(100vh - 294px);
+      }
+
+      .distance-hud {
+        left: 10px;
+        right: 10px;
+        bottom: 10px;
+        width: auto;
+        min-width: 0;
+        transform: none;
+        padding: 13px 14px 14px;
+      }
+
+      .distance-topline {
+        align-items: flex-start;
+        flex-wrap: wrap;
+        gap: 4px 12px;
+      }
+
+      .force-readout {
+        margin-left: 0;
+      }
+
+      .ci-layer-readout {
+        margin-left: auto;
+      }
+
+      .track-labels {
+        font-size: 0.57rem;
+      }
+
+      .camera-tip {
+        display: none;
+      }
+
+      .callout {
+        font-size: 0.61rem;
+      }
+
+      .ca-badge {
+        min-width: 0;
+      }
+    }
+
+
+    /* === Melhorias para movimento inequívoco dos 2 Ca === */
+    body.is-moving .ca-badge {
+      box-shadow: none;
+      transition: left 60ms linear, top 60ms linear;
+    }
+    body.moving-out .ca-badge.left {
+      animation: nudgeLeftOut 420ms ease-in-out infinite alternate;
+    }
+    body.moving-out .ca-badge.right {
+      animation: nudgeRightOut 420ms ease-in-out infinite alternate;
+    }
+    body.moving-in .ca-badge.left {
+      animation: nudgeLeftIn 380ms ease-in-out infinite alternate;
+    }
+    body.moving-in .ca-badge.right {
+      animation: nudgeRightIn 380ms ease-in-out infinite alternate;
+    }
+    @keyframes nudgeLeftOut {
+      from { transform: translate(-50%, -50%) translateX(0); }
+      to { transform: translate(-50%, -50%) translateX(-6px); }
+    }
+    @keyframes nudgeRightOut {
+      from { transform: translate(-50%, -50%) translateX(0); }
+      to { transform: translate(-50%, -50%) translateX(6px); }
+    }
+    @keyframes nudgeLeftIn {
+      from { transform: translate(-50%, -50%) translateX(0); }
+      to { transform: translate(-50%, -50%) translateX(4px); }
+    }
+    @keyframes nudgeRightIn {
+      from { transform: translate(-50%, -50%) translateX(0); }
+      to { transform: translate(-50%, -50%) translateX(-4px); }
+    }
+    body.is-moving .distance-hud {
+      border-color: rgba(94,231,242,0.28);
+      box-shadow: 0 16px 40px rgba(0,0,0,0.32), 0 0 22px rgba(94,231,242,0.12);
+    }
+    body.moving-out .distance-hud {
+      border-color: rgba(94,231,242,0.38);
+    }
+    body.moving-in .distance-hud {
+      border-color: rgba(255,82,119,0.36);
+    }
+    .ci-layer-readout {
+      transition: opacity 280ms ease, filter 280ms ease;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        scroll-behavior: auto !important;
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app" id="app">
+    <header class="topbar">
+      <div class="brand" aria-label="TUIDG">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span class="brand-copy">
+          <strong>TUIDG</strong>
+          <span>The Universe as Immaterial Geometry</span>
+        </span>
+      </div>
+
+      <div class="title-block">
+        <div class="eyebrow">Geometric interaction laboratory</div>
+        <h1>This is TUIDG’s Rotating Interaction</h1>
+      </div>
+
+      <div class="top-actions">
+        <button class="ghost-button" id="labels-button" type="button" aria-pressed="true" title="Show or hide labels">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12s3.2-6 9-6 9 6 9 6-3.2 6-9 6-9-6-9-6Z"/><circle cx="12" cy="12" r="2.6"/></svg>
+          <span>Labels</span>
+        </button>
+        <button class="ghost-button" id="reset-view" type="button" title="Reset 3D view">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.7 8.1A8 8 0 1 1 4 14"/><path d="M4 4v4.5h4.5"/></svg>
+          <span>Reset view</span>
+        </button>
+      </div>
+    </header>
+
+    <main class="stage" id="stage">
+      <canvas id="underlay" aria-hidden="true"></canvas>
+      <canvas id="gl-canvas" aria-label="Interactive 3D visualization of two Compalphas. Drag to orbit and use the mouse wheel to zoom."></canvas>
+      <canvas id="hud-canvas" aria-hidden="true"></canvas>
+
+      <aside class="control-panel" id="control-panel" aria-label="Rotating Interaction controls">
+        <div class="panel-header">
+          <div class="panel-title"><span class="live-dot" aria-hidden="true"></span><span>Interaction controls</span></div>
+          <button class="collapse-button" id="collapse-panel" type="button" aria-label="Collapse control panel" aria-expanded="true">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14.5 6-6 6 6 6"/></svg>
+          </button>
+        </div>
+
+        <div class="panel-body">
+          <section class="control-group" aria-labelledby="distance-heading">
+            <div class="group-heading" id="distance-heading"><span>αP separation</span><output id="panel-distance">96 Dm</output></div>
+            <div class="preset-grid">
+              <button class="preset-button" type="button" data-distance="1">
+                <span>Meronic Distance</span><small>Med · 1 Dm</small>
+              </button>
+              <button class="preset-button" type="button" data-distance="24">
+                <span>Molecular Distance</span><small>Mod · 24 Dm</small>
+              </button>
+              <button class="preset-button active" type="button" data-distance="96">
+                <span>Exomolecular Distance</span><small>Exd · 96 Dm</small>
+              </button>
+            </div>
+            <div class="range-wrap" style="margin-top: 10px;">
+              <input id="distance-range" type="range" min="0" max="1" step="0.001" value="1" aria-label="Continuous Alpha Point separation from 1 to 96 Meronic Distance units">
+              <span class="range-value">1–96 Dm</span>
+            </div>
+          </section>
+
+          <section class="control-group" aria-labelledby="presentation-heading">
+            <div class="group-heading" id="presentation-heading"><span>Presentation</span><output id="cycle-stage">Exd · hold 2.0 s</output></div>
+            <div class="presentation-grid">
+              <button class="motion-toggle running" id="distance-animation-toggle" type="button" aria-pressed="true" aria-label="Stop automatic distance animation">
+                <strong>Stop animation</strong><small>Exd → Mod → Med</small>
+              </button>
+              <button class="motion-toggle running" id="camera-rotation-toggle" type="button" aria-pressed="true" aria-label="Stop automatic camera rotation">
+                <strong>Stop camera</strong><small>Automatic orbit</small>
+              </button>
+            </div>
+          </section>
+
+          <section class="control-group" aria-labelledby="interaction-heading">
+            <div class="group-heading" id="interaction-heading"><span>Interaction</span></div>
+            <div class="interaction-grid">
+              <button class="interaction-button active" type="button" data-mode="attraction">
+                <strong>Attraction</strong><small>Opposed Alpha Axes</small>
+              </button>
+              <button class="interaction-button" type="button" data-mode="repulsion">
+                <strong>Repulsion</strong><small>Aligned Alpha Axes</small>
+              </button>
+            </div>
+            <div class="axis-direction-control">
+              <span class="axis-direction-label">Aligned αA direction · repulsion</span>
+              <div class="segmented" role="group" aria-label="Repulsion Alpha Axis direction">
+                <button class="segment-button active" type="button" data-repulsion-direction="up">↑ Up · red</button>
+                <button class="segment-button" type="button" data-repulsion-direction="down">↓ Down · blue</button>
+              </div>
+            </div>
+          </section>
+
+          <section class="control-group" aria-labelledby="geometry-heading">
+            <div class="group-heading" id="geometry-heading"><span>Meridians per layer</span></div>
+            <div class="segmented" role="group" aria-label="Meridian density">
+              <button class="segment-button active" type="button" data-meridians="18">18 meridians</button>
+              <button class="segment-button" type="button" data-meridians="36">36 meridians</button>
+            </div>
+          </section>
+
+          <section class="control-group" aria-labelledby="opacity-heading">
+            <div class="group-heading" id="opacity-heading"><span>CI layer opacity</span><output id="ci-opacity-value">100%</output></div>
+            <div class="range-wrap">
+              <input id="ci-opacity-range" type="range" min="15" max="140" step="1" value="100" aria-label="Opacity of all CI layers while preserving their gradient">
+              <span class="range-value">gradient</span>
+            </div>
+          </section>
+
+          <div class="principle" aria-live="polite">
+            <span class="principle-label">IG principle</span>
+            <strong id="principle-title">Opposed Alpha Axes attract.</strong>
+            <p id="principle-copy">αA A points up in red and αA B points down in blue. Their common CI rotates through both Alpha Points.</p>
+          </div>
+
+          <div class="force-law" aria-label="Coulomb-type relative IG law">
+            <span class="force-law-label">Coulomb-type IG mapping</span>
+            <div class="force-equation">Coulomb: |F| = k|q<sub>A</sub>q<sub>B</sub>| / d<sup>2</sup></div>
+            <div class="force-equation secondary">IG magnitude: |F<sub>IG</sub>| / F<sub>0</sub> = (1 Dm / d)<sup>2</sup></div>
+            <div class="force-result">
+              <span id="force-sign">Direction: attraction · inward</span>
+              <output id="force-panel-value">1.085 × 10⁻⁴ F₀</output>
+            </div>
+            <p class="force-law-note">F₀ is the IG magnitude at 1 Dm. At 24 and 96 Dm, |F| becomes F₀/576 and F₀/9216. Values are relative, not newtons.</p>
+          </div>
+        </div>
+      </aside>
+
+      <aside class="theory-panel" id="theory-panel" aria-label="Compalpha and Rotating Interaction explanation">
+        <div class="theory-panel-header">
+          <div class="theory-panel-title"><span class="theory-mark" aria-hidden="true">α</span><span>Compalpha &amp; Rotating Interaction</span></div>
+          <button class="theory-collapse-button" id="theory-collapse-button" type="button" aria-label="Minimize explanation" aria-expanded="true" aria-controls="theory-panel-body">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9.5 6 6 6-6 6"/></svg>
+          </button>
+        </div>
+        <div class="theory-panel-body" id="theory-panel-body">
+          <div class="theory-kicker">TUIDG ontology</div>
+          <h2>The Compalpha and its Rotating Interaction</h2>
+          <p>Within TUIDG, Alpha Components—or <strong>Compalphas (Cα)</strong>—are not material objects. The framework begins from the ontological premise that matter and energy are not substances essentially distinct from nothingness, understood here as absolutely empty space. A Compalpha is therefore described as a purely geometric organization with toroidal form.</p>
+          <p>Its visual structure is expressed by an infinite family of circular lines called <strong>Interaction Circles (CI)</strong>. These circles project from a common Alpha Point (αP) through infinitely many spatial directions, forming the continuous geometry represented in this simulation.</p>
+          <p><strong>Rotating Interaction (IG)</strong> is the geometric rule relating these circles through apparent rotation. Their relative rotational agreement determines the resulting interaction:</p>
+          <div class="ig-rules" aria-label="Rotating Interaction rules">
+            <div class="ig-rule attraction"><strong>Concordant rotation</strong><span>Geometric attraction</span></div>
+            <div class="ig-rule repulsion"><strong>Discordant rotation</strong><span>Geometric repulsion</span></div>
+          </div>
+          <p>No separate material substance is exchanged between the Compalphas; in the model, attraction and repulsion arise from the relative geometric configuration of their Interaction Circles.</p>
+          <p>According to their range and relative interaction intensity, these circles are identified as <strong>Meronic and Intrameronic</strong> (CM/CiM), <strong>Molecular and Intramolecular</strong> (CMo/CiMo), and <strong>Exomolecular and Intraexomolecular</strong> (CEx/CiEx). These names designate different scales of the same interaction geometry—not different kinds of material entity.</p>
+        </div>
+      </aside>
+
+      <div class="ca-badge left" id="ca-left-badge"><strong>Cα A</strong></div>
+      <div class="ca-badge right" id="ca-right-badge"><strong>Cα B</strong></div>
+      <div class="callout" id="label-circles">Common + Intra CI</div>
+      <div class="callout contact-label" id="label-intra-contact">CiEx A–B · Repulsion Point</div>
+      <div class="callout axis-up" id="label-axis-a" aria-label="Alpha Axis A">αA A</div>
+      <div class="callout axis-down" id="label-axis-b" aria-label="Alpha Axis B">αA B</div>
+      <div class="callout plane-label" id="label-plane-a" aria-label="Alpha Plane A">αPl A</div>
+      <div class="callout plane-label" id="label-plane-b" aria-label="Alpha Plane B">αPl B</div>
+      <div class="callout point-label" id="label-point-a" aria-label="Alpha Point A">αP A</div>
+      <div class="callout point-label" id="label-point-b" aria-label="Alpha Point B">αP B</div>
+      <div class="interface-badge attraction" id="interface-badge">Attraction · CCI clockwise</div>
+
+      <section class="distance-hud" aria-label="Current Compalpha separation">
+        <div class="distance-topline">
+          <div class="distance-readout"><strong id="distance-value">96</strong><span>Dm between Alpha Points</span></div>
+          <div class="force-readout attraction" id="force-readout"><span>|F<sub>IG</sub>| / F₀</span><strong id="force-hud-value">1.085 × 10⁻⁴</strong></div>
+          <div class="ci-layer-readout" id="ci-layer-readout"><i id="ci-layer-swatch" aria-hidden="true"></i><span>Active CI</span><strong id="ci-layer-name">CEx red · CiEx orange</strong></div>
+          <div class="motion-status" id="motion-status">Exomolecular Distance · automatic hold 2.0 s</div>
+        </div>
+        <div class="distance-track">
+          <i class="track-marker" style="left: 0%;" aria-hidden="true"></i>
+          <i class="track-marker" style="left: 24.2105%;" aria-hidden="true"></i>
+          <i class="track-marker" style="left: 100%;" aria-hidden="true"></i>
+          <input class="distance-hud-range" id="distance-hud-range" type="range" min="1" max="96" step="0.1" value="96" aria-label="Change the distance between the two Compalphas">
+        </div>
+        <div class="track-labels" aria-hidden="true">
+          <span style="left: 0%;">Meronic · 1 Dm</span>
+          <span style="left: 24.2105%;">Molecular · 24 Dm</span>
+          <span style="left: 100%;">Exomolecular · 96 Dm</span>
+        </div>
+      </section>
+
+      <div class="camera-tip">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="3" width="10" height="17" rx="5"/><path d="M12 3v5"/></svg>
+        <span>Auto-orbit · Stop/start in panel · Drag to take control · Scroll to zoom</span>
+      </div>
+
+      <div class="fallback" id="fallback">
+        <div>
+          <strong>The 3D view could not start.</strong>
+          <p>Please enable WebGL in your browser or open this visualization in a current version of Chrome, Edge, Firefox, or Safari.</p>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+  (function () {
+    "use strict";
+
+    var app = document.getElementById("app");
+    var stage = document.getElementById("stage");
+    var glCanvas = document.getElementById("gl-canvas");
+    var underlay = document.getElementById("underlay");
+    var hudCanvas = document.getElementById("hud-canvas");
+    var underCtx = underlay.getContext("2d");
+    var hudCtx = hudCanvas.getContext("2d");
+    var gl = glCanvas.getContext("webgl", {
+      alpha: true,
+      antialias: true,
+      depth: true,
+      premultipliedAlpha: false,
+      preserveDrawingBuffer: false
+    });
+
+    if (!gl) {
+      document.getElementById("fallback").classList.add("visible");
+      return;
+    }
+
+    var TWO_PI = Math.PI * 2;
+    var DISTANCE_MIN = 1;
+    var DISTANCE_MAX = 96;
+    var WORLD_PER_DM = 0.07;
+    var LINEAR_SPEED_DM_PER_SECOND = 7;
+    var SETTLED_EPSILON = 0.08;
+    var CAMERA_MOVE_FOLLOW = 0.22;
+    var CAMERA_SETTLED_FOLLOW = 1.4;
+    var CCI_FLOW_PIXELS_PER_SECOND = 38;
+    var CAMERA_DM_DISTANCE = 0.58;
+    var CAMERA_DISTANCE_GAIN = 1.75;
+    var CAMERA_ROTATION_RADIANS_PER_SECOND = 0.085;
+    var DISTANCE_HOLD_SECONDS = 2;
+    var DISTANCE_SEQUENCE = [96, 24, 1, 24];
+    var INITIAL_CAMERA_DISTANCE = CAMERA_DM_DISTANCE + ((DISTANCE_MAX - 1) * WORLD_PER_DM) * CAMERA_DISTANCE_GAIN;
+    var AXIS_RED = "#ff405d";
+    var AXIS_BLUE = "#3d8bff";
+    var state = {
+      distance: 96,
+      targetDistance: 96,
+      moveStartDistance: 96,
+      settledProgress: 1,
+      pendingDistance: null,
+      cameraPhase: "idle",
+      distanceAnimationRunning: true,
+      distanceSequenceIndex: 0,
+      distanceHoldRemaining: DISTANCE_HOLD_SECONDS,
+      cameraAutoRotate: true,
+      mode: "attraction",
+      repulsionDirection: 1,
+      cciDashOffset: 0,
+      meridians: 18,
+      ciOpacity: 1,
+      labels: true,
+      hostTabActive: true,
+      lastTime: performance.now(),
+      dragging: false,
+      pointerX: 0,
+      pointerY: 0,
+      camera: {
+        yaw: -0.54,
+        pitch: 0.28,
+        distance: INITIAL_CAMERA_DISTANCE,
+        zoomFactor: 1
+      }
+    };
+
+    var centers = {
+      left: [-DISTANCE_MAX * WORLD_PER_DM / 2, 0, 0],
+      right: [DISTANCE_MAX * WORLD_PER_DM / 2, 0, 0]
+    };
+
+    var vertexSource = [
+      "attribute vec4 aData;",
+      "uniform mat4 uViewProjection;",
+      "uniform vec3 uCenter;",
+      "uniform float uRadiusScale;",
+      "varying float vGlow;",
+      "varying float vAlpha;",
+      "void main() {",
+      "  float layerRadius = aData.x * uRadiusScale;",
+      "  float u = aData.y;",
+      "  float v = aData.z;",
+      "  vec3 p = vec3(",
+      "    layerRadius * (1.0 + cos(v)) * cos(u),",
+      "    layerRadius * sin(v),",
+      "    layerRadius * (1.0 + cos(v)) * sin(u)",
+      "  );",
+      "  p += uCenter;",
+      "  gl_Position = uViewProjection * vec4(p, 1.0);",
+      "  vGlow = 0.16 + 0.24 * (0.5 + 0.5 * cos(v));",
+      "  vAlpha = aData.w;",
+      "}"
+    ].join("\n");
+
+    var fragmentSource = [
+      "precision mediump float;",
+      "uniform vec3 uColor;",
+      "uniform vec3 uHotColor;",
+      "uniform float uOpacity;",
+      "varying float vGlow;",
+      "varying float vAlpha;",
+      "void main() {",
+      "  vec3 color = mix(uColor, uHotColor, vGlow);",
+      "  float alpha = vAlpha * (0.46 + vGlow * 0.78) * uOpacity;",
+      "  gl_FragColor = vec4(color, alpha);",
+      "}"
+    ].join("\n");
+
+    function compileShader(type, source) {
+      var shader = gl.createShader(type);
+      gl.shaderSource(shader, source);
+      gl.compileShader(shader);
+      if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+        throw new Error(gl.getShaderInfoLog(shader) || "Shader compilation failed");
+      }
+      return shader;
+    }
+
+    function createProgram() {
+      var program = gl.createProgram();
+      gl.attachShader(program, compileShader(gl.VERTEX_SHADER, vertexSource));
+      gl.attachShader(program, compileShader(gl.FRAGMENT_SHADER, fragmentSource));
+      gl.linkProgram(program);
+      if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+        throw new Error(gl.getProgramInfoLog(program) || "Shader linking failed");
+      }
+      return program;
+    }
+
+    var program;
+    try {
+      program = createProgram();
+    } catch (error) {
+      document.getElementById("fallback").classList.add("visible");
+      return;
+    }
+
+    var locations = {
+      data: gl.getAttribLocation(program, "aData"),
+      viewProjection: gl.getUniformLocation(program, "uViewProjection"),
+      center: gl.getUniformLocation(program, "uCenter"),
+      radiusScale: gl.getUniformLocation(program, "uRadiusScale"),
+      color: gl.getUniformLocation(program, "uColor"),
+      hotColor: gl.getUniformLocation(program, "uHotColor"),
+      opacity: gl.getUniformLocation(program, "uOpacity")
+    };
+
+    var geometry = {
+      buffer: gl.createBuffer(),
+      count: 0
+    };
+
+    var activeGeometry = {
+      buffer: gl.createBuffer(),
+      count: 0
+    };
+
+    function buildLayerDefinitions() {
+      var layers = [];
+      var i;
+
+      function isReferenceDiameter(diameter) {
+        return Math.abs(diameter - 1) < 0.001 ||
+          Math.abs(diameter - 24) < 0.001 ||
+          Math.abs(diameter - 96) < 0.001;
+      }
+
+      function ciLayerOpacity(diameter) {
+        var opacity;
+        if (diameter <= 96) {
+          var calibratedProgress = (diameter - 1) / (96 - 1);
+          opacity = 0.58 - 0.40 * Math.pow(calibratedProgress, 0.72);
+        } else {
+          var extendedProgress = Math.max(0, Math.min(1, (diameter - 96) / (680 - 96)));
+          opacity = 0.16 - 0.115 * extendedProgress;
+        }
+        return Math.min(0.70, opacity + (isReferenceDiameter(diameter) ? 0.10 : 0));
+      }
+
+      for (i = 0; i < 8; i += 1) {
+        var meronicToMolecular = 1 + (24 - 1) * (i / 7);
+        layers.push({
+          diameter: meronicToMolecular,
+          radius: meronicToMolecular * WORLD_PER_DM * 0.5,
+          alpha: ciLayerOpacity(meronicToMolecular)
+        });
+      }
+
+      for (i = 1; i <= 24; i += 1) {
+        var molecularToExomolecular = 24 + (96 - 24) * (i / 24);
+        layers.push({
+          diameter: molecularToExomolecular,
+          radius: molecularToExomolecular * WORLD_PER_DM * 0.5,
+          alpha: ciLayerOpacity(molecularToExomolecular)
+        });
+      }
+
+      var extendedDiameters = [120, 150, 190, 240, 310, 400, 520, 680];
+      extendedDiameters.forEach(function (diameter) {
+        layers.push({
+          diameter: diameter,
+          radius: diameter * WORLD_PER_DM * 0.5,
+          alpha: ciLayerOpacity(diameter)
+        });
+      });
+
+      return layers;
+    }
+
+    var layerDefinitions = buildLayerDefinitions();
+
+    function rebuildGeometry(meridianCount) {
+      var vertices = [];
+      var segments = 44;
+      for (var layer = 0; layer < layerDefinitions.length; layer += 1) {
+        var layerDefinition = layerDefinitions[layer];
+        for (var meridian = 0; meridian < meridianCount; meridian += 1) {
+          var u = meridian / meridianCount * TWO_PI;
+          for (var segment = 0; segment < segments; segment += 1) {
+            var v0 = segment / segments * TWO_PI;
+            var v1 = (segment + 1) / segments * TWO_PI;
+            vertices.push(layerDefinition.radius, u, v0, layerDefinition.alpha);
+            vertices.push(layerDefinition.radius, u, v1, layerDefinition.alpha);
+          }
+        }
+      }
+      var data = new Float32Array(vertices);
+      gl.bindBuffer(gl.ARRAY_BUFFER, geometry.buffer);
+      gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW);
+      geometry.count = data.length / 4;
+    }
+
+    function rebuildActiveGeometry(meridianCount) {
+      var vertices = [];
+      var segments = 56;
+      for (var meridian = 0; meridian < meridianCount; meridian += 1) {
+        var u = meridian / meridianCount * TWO_PI;
+        for (var segment = 0; segment < segments; segment += 1) {
+          var v0 = segment / segments * TWO_PI;
+          var v1 = (segment + 1) / segments * TWO_PI;
+          vertices.push(1, u, v0, 1);
+          vertices.push(1, u, v1, 1);
+        }
+      }
+      var data = new Float32Array(vertices);
+      gl.bindBuffer(gl.ARRAY_BUFFER, activeGeometry.buffer);
+      gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW);
+      activeGeometry.count = data.length / 4;
+    }
+
+    rebuildGeometry(state.meridians);
+    rebuildActiveGeometry(state.meridians);
+
+    function mat4Perspective(fov, aspect, near, far) {
+      var f = 1 / Math.tan(fov / 2);
+      var nf = 1 / (near - far);
+      return [
+        f / aspect, 0, 0, 0,
+        0, f, 0, 0,
+        0, 0, (far + near) * nf, -1,
+        0, 0, 2 * far * near * nf, 0
+      ];
+    }
+
+    function normalize3(v) {
+      var length = Math.hypot(v[0], v[1], v[2]) || 1;
+      return [v[0] / length, v[1] / length, v[2] / length];
+    }
+
+    function cross3(a, b) {
+      return [
+        a[1] * b[2] - a[2] * b[1],
+        a[2] * b[0] - a[0] * b[2],
+        a[0] * b[1] - a[1] * b[0]
+      ];
+    }
+
+    function dot3(a, b) {
+      return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+    }
+
+    function mat4LookAt(eye, target, up) {
+      var z = normalize3([eye[0] - target[0], eye[1] - target[1], eye[2] - target[2]]);
+      var x = normalize3(cross3(up, z));
+      var y = cross3(z, x);
+      return [
+        x[0], y[0], z[0], 0,
+        x[1], y[1], z[1], 0,
+        x[2], y[2], z[2], 0,
+        -dot3(x, eye), -dot3(y, eye), -dot3(z, eye), 1
+      ];
+    }
+
+    function mat4Multiply(a, b) {
+      var out = new Array(16);
+      for (var column = 0; column < 4; column += 1) {
+        for (var row = 0; row < 4; row += 1) {
+          out[column * 4 + row] =
+            a[0 * 4 + row] * b[column * 4 + 0] +
+            a[1 * 4 + row] * b[column * 4 + 1] +
+            a[2 * 4 + row] * b[column * 4 + 2] +
+            a[3 * 4 + row] * b[column * 4 + 3];
+        }
+      }
+      return out;
+    }
+
+    var viewProjection = new Float32Array(16);
+    var cssWidth = 1;
+    var cssHeight = 1;
+    var pixelRatio = 1;
+
+    function updateCameraMatrix() {
+      var camera = state.camera;
+      var cp = Math.cos(camera.pitch);
+      var eye = [
+        camera.distance * cp * Math.sin(camera.yaw),
+        camera.distance * Math.sin(camera.pitch) + 0.1,
+        camera.distance * cp * Math.cos(camera.yaw)
+      ];
+      var projection = mat4Perspective(42 * Math.PI / 180, cssWidth / cssHeight, 0.02, 100);
+      var view = mat4LookAt(eye, [0, 0, 0], [0, 1, 0]);
+      viewProjection.set(mat4Multiply(projection, view));
+    }
+
+    function project(point) {
+      var m = viewProjection;
+      var x = point[0];
+      var y = point[1];
+      var z = point[2];
+      var clipX = m[0] * x + m[4] * y + m[8] * z + m[12];
+      var clipY = m[1] * x + m[5] * y + m[9] * z + m[13];
+      var clipW = m[3] * x + m[7] * y + m[11] * z + m[15];
+      if (clipW <= 0.001) {
+        return { x: -9999, y: -9999, visible: false };
+      }
+      return {
+        x: (clipX / clipW * 0.5 + 0.5) * cssWidth,
+        y: (-clipY / clipW * 0.5 + 0.5) * cssHeight,
+        visible: true
+      };
+    }
+
+    function resize() {
+      var rect = stage.getBoundingClientRect();
+      cssWidth = Math.max(1, Math.round(rect.width));
+      cssHeight = Math.max(1, Math.round(rect.height));
+      pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+      var renderWidth = Math.round(cssWidth * pixelRatio);
+      var renderHeight = Math.round(cssHeight * pixelRatio);
+      [glCanvas, underlay, hudCanvas].forEach(function (canvas) {
+        if (canvas.width !== renderWidth || canvas.height !== renderHeight) {
+          canvas.width = renderWidth;
+          canvas.height = renderHeight;
+        }
+      });
+      gl.viewport(0, 0, renderWidth, renderHeight);
+      underCtx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+      hudCtx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+      updateCameraMatrix();
+    }
+
+    function displaySeparation(distance) {
+      return distance * WORLD_PER_DM;
+    }
+
+    function updateCenters() {
+      var separation = displaySeparation(state.distance);
+      centers.left[0] = -separation / 2;
+      centers.right[0] = separation / 2;
+    }
+
+    function normalizedDistance() {
+      return Math.max(0, Math.min(1, (state.distance - DISTANCE_MIN) / (DISTANCE_MAX - DISTANCE_MIN)));
+    }
+
+    function alphaAxisLength() {
+      return displaySeparation(state.distance);
+    }
+
+    function alphaPlaneRadius() {
+      return displaySeparation(state.distance);
+    }
+
+    function automaticCameraDistanceForDistance(dist) {
+      var visibleGrowth = Math.max(0, displaySeparation(dist) - WORLD_PER_DM);
+      return CAMERA_DM_DISTANCE + visibleGrowth * CAMERA_DISTANCE_GAIN;
+    }
+
+    function automaticCameraDistance() {
+      return automaticCameraDistanceForDistance(state.distance);
+    }
+
+    function cameraTargetForDistance(dist, zoomFactor) {
+      var zf = zoomFactor !== undefined ? zoomFactor : state.camera.zoomFactor;
+      var autoTarget = automaticCameraDistanceForDistance(dist) * zf;
+      var norm = Math.max(0, Math.min(1, (dist - DISTANCE_MIN) / (DISTANCE_MAX - DISTANCE_MIN)));
+      var minimumDistance = 0.14 + Math.pow(norm, 0.78) * 2.86;
+      return Math.max(minimumDistance, Math.min(24, autoTarget));
+    }
+
+    function requestDistanceTarget(newTarget) {
+      newTarget = Math.max(DISTANCE_MIN, Math.min(DISTANCE_MAX, Number(newTarget)));
+      var currentTarget = state.pendingDistance !== null ? state.pendingDistance : state.targetDistance;
+      if (Math.abs(newTarget - currentTarget) < 0.01 && Math.abs(newTarget - state.distance) < SETTLED_EPSILON) {
+        return false;
+      }
+
+      state.moveStartDistance = state.distance;
+      state.settledProgress = 0;
+
+      if (newTarget > state.distance + SETTLED_EPSILON) {
+        state.targetDistance = state.distance;
+        state.pendingDistance = newTarget;
+        state.cameraPhase = "framing-out";
+      } else {
+        state.pendingDistance = null;
+        state.targetDistance = newTarget;
+        state.cameraPhase = newTarget < state.distance - SETTLED_EPSILON ? "moving-in" : "idle";
+      }
+      return true;
+    }
+
+    function distanceAbbreviation(value) {
+      if (Math.abs(value - 96) < 1) return "Exd";
+      if (Math.abs(value - 24) < 0.5) return "Mod";
+      if (Math.abs(value - 1) < 0.12) return "Med";
+      return formatDistance(value) + " Dm";
+    }
+
+    function synchronizeDistanceSequence(value) {
+      if (Math.abs(value - 96) < 1) {
+        state.distanceSequenceIndex = 0;
+      } else if (Math.abs(value - 1) < 0.12) {
+        state.distanceSequenceIndex = 2;
+      } else if (Math.abs(value - 24) < 0.5) {
+        state.distanceSequenceIndex = state.distanceSequenceIndex >= 2 ? 3 : 1;
+      }
+      state.distanceHoldRemaining = DISTANCE_HOLD_SECONDS;
+    }
+
+    function stopDistanceAnimation(freezeMotion) {
+      state.distanceAnimationRunning = false;
+      if (freezeMotion) {
+        state.pendingDistance = null;
+        state.targetDistance = state.distance;
+        state.moveStartDistance = state.distance;
+        state.cameraPhase = "idle";
+        state.settledProgress = 1;
+        document.body.classList.remove("is-moving", "moving-out", "moving-in");
+      }
+    }
+
+    function startDistanceAnimation() {
+      state.distanceAnimationRunning = true;
+      state.distanceHoldRemaining = DISTANCE_HOLD_SECONDS;
+      var sequenceTarget = DISTANCE_SEQUENCE[state.distanceSequenceIndex];
+      if (Math.abs(sequenceTarget - state.distance) >= SETTLED_EPSILON) {
+        requestDistanceTarget(sequenceTarget);
+      }
+    }
+
+    function updateDistanceSequence(deltaSeconds) {
+      if (!state.distanceAnimationRunning) return;
+      var sequenceTarget = DISTANCE_SEQUENCE[state.distanceSequenceIndex];
+      if (!isDistanceSettled() || Math.abs(state.distance - sequenceTarget) >= SETTLED_EPSILON) return;
+
+      state.distanceHoldRemaining = Math.max(0, state.distanceHoldRemaining - deltaSeconds);
+      if (state.distanceHoldRemaining > 0) return;
+
+      state.distanceSequenceIndex = (state.distanceSequenceIndex + 1) % DISTANCE_SEQUENCE.length;
+      state.distanceHoldRemaining = DISTANCE_HOLD_SECONDS;
+      requestDistanceTarget(DISTANCE_SEQUENCE[state.distanceSequenceIndex]);
+    }
+
+    function setCameraRotationRunning(running) {
+      state.cameraAutoRotate = Boolean(running);
+    }
+
+    function isDistanceSettled() {
+      // Se há enquadramento pendente ou câmera em fase de framing, não está estabilizado
+      if (state.pendingDistance !== null) return false;
+      if (state.cameraPhase === 'framing-out') return false;
+      return Math.abs(state.targetDistance - state.distance) < SETTLED_EPSILON;
+    }
+
+    function getMotionDirection() {
+      // Durante framing-out, a direção é baseada no pending
+      if (state.pendingDistance !== null) {
+        return Math.sign(state.pendingDistance - state.distance);
+      }
+      return Math.sign(state.targetDistance - state.distance);
+    }
+
+    function updateCameraDistance(deltaSeconds) {
+      var settled = isDistanceSettled();
+
+      // FASE 1: Para afastamento (1 -> 96), a câmera se afasta PRIMEIRO
+      if (state.cameraPhase === 'framing-out' && state.pendingDistance !== null) {
+        var desired = cameraTargetForDistance(state.pendingDistance);
+        var followFraming = 1 - Math.exp(-deltaSeconds * 1.15); // framing mais rápido que o movimento dos Ca
+        state.camera.distance += (desired - state.camera.distance) * followFraming;
+
+        // Quando a câmera chega perto do enquadramento ideal, inicia o movimento dos Ca
+        if (Math.abs(state.camera.distance - desired) < 0.09) {
+          state.targetDistance = state.pendingDistance;
+          state.pendingDistance = null;
+          state.cameraPhase = 'moving-out';
+          state.moveStartDistance = state.distance;
+          state.settledProgress = 0;
+        }
+        return;
+      }
+
+      // FASE 2: Movimento dos Ca
+      if (!settled) {
+        var autoTarget = automaticCameraDistance() * state.camera.zoomFactor;
+        var minimumDistance = 0.14 + Math.pow(normalizedDistance(), 0.78) * 2.86;
+        autoTarget = Math.max(minimumDistance, Math.min(24, autoTarget));
+
+        if (state.cameraPhase === 'moving-in') {
+          // Aproximação (96 -> 1): Ca se aproximam primeiro, câmera quase fixa (comportamento que já estava perfeito)
+          var driftTargetIn = state.camera.distance * 0.92 + autoTarget * 0.08;
+          var slowFollowIn = 1 - Math.exp(-deltaSeconds * CAMERA_MOVE_FOLLOW);
+          state.camera.distance += (driftTargetIn - state.camera.distance) * slowFollowIn;
+        } else if (state.cameraPhase === 'moving-out') {
+          // Afastamento: câmera já está enquadrada, mantém quase fixa enquanto Ca se afastam
+          var driftTargetOut = state.camera.distance * 0.94 + autoTarget * 0.06;
+          var slowFollowOut = 1 - Math.exp(-deltaSeconds * CAMERA_MOVE_FOLLOW * 0.8);
+          state.camera.distance += (driftTargetOut - state.camera.distance) * slowFollowOut;
+        } else {
+          // Fallback
+          var driftTarget = state.camera.distance * 0.92 + autoTarget * 0.08;
+          var slowFollow = 1 - Math.exp(-deltaSeconds * CAMERA_MOVE_FOLLOW);
+          state.camera.distance += (driftTarget - state.camera.distance) * slowFollow;
+        }
+      } else {
+        // Estabilizado
+        var finalTarget = cameraTargetForDistance(state.distance);
+        var fastFollow = 1 - Math.exp(-deltaSeconds * CAMERA_SETTLED_FOLLOW);
+        state.camera.distance += (finalTarget - state.camera.distance) * fastFollow;
+        state.settledProgress = Math.min(1, state.settledProgress + deltaSeconds * 2.5);
+        if (state.cameraPhase !== 'idle') {
+          state.cameraPhase = 'idle';
+        }
+      }
+    }
+
+    function axisConfigurations() {
+      if (state.mode === "attraction") {
+        return {
+          left: { direction: 1, color: AXIS_RED, name: "Spin up" },
+          right: { direction: -1, color: AXIS_BLUE, name: "Spin down" }
+        };
+      }
+      var direction = state.repulsionDirection;
+      var color = direction > 0 ? AXIS_RED : AXIS_BLUE;
+      var name = direction > 0 ? "Spin up" : "Spin down";
+      return {
+        left: { direction: direction, color: color, name: name },
+        right: { direction: direction, color: color, name: name }
+      };
+    }
+
+    function axisEndpoint(center, configuration) {
+      var halfLength = alphaAxisLength() * 0.5;
+      return [center[0], center[1] + configuration.direction * halfLength, center[2]];
+    }
+
+    function mixColor(from, to, amount) {
+      return [
+        from[0] + (to[0] - from[0]) * amount,
+        from[1] + (to[1] - from[1]) * amount,
+        from[2] + (to[2] - from[2]) * amount
+      ];
+    }
+
+    function activeLayerColor() {
+      var blue = [0.24, 0.55, 1.0];
+      var yellow = [1.0, 0.82, 0.22];
+      var red = [1.0, 0.25, 0.36];
+      if (state.distance <= 24) {
+        return mixColor(blue, yellow, (state.distance - 1) / (24 - 1));
+      }
+      return mixColor(yellow, red, (state.distance - 24) / (96 - 24));
+    }
+
+    function intraLayerColor() {
+      var white = [1.0, 1.0, 1.0];
+      var green = [0.24, 0.9, 0.42];
+      var orange = [1.0, 0.5, 0.1];
+      if (state.distance <= 24) {
+        return mixColor(white, green, (state.distance - 1) / (24 - 1));
+      }
+      return mixColor(green, orange, (state.distance - 24) / (96 - 24));
+    }
+
+    function drawCompalpha(sourceGeometry, center, color, hotColor, opacity, radiusScale) {
+      gl.bindBuffer(gl.ARRAY_BUFFER, sourceGeometry.buffer);
+      gl.vertexAttribPointer(locations.data, 4, gl.FLOAT, false, 0, 0);
+      gl.uniform3fv(locations.center, center);
+      gl.uniform3fv(locations.color, color);
+      gl.uniform3fv(locations.hotColor, hotColor);
+      gl.uniform1f(locations.opacity, opacity);
+      gl.uniform1f(locations.radiusScale, radiusScale);
+      gl.drawArrays(gl.LINES, 0, sourceGeometry.count);
+    }
+
+    function renderWebGL() {
+      gl.clearColor(0, 0, 0, 0);
+      gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+      gl.enable(gl.DEPTH_TEST);
+      gl.depthFunc(gl.LEQUAL);
+      gl.enable(gl.BLEND);
+      gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+      gl.useProgram(program);
+      gl.enableVertexAttribArray(locations.data);
+      gl.uniformMatrix4fv(locations.viewProjection, false, viewProjection);
+
+      // Camadas de fundo (cinza) sempre visíveis
+      drawCompalpha(geometry, centers.left, [0.78, 0.82, 0.86], [1.0, 1.0, 1.0], state.ciOpacity, 1);
+      drawCompalpha(geometry, centers.right, [0.78, 0.82, 0.86], [1.0, 1.0, 1.0], state.ciOpacity, 1);
+
+      // CM/CMo/CEx permanecem visíveis e mudam de escala durante todo o deslocamento.
+      var activeColor = activeLayerColor();
+      var activeHotColor = mixColor(activeColor, [1, 1, 1], 0.42);
+      var activeRadius = displaySeparation(state.distance) * 0.5;
+      var motionVisibility = isDistanceSettled() ? 1 : 0.76;
+      var activeOpacity = Math.min(1.6, state.ciOpacity * 1.38) * motionVisibility;
+      drawCompalpha(activeGeometry, centers.left, activeColor, activeHotColor, activeOpacity, activeRadius);
+      drawCompalpha(activeGeometry, centers.right, activeColor, activeHotColor, activeOpacity, activeRadius);
+    }
+
+    function line3D(ctx, a, b, color, width, dash) {
+      var pa = project(a);
+      var pb = project(b);
+      if (!pa.visible || !pb.visible) {
+        return;
+      }
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(pa.x, pa.y);
+      ctx.lineTo(pb.x, pb.y);
+      ctx.strokeStyle = color;
+      ctx.lineWidth = width;
+      if (dash) {
+        ctx.setLineDash(dash);
+      }
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function drawFloorGrid() {
+      underCtx.clearRect(0, 0, cssWidth, cssHeight);
+      var fade = underCtx.createLinearGradient(0, cssHeight * 0.38, 0, cssHeight);
+      fade.addColorStop(0, "rgba(61, 119, 145, 0.00)");
+      fade.addColorStop(0.35, "rgba(61, 119, 145, 0.09)");
+      fade.addColorStop(1, "rgba(61, 119, 145, 0.02)");
+
+      // Grid no mesmo plano dos Ca (y=0) para não flutuarem
+      for (var i = -12; i <= 12; i += 1) {
+        line3D(underCtx, [i, 0, -10], [i, 0, 10], "rgba(91, 146, 169, 0.12)", 1);
+        line3D(underCtx, [-12, 0, i], [12, 0, i], "rgba(91, 146, 169, 0.12)", 1);
+      }
+
+      underCtx.save();
+      underCtx.globalCompositeOperation = "source-atop";
+      underCtx.fillStyle = fade;
+      underCtx.fillRect(0, 0, cssWidth, cssHeight);
+      underCtx.restore();
+    }
+
+    function drawPlane(center, radius) {
+      var points = [];
+      for (var i = 0; i <= 72; i += 1) {
+        var angle = i / 72 * TWO_PI;
+        points.push(project([
+          center[0] + Math.cos(angle) * radius,
+          center[1],
+          center[2] + Math.sin(angle) * radius
+        ]));
+      }
+      underCtx.save();
+      underCtx.beginPath();
+      points.forEach(function (p, index) {
+        if (index === 0) {
+          underCtx.moveTo(p.x, p.y);
+        } else {
+          underCtx.lineTo(p.x, p.y);
+        }
+      });
+      underCtx.closePath();
+      underCtx.fillStyle = "rgba(79, 225, 138, 0.075)";
+      underCtx.strokeStyle = "rgba(79, 225, 138, 0.48)";
+      underCtx.lineWidth = 1.25;
+      underCtx.shadowColor = "rgba(79, 225, 138, 0.42)";
+      underCtx.shadowBlur = 7;
+      underCtx.fill();
+      underCtx.stroke();
+      underCtx.restore();
+    }
+
+    function drawArrowhead(ctx, from, to, color, size) {
+      var angle = Math.atan2(to.y - from.y, to.x - from.x);
+      ctx.save();
+      ctx.translate(to.x, to.y);
+      ctx.rotate(angle);
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(-size, -size * 0.55);
+      ctx.lineTo(-size, size * 0.55);
+      ctx.closePath();
+      ctx.fillStyle = color;
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function drawAxis(center, configuration) {
+      var halfLength = alphaAxisLength() * 0.5;
+      var bottom = project([center[0], center[1] - halfLength, center[2]]);
+      var top = project([center[0], center[1] + halfLength, center[2]]);
+      var middle = project(center);
+      var endpoint = project(axisEndpoint(center, configuration));
+      hudCtx.save();
+      hudCtx.beginPath();
+      hudCtx.moveTo(bottom.x, bottom.y);
+      hudCtx.lineTo(top.x, top.y);
+      hudCtx.strokeStyle = configuration.color;
+      hudCtx.lineWidth = 2.2;
+      hudCtx.shadowColor = configuration.color;
+      hudCtx.shadowBlur = 11;
+      hudCtx.stroke();
+      drawArrowhead(hudCtx, middle, endpoint, configuration.color, 9);
+      hudCtx.beginPath();
+      hudCtx.arc(middle.x, middle.y, 4.2, 0, TWO_PI);
+      hudCtx.fillStyle = "#f2d47d";
+      hudCtx.shadowColor = "#f2d47d";
+      hudCtx.shadowBlur = 12;
+      hudCtx.fill();
+      hudCtx.restore();
+    }
+
+    function commonInteractionPoint(theta) {
+      var radius = displaySeparation(state.distance) * 0.5;
+      return [
+        Math.cos(theta) * radius,
+        Math.sin(theta) * radius,
+        0
+      ];
+    }
+
+    function intraInteractionDiameter(distance) {
+      // Cada círculo Intra ocupa exatamente metade da separação αP–αP.
+      // Assim, o αP fica na borda externa e ambos se tocam no ponto médio.
+      return distance * 0.5;
+    }
+
+    function interactionColorWithAlpha(color, alpha) {
+      return "rgba(" + color.map(function (channel) {
+        return Math.round(channel * 255);
+      }).join(",") + "," + alpha + ")";
+    }
+
+    function drawIntraInteractionCircle(center, phaseOffset) {
+      var radius = displaySeparation(intraInteractionDiameter(state.distance)) * 0.5;
+      var segments = 128;
+      var points = [];
+      for (var i = 0; i <= segments; i += 1) {
+        var theta = i / segments * TWO_PI;
+        points.push(project([
+          center[0] + Math.cos(theta) * radius,
+          center[1] + Math.sin(theta) * radius,
+          center[2]
+        ]));
+      }
+
+      hudCtx.save();
+      hudCtx.beginPath();
+      points.forEach(function (point, index) {
+        if (index === 0) hudCtx.moveTo(point.x, point.y);
+        else hudCtx.lineTo(point.x, point.y);
+      });
+      hudCtx.closePath();
+      hudCtx.lineCap = "round";
+      hudCtx.globalAlpha = Math.min(1, Math.max(0.18, state.ciOpacity));
+
+      var color = intraLayerColor();
+      hudCtx.setLineDash([2, 6]);
+      hudCtx.lineDashOffset = 0;
+      hudCtx.strokeStyle = interactionColorWithAlpha(color, 0.25);
+      hudCtx.lineWidth = 3.2;
+      hudCtx.shadowColor = interactionColorWithAlpha(color, 0.5);
+      hudCtx.shadowBlur = 8;
+      hudCtx.stroke();
+
+      if (state.mode === "repulsion") {
+        hudCtx.setLineDash([2.8, 9.2]);
+        hudCtx.lineDashOffset = state.cciDashOffset + phaseOffset;
+        hudCtx.strokeStyle = interactionColorWithAlpha(color, 0.82);
+        hudCtx.lineWidth = 1.45;
+        hudCtx.stroke();
+
+        hudCtx.setLineDash([1.6, 10.4]);
+        hudCtx.lineDashOffset = -state.cciDashOffset + phaseOffset + 5;
+        hudCtx.strokeStyle = interactionColorWithAlpha(mixColor(color, [1, 1, 1], 0.48), 0.66);
+        hudCtx.lineWidth = 1.05;
+        hudCtx.stroke();
+      } else {
+        hudCtx.setLineDash([2.2, 7.8]);
+        hudCtx.lineDashOffset = state.cciDashOffset * commonRotationDirection() + phaseOffset;
+        hudCtx.strokeStyle = interactionColorWithAlpha(color, 0.88);
+        hudCtx.lineWidth = 1.45;
+        hudCtx.stroke();
+      }
+
+      hudCtx.setLineDash([]);
+      hudCtx.restore();
+    }
+
+    function drawIntraInteractionCircles() {
+      var radius = displaySeparation(intraInteractionDiameter(state.distance)) * 0.5;
+      var leftCenter = [centers.left[0] + radius, centers.left[1], centers.left[2]];
+      var rightCenter = [centers.right[0] - radius, centers.right[1], centers.right[2]];
+      drawIntraInteractionCircle(leftCenter, 0);
+      drawIntraInteractionCircle(rightCenter, 7);
+    }
+
+    function commonRotationDirection() {
+      return 1;
+    }
+
+    function commonRotationName() {
+      if (state.mode === "repulsion") {
+        return "opposing flows";
+      }
+      return commonRotationDirection() > 0 ? "clockwise" : "counterclockwise";
+    }
+
+    function commonInteractionColor(alpha) {
+      return interactionColorWithAlpha(activeLayerColor(), alpha);
+    }
+
+    function commonInteractionCounterColor(alpha) {
+      return interactionColorWithAlpha(mixColor(activeLayerColor(), [1, 1, 1], 0.34), alpha);
+    }
+
+    function drawCommonInteractionCircle() {
+      var segments = 144;
+      var points = [];
+      for (var i = 0; i <= segments; i += 1) {
+        points.push(project(commonInteractionPoint(i / segments * TWO_PI)));
+      }
+
+      hudCtx.save();
+      hudCtx.beginPath();
+      points.forEach(function (point, index) {
+        if (index === 0) {
+          hudCtx.moveTo(point.x, point.y);
+        } else {
+          hudCtx.lineTo(point.x, point.y);
+        }
+      });
+      hudCtx.closePath();
+      hudCtx.lineCap = "round";
+      hudCtx.setLineDash([2.4, 8.4]);
+      hudCtx.lineDashOffset = 0;
+      hudCtx.strokeStyle = commonInteractionColor(0.13);
+      hudCtx.lineWidth = 4.5;
+      hudCtx.shadowColor = commonInteractionColor(0.62);
+      hudCtx.shadowBlur = 11;
+      hudCtx.stroke();
+
+      if (state.mode === "repulsion") {
+        hudCtx.setLineDash([3.4, 12.6]);
+        hudCtx.lineDashOffset = state.cciDashOffset;
+        hudCtx.strokeStyle = commonInteractionColor(0.82);
+        hudCtx.lineWidth = 2.35;
+        hudCtx.shadowBlur = 8;
+        hudCtx.stroke();
+
+        hudCtx.setLineDash([1.9, 14.1]);
+        hudCtx.lineDashOffset = -state.cciDashOffset + 8;
+        hudCtx.strokeStyle = commonInteractionCounterColor(0.72);
+        hudCtx.lineWidth = 2.05;
+        hudCtx.shadowColor = commonInteractionCounterColor(0.72);
+        hudCtx.shadowBlur = 6;
+        hudCtx.stroke();
+      } else {
+        hudCtx.setLineDash([2.4, 8.4]);
+        hudCtx.lineDashOffset = state.cciDashOffset * commonRotationDirection();
+        hudCtx.strokeStyle = commonInteractionColor(0.82);
+        hudCtx.lineWidth = 2.25;
+        hudCtx.shadowBlur = 7;
+        hudCtx.stroke();
+      }
+      hudCtx.setLineDash([]);
+      hudCtx.restore();
+    }
+
+    function drawInteractionLine() {
+      var left = project(centers.left);
+      var right = project(centers.right);
+      if (!left.visible || !right.visible) {
+        return;
+      }
+      hudCtx.save();
+      hudCtx.beginPath();
+      hudCtx.moveTo(left.x, left.y);
+      hudCtx.lineTo(right.x, right.y);
+      hudCtx.setLineDash([6, 7]);
+      hudCtx.strokeStyle = state.mode === "attraction" ? "rgba(94, 231, 242, 0.58)" : "rgba(255, 82, 119, 0.58)";
+      hudCtx.lineWidth = 1.35;
+      hudCtx.stroke();
+      hudCtx.setLineDash([]);
+
+      var dx = right.x - left.x;
+      var dy = right.y - left.y;
+      var length = Math.hypot(dx, dy);
+      if (length < 34) {
+        hudCtx.restore();
+        return;
+      }
+      var ux = dx / length;
+      var uy = dy / length;
+      var middle = { x: (left.x + right.x) / 2, y: (left.y + right.y) / 2 };
+      var color = state.mode === "attraction" ? "#5ee7f2" : "#ff5277";
+      if (state.mode === "attraction") {
+        drawArrowhead(hudCtx, left, { x: middle.x - ux * 8, y: middle.y - uy * 8 }, color, 7);
+        drawArrowhead(hudCtx, right, { x: middle.x + ux * 8, y: middle.y + uy * 8 }, color, 7);
+      } else {
+        drawArrowhead(hudCtx, middle, left, color, 7);
+        drawArrowhead(hudCtx, middle, right, color, 7);
+      }
+      hudCtx.restore();
+    }
+
+    function drawConnector(fromWorld, element) {
+      if (!state.labels) {
+        return;
+      }
+      var from = project(fromWorld);
+      var rect = element.getBoundingClientRect();
+      var stageRect = stage.getBoundingClientRect();
+      var to = {
+        x: rect.left - stageRect.left + rect.width / 2,
+        y: rect.top - stageRect.top + rect.height / 2
+      };
+      hudCtx.save();
+      hudCtx.beginPath();
+      hudCtx.moveTo(from.x, from.y);
+      hudCtx.lineTo(to.x, to.y);
+      hudCtx.strokeStyle = "rgba(179, 215, 232, 0.22)";
+      hudCtx.lineWidth = 1;
+      hudCtx.stroke();
+      hudCtx.beginPath();
+      hudCtx.arc(from.x, from.y, 2.1, 0, TWO_PI);
+      hudCtx.fillStyle = "rgba(220, 244, 252, 0.72)";
+      hudCtx.fill();
+      hudCtx.restore();
+    }
+
+    function drawIntraContactConnector(element) {
+      if (!state.labels || !element) {
+        return;
+      }
+      var contact = project([0, 0, 0]);
+      if (!contact.visible) {
+        return;
+      }
+      var rect = element.getBoundingClientRect();
+      var stageRect = stage.getBoundingClientRect();
+      var labelPoint = {
+        x: rect.left - stageRect.left + rect.width / 2,
+        y: rect.top - stageRect.top + rect.height / 2
+      };
+      var color = intraLayerColor();
+      hudCtx.save();
+      hudCtx.beginPath();
+      hudCtx.moveTo(contact.x, contact.y);
+      hudCtx.lineTo(labelPoint.x, labelPoint.y);
+      hudCtx.strokeStyle = interactionColorWithAlpha(color, 0.68);
+      hudCtx.lineWidth = 1.25;
+      hudCtx.stroke();
+      hudCtx.beginPath();
+      hudCtx.arc(contact.x, contact.y, 3.3, 0, TWO_PI);
+      hudCtx.fillStyle = interactionColorWithAlpha(color, 0.98);
+      hudCtx.shadowColor = interactionColorWithAlpha(color, 0.9);
+      hudCtx.shadowBlur = 9;
+      hudCtx.fill();
+      hudCtx.restore();
+    }
+
+    function interactionCircleLabelPoint() {
+      var scale = displaySeparation(state.distance);
+      var offset = Math.min(1.68, Math.max(0.08, scale * 0.35));
+      return [centers.left[0] - offset, scale * 0.12, scale * 0.12];
+    }
+
+    function interfaceBadgePoint() {
+      return [0, -Math.max(0.055, displaySeparation(state.distance) * 0.66), 0];
+    }
+
+
+    function drawMotionTrails() {
+      var delta = state.targetDistance - state.distance;
+      if (Math.abs(delta) < SETTLED_EPSILON) return;
+      var dir = Math.sign(delta);
+      var left = project(centers.left);
+      var right = project(centers.right);
+      if (!left.visible || !right.visible) return;
+
+      // Ghosts / rastro para dar sensação inequívoca de movimento
+      var steps = 4;
+      for (var i = 1; i <= steps; i++) {
+        var t = i / steps;
+        var ghostDist = state.distance - dir * t * 3.2;
+        if (ghostDist < DISTANCE_MIN || ghostDist > DISTANCE_MAX * 1.2) continue;
+        var ghostSep = displaySeparation(ghostDist);
+        var lg = project([-ghostSep/2, 0, 0]);
+        var rg = project([ghostSep/2, 0, 0]);
+        if (!lg.visible || !rg.visible) continue;
+        var alpha = 0.22 * (1 - t) * (1 - t);
+        hudCtx.save();
+        hudCtx.globalAlpha = alpha;
+        hudCtx.beginPath();
+        hudCtx.arc(lg.x, lg.y, 18 * (1 - t*0.25), 0, TWO_PI);
+        hudCtx.fillStyle = dir > 0 ? "rgba(94,231,242,0.9)" : "rgba(255,82,119,0.9)";
+        hudCtx.fill();
+        hudCtx.beginPath();
+        hudCtx.arc(rg.x, rg.y, 18 * (1 - t*0.25), 0, TWO_PI);
+        hudCtx.fill();
+        hudCtx.restore();
+      }
+
+      // Faixas de velocidade ao longo da linha central
+      hudCtx.save();
+      var midY = (left.y + right.y) * 0.5;
+      var speed = Math.abs(delta);
+      var dashLen = 18 + speed * 0.3;
+      hudCtx.setLineDash([dashLen, 14]);
+      hudCtx.lineDashOffset = -state.cciDashOffset * dir * 1.8;
+      hudCtx.strokeStyle = dir > 0 ? "rgba(94,231,242,0.35)" : "rgba(255,140,160,0.38)";
+      hudCtx.lineWidth = 2;
+      hudCtx.beginPath();
+      hudCtx.moveTo(left.x, left.y);
+      hudCtx.lineTo(right.x, right.y);
+      hudCtx.stroke();
+
+      // Texto grande de direção - inequívoco
+      hudCtx.setLineDash([]);
+      hudCtx.font = "800 13px Inter, sans-serif";
+      hudCtx.textAlign = "center";
+      hudCtx.textBaseline = "middle";
+      var label = dir > 0 ? "⟵ Diverging ⟶" : "⟶ Converging ⟵";
+      var bgW = hudCtx.measureText(label).width + 22;
+      var bgH = 22;
+      var mx = (left.x + right.x) / 2;
+      var my = midY - 44;
+      hudCtx.fillStyle = dir > 0 ? "rgba(94,231,242,0.14)" : "rgba(255,64,93,0.14)";
+      hudCtx.strokeStyle = dir > 0 ? "rgba(94,231,242,0.42)" : "rgba(255,64,93,0.42)";
+      hudCtx.lineWidth = 1;
+      hudCtx.beginPath();
+      if (hudCtx.roundRect) {
+        hudCtx.roundRect(mx - bgW/2, my - bgH/2, bgW, bgH, 11);
+      } else {
+        hudCtx.rect(mx - bgW/2, my - bgH/2, bgW, bgH);
+      }
+      hudCtx.fill();
+      hudCtx.stroke();
+      hudCtx.fillStyle = dir > 0 ? "#a8f7ff" : "#ffb3c0";
+      hudCtx.shadowColor = dir > 0 ? "rgba(94,231,242,0.9)" : "rgba(255,64,93,0.9)";
+      hudCtx.shadowBlur = 10;
+      hudCtx.fillText(label, mx, my);
+      hudCtx.shadowBlur = 0;
+      hudCtx.restore();
+
+      // Setas extras nas bordas dos Ca
+      hudCtx.save();
+      var arrowColor = dir > 0 ? "#5ee7f2" : "#ff5277";
+      var leftEdge = { x: left.x + (dir>0 ? -22 : 22), y: left.y };
+      var rightEdge = { x: right.x + (dir>0 ? 22 : -22), y: right.y };
+      drawArrowhead(hudCtx, {x: left.x, y: left.y}, leftEdge, arrowColor, dir>0 ? 10 : 10);
+      drawArrowhead(hudCtx, {x: right.x, y: right.y}, rightEdge, arrowColor, dir>0 ? 10 : 10);
+      hudCtx.restore();
+    }
+
+    function drawDistanceScaleEffect() {
+      var delta = state.targetDistance - state.distance;
+      if (Math.abs(delta) < SETTLED_EPSILON) return;
+      var dir = Math.sign(delta);
+      // Pulsos concêntricos saindo dos centros para reforçar expansão/contração
+      var left = project(centers.left);
+      var right = project(centers.right);
+      if (!left.visible || !right.visible) return;
+      hudCtx.save();
+      hudCtx.globalAlpha = 0.18 + 0.12 * Math.sin(performance.now()*0.008);
+      for (var r = 0; r < 3; r++) {
+        var radius = 14 + r * 18 + (performance.now()*0.04 % 18);
+        hudCtx.beginPath();
+        hudCtx.arc(left.x, left.y, radius, 0, TWO_PI);
+        hudCtx.strokeStyle = dir>0 ? "rgba(94,231,242,0.5)" : "rgba(255,82,119,0.5)";
+        hudCtx.lineWidth = 1.1 - r*0.2;
+        hudCtx.stroke();
+        hudCtx.beginPath();
+        hudCtx.arc(right.x, right.y, radius, 0, TWO_PI);
+        hudCtx.stroke();
+      }
+      hudCtx.restore();
+    }
+
+
+    function drawHud() {
+      var configurations = axisConfigurations();
+      hudCtx.clearRect(0, 0, cssWidth, cssHeight);
+      drawDistanceScaleEffect();
+      drawMotionTrails();
+      drawInteractionLine();
+      drawIntraInteractionCircles();
+      drawCommonInteractionCircle();
+      drawAxis(centers.left, configurations.left);
+      drawAxis(centers.right, configurations.right);
+      drawConnector(interactionCircleLabelPoint(), document.getElementById("label-circles"));
+      drawIntraContactConnector(document.getElementById("label-intra-contact"));
+      drawConnector(axisEndpoint(centers.left, configurations.left), document.getElementById("label-axis-a"));
+      drawConnector(axisEndpoint(centers.right, configurations.right), document.getElementById("label-axis-b"));
+      drawConnector([centers.left[0] + alphaPlaneRadius() * 0.62, 0, alphaPlaneRadius() * 0.62], document.getElementById("label-plane-a"));
+      drawConnector([centers.right[0] - alphaPlaneRadius() * 0.62, 0, -alphaPlaneRadius() * 0.62], document.getElementById("label-plane-b"));
+      drawConnector(centers.left, document.getElementById("label-point-a"));
+      drawConnector(centers.right, document.getElementById("label-point-b"));
+    }
+
+    function placeElement(id, world, offsetX, offsetY) {
+      var element = document.getElementById(id);
+      var p = project(world);
+      element.style.left = (p.x + offsetX) + "px";
+      element.style.top = (p.y + offsetY) + "px";
+      element.style.visibility = p.visible ? "visible" : "hidden";
+    }
+
+    function updateLabels() {
+      var configurations = axisConfigurations();
+      var labelHeight = alphaAxisLength() * 0.5 + Math.max(0.075, alphaAxisLength() * 0.12);
+      var leftAxisLabel = document.getElementById("label-axis-a");
+      var rightAxisLabel = document.getElementById("label-axis-b");
+      leftAxisLabel.textContent = "αA A";
+      rightAxisLabel.textContent = "αA B";
+      leftAxisLabel.classList.toggle("axis-up", configurations.left.direction > 0);
+      leftAxisLabel.classList.toggle("axis-down", configurations.left.direction < 0);
+      rightAxisLabel.classList.toggle("axis-up", configurations.right.direction > 0);
+      rightAxisLabel.classList.toggle("axis-down", configurations.right.direction < 0);
+
+      placeElement("ca-left-badge", [centers.left[0], labelHeight, 0], 0, -12);
+      placeElement("ca-right-badge", [centers.right[0], labelHeight, 0], 0, -12);
+      placeElement("label-circles", interactionCircleLabelPoint(), -74, -10);
+      placeElement("label-intra-contact", [0, 0, 0], 0, -70);
+      placeElement("label-axis-a", axisEndpoint(centers.left, configurations.left), -66, 0);
+      placeElement("label-axis-b", axisEndpoint(centers.right, configurations.right), 66, 0);
+      placeElement("label-plane-a", [centers.left[0] + alphaPlaneRadius() * 0.62, 0, alphaPlaneRadius() * 0.62], 54, 16);
+      placeElement("label-plane-b", [centers.right[0] - alphaPlaneRadius() * 0.62, 0, -alphaPlaneRadius() * 0.62], -54, 16);
+      placeElement("label-point-a", centers.left, -48, 30);
+      placeElement("label-point-b", centers.right, 48, 30);
+      placeElement("interface-badge", interfaceBadgePoint(), 0, 12);
+    }
+
+    function distanceName(value) {
+      if (Math.abs(value - 1) < 0.08) {
+        return "Meronic Distance";
+      }
+      if (Math.abs(value - 24) < 0.5) {
+        return "Molecular Distance";
+      }
+      if (Math.abs(value - 96) < 1) {
+        return "Exomolecular Distance";
+      }
+      return "Transitional distance";
+    }
+
+    function formatDistance(value) {
+      return value < 10 ? value.toFixed(1) : value.toFixed(0);
+    }
+
+    function activeLayerName() {
+      if (Math.abs(state.distance - 1) < 0.12) {
+        return "CM blue · CiM white";
+      }
+      if (Math.abs(state.distance - 24) < 0.45) {
+        return "CMo yellow · CiMo green";
+      }
+      if (Math.abs(state.distance - 96) < 0.8) {
+        return "CEx red · CiEx orange";
+      }
+      return state.distance < 24 ? "CM/CiM → CMo/CiMo" : "CMo/CiMo → CEx/CiEx";
+    }
+
+    function intraContactLabel() {
+      if (Math.abs(state.distance - 1) < 0.12) {
+        return "CiM A–B · Repulsion Point";
+      }
+      if (Math.abs(state.distance - 24) < 0.45) {
+        return "CiMo A–B · Repulsion Point";
+      }
+      if (Math.abs(state.distance - 96) < 0.8) {
+        return "CiEx A–B · Repulsion Point";
+      }
+      return "Intra CI A–B · Repulsion Point";
+    }
+
+    function activeCirclePairLabel() {
+      if (Math.abs(state.distance - 1) < 0.12) return "CM + CiM";
+      if (Math.abs(state.distance - 24) < 0.45) return "CMo + CiMo";
+      if (Math.abs(state.distance - 96) < 0.8) return "CEx + CiEx";
+      return "Common + Intra CI";
+    }
+
+    function colorToCss(color) {
+      return "rgb(" + color.map(function (channel) {
+        return Math.round(channel * 255);
+      }).join(",") + ")";
+    }
+
+    function relativeIGMagnitude() {
+      return 1 / Math.pow(state.distance, 2);
+    }
+
+    function superscriptInteger(value) {
+      var characters = {
+        "-": "⁻",
+        "0": "⁰",
+        "1": "¹",
+        "2": "²",
+        "3": "³",
+        "4": "⁴",
+        "5": "⁵",
+        "6": "⁶",
+        "7": "⁷",
+        "8": "⁸",
+        "9": "⁹"
+      };
+      return String(value).split("").map(function (character) {
+        return characters[character] || character;
+      }).join("");
+    }
+
+    function formatRelativeMagnitude(magnitude, includeReferenceUnit) {
+      var formatted;
+      if (magnitude >= 0.01) {
+        formatted = magnitude.toFixed(3);
+      } else {
+        var exponent = Math.floor(Math.log(magnitude) / Math.LN10);
+        var mantissa = magnitude / Math.pow(10, exponent);
+        formatted = mantissa.toFixed(3) + " × 10" + superscriptInteger(exponent);
+      }
+      return formatted + (includeReferenceUnit ? " F₀" : "");
+    }
+
+    function updateMotionControls() {
+      var distanceButton = document.getElementById("distance-animation-toggle");
+      var distanceStrong = distanceButton.querySelector("strong");
+      var distanceSmall = distanceButton.querySelector("small");
+      distanceButton.classList.toggle("running", state.distanceAnimationRunning);
+      distanceButton.classList.toggle("paused", !state.distanceAnimationRunning);
+      distanceButton.setAttribute("aria-pressed", String(state.distanceAnimationRunning));
+      distanceButton.setAttribute("aria-label", state.distanceAnimationRunning ? "Stop automatic distance animation" : "Start automatic distance animation");
+      distanceStrong.textContent = state.distanceAnimationRunning ? "Stop animation" : "Start animation";
+      distanceSmall.textContent = state.distanceAnimationRunning ? "Exd → Mod → Med" : "Distance cycle paused";
+
+      var cameraButton = document.getElementById("camera-rotation-toggle");
+      var cameraStrong = cameraButton.querySelector("strong");
+      var cameraSmall = cameraButton.querySelector("small");
+      cameraButton.classList.toggle("running", state.cameraAutoRotate);
+      cameraButton.classList.toggle("paused", !state.cameraAutoRotate);
+      cameraButton.setAttribute("aria-pressed", String(state.cameraAutoRotate));
+      cameraButton.setAttribute("aria-label", state.cameraAutoRotate ? "Stop automatic camera rotation" : "Start automatic camera rotation");
+      cameraStrong.textContent = state.cameraAutoRotate ? "Stop camera" : "Start camera";
+      cameraSmall.textContent = state.cameraAutoRotate ? "Automatic orbit" : "Camera orbit paused";
+
+      var cycleStage = document.getElementById("cycle-stage");
+      if (!state.distanceAnimationRunning) {
+        cycleStage.textContent = "Paused";
+      } else if (isDistanceSettled()) {
+        cycleStage.textContent = distanceAbbreviation(state.distance) + " · hold " + state.distanceHoldRemaining.toFixed(1) + " s";
+      } else {
+        cycleStage.textContent = "→ " + distanceAbbreviation(DISTANCE_SEQUENCE[state.distanceSequenceIndex]);
+      }
+    }
+
+    function updateInterface() {
+      var formatted = formatDistance(state.distance);
+      document.getElementById("distance-value").textContent = formatted;
+      document.getElementById("panel-distance").textContent = formatted + " Dm";
+      var normalized = (state.distance - DISTANCE_MIN) / (DISTANCE_MAX - DISTANCE_MIN);
+      document.getElementById("distance-range").value = normalized;
+      document.getElementById("distance-hud-range").value = state.distance;
+      var activeColorCss = colorToCss(activeLayerColor());
+      var intraColorCss = colorToCss(intraLayerColor());
+      var layerSwatch = document.getElementById("ci-layer-swatch");
+      layerSwatch.style.background = "linear-gradient(90deg," + activeColorCss + " 0 50%," + intraColorCss + " 50% 100%)";
+      layerSwatch.style.color = activeColorCss;
+      document.getElementById("ci-layer-name").textContent = activeLayerName();
+      document.getElementById("label-circles").textContent = activeCirclePairLabel();
+      var intraContact = document.getElementById("label-intra-contact");
+      intraContact.textContent = intraContactLabel();
+      intraContact.style.color = intraColorCss;
+      intraContact.style.textShadow = "0 1px 3px #02040a, 0 0 11px " + intraColorCss;
+
+      var relativeMagnitude = relativeIGMagnitude();
+      var attraction = state.mode === "attraction";
+      document.getElementById("force-panel-value").textContent = formatRelativeMagnitude(relativeMagnitude, true);
+      document.getElementById("force-hud-value").textContent = formatRelativeMagnitude(relativeMagnitude, false);
+      document.getElementById("force-sign").textContent = attraction
+        ? "Direction: attraction · inward"
+        : "Direction: repulsion · outward";
+      var forceReadout = document.getElementById("force-readout");
+      forceReadout.classList.toggle("attraction", attraction);
+      forceReadout.classList.toggle("repulsion", !attraction);
+
+      var effectiveTarget = state.pendingDistance !== null ? state.pendingDistance : state.targetDistance;
+      var delta = effectiveTarget - state.distance;
+      var movement;
+      var settled = isDistanceSettled();
+      if (settled) {
+        movement = state.distanceAnimationRunning
+          ? distanceName(state.distance) + " · automatic hold " + state.distanceHoldRemaining.toFixed(1) + " s"
+          : distanceName(state.distance) + " · " + state.mode + " mode · stabilized";
+      } else if (state.cameraPhase === 'framing-out') {
+        movement = "◍ Framing the Camera to " + formatDistance(state.pendingDistance).replace('.',',') + " Dm → then Cα diverging · " + state.mode;
+      } else if (delta > 0) {
+        movement = "↗ DIVERGING Cα A ⟷ Cα B · " + formatDistance(state.distance).replace('.',',') + " → " + formatDistance(effectiveTarget).replace('.',',') + " Dm · " + state.mode;
+      } else {
+        movement = "↙ CONVERGING Cα A ⟷ Cα B · " + formatDistance(state.distance).replace('.',',') + " → " + formatDistance(effectiveTarget).replace('.',',') + " Dm · " + state.mode;
+      }
+      document.getElementById("motion-status").textContent = movement;
+
+      // Os CI comuns e Intra permanecem legíveis enquanto mudam de escala.
+      var ciReadout = document.getElementById("ci-layer-readout");
+      ciReadout.style.opacity = settled ? "1" : "0.82";
+      ciReadout.style.filter = "none";
+      document.getElementById("ci-layer-name").textContent = activeLayerName();
+
+      document.querySelectorAll("[data-distance]").forEach(function (button) {
+        var target = Number(button.getAttribute("data-distance"));
+        button.classList.toggle("active", Math.abs(state.targetDistance - target) < 0.01 && Math.abs(state.distance - target) < Math.max(0.1, target * 0.018));
+      });
+      updateMotionControls();
+    }
+
+    function updateModeText() {
+      var attraction = state.mode === "attraction";
+      var principleTitle = document.getElementById("principle-title");
+      var principleCopy = document.getElementById("principle-copy");
+      var interfaceBadge = document.getElementById("interface-badge");
+      document.querySelectorAll("[data-mode]").forEach(function (button) {
+        button.classList.toggle("active", button.getAttribute("data-mode") === state.mode);
+      });
+      principleTitle.textContent = attraction ? "Opposed Alpha Axes attract." : "Aligned Alpha Axes repel.";
+      principleCopy.textContent = attraction
+        ? "αA A points up in red and αA B points down in blue. The vertical dotted CCI flows clockwise through both Alpha Points."
+        : (state.repulsionDirection > 0
+          ? "Both Alpha Axes point up in red. They force two dotted CCI flows clockwise and counterclockwise at the same time."
+          : "Both Alpha Axes point down in blue. They force two dotted CCI flows clockwise and counterclockwise at the same time.");
+      interfaceBadge.textContent = (attraction ? "Attraction · CCI " : "Repulsion · CCI ") + commonRotationName();
+      interfaceBadge.classList.toggle("attraction", attraction);
+      interfaceBadge.classList.toggle("repulsion", !attraction);
+      document.querySelectorAll("[data-repulsion-direction]").forEach(function (button) {
+        var direction = button.getAttribute("data-repulsion-direction") === "up" ? 1 : -1;
+        button.classList.toggle("active", direction === state.repulsionDirection);
+      });
+    }
+
+    function animate(now) {
+      if (!state.hostTabActive || document.hidden) {
+        state.lastTime = now;
+        requestAnimationFrame(animate);
+        return;
+      }
+      var deltaSeconds = Math.min(0.05, Math.max(0, (now - state.lastTime) / 1000));
+      state.lastTime = now;
+
+      var effectiveTarget = state.pendingDistance !== null ? state.pendingDistance : state.targetDistance;
+      var distanceDelta = effectiveTarget - state.distance;
+      var isSettledBefore = isDistanceSettled();
+      if (!isSettledBefore && Math.abs(state.moveStartDistance - effectiveTarget) < 0.01 && state.cameraPhase === 'idle') {
+        // Se começou um novo movimento, registra origem
+        state.moveStartDistance = state.distance;
+        state.settledProgress = 0;
+      }
+      // Usa target real para movimento dos Ca (se em framing-out, targetDistance == distance, então delta é zero para Ca)
+      distanceDelta = state.targetDistance - state.distance;
+      var maximumStep = LINEAR_SPEED_DM_PER_SECOND * deltaSeconds;
+      // Movimento lento e constante: easing suave para dar peso
+      if (Math.abs(distanceDelta) > 1) {
+        maximumStep *= 1.0 + Math.min(0.4, Math.abs(distanceDelta) * 0.008);
+      }
+      if (Math.abs(distanceDelta) <= maximumStep) {
+        state.distance = state.targetDistance;
+      } else {
+        state.distance += Math.sign(distanceDelta) * maximumStep;
+      }
+      var isSettledAfter = Math.abs(state.targetDistance - state.distance) < SETTLED_EPSILON;
+      if (!isSettledAfter) {
+        state.settledProgress = 0;
+        document.body.classList.add('is-moving');
+        document.body.classList.toggle('moving-out', distanceDelta > 0);
+        document.body.classList.toggle('moving-in', distanceDelta < 0);
+      } else {
+        document.body.classList.remove('is-moving', 'moving-out', 'moving-in');
+        if (!isSettledBefore) {
+          // Acabou de estabilizar
+          state.settledProgress = 0.01;
+        }
+      }
+
+      updateDistanceSequence(deltaSeconds);
+      state.cciDashOffset += deltaSeconds * CCI_FLOW_PIXELS_PER_SECOND;
+      if (Math.abs(state.cciDashOffset) > 10000) {
+        state.cciDashOffset %= 10000;
+      }
+
+      updateCenters();
+      updateCameraDistance(deltaSeconds);
+      if (state.cameraAutoRotate && !state.dragging) {
+        state.camera.yaw += CAMERA_ROTATION_RADIANS_PER_SECOND * deltaSeconds;
+        if (Math.abs(state.camera.yaw) > TWO_PI * 4) state.camera.yaw %= TWO_PI;
+      }
+      updateCameraMatrix();
+      drawFloorGrid();
+      drawPlane(centers.left, alphaPlaneRadius());
+      drawPlane(centers.right, alphaPlaneRadius());
+      renderWebGL();
+      updateLabels();
+      drawHud();
+      updateInterface();
+      requestAnimationFrame(animate);
+    }
+
+    document.querySelectorAll("[data-distance]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        var newTarget = Number(button.getAttribute("data-distance"));
+        stopDistanceAnimation(true);
+        synchronizeDistanceSequence(newTarget);
+        requestDistanceTarget(newTarget);
+        updateModeText();
+      });
+    });
+
+    document.getElementById("distance-animation-toggle").addEventListener("click", function () {
+      if (state.distanceAnimationRunning) stopDistanceAnimation(true);
+      else startDistanceAnimation();
+      updateMotionControls();
+    });
+
+    document.getElementById("camera-rotation-toggle").addEventListener("click", function () {
+      setCameraRotationRunning(!state.cameraAutoRotate);
+      updateMotionControls();
+    });
+
+    document.querySelectorAll("[data-mode]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        state.mode = button.getAttribute("data-mode");
+        updateModeText();
+      });
+    });
+
+    document.querySelectorAll("[data-repulsion-direction]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        state.repulsionDirection = button.getAttribute("data-repulsion-direction") === "up" ? 1 : -1;
+        state.mode = "repulsion";
+        updateModeText();
+      });
+    });
+
+    document.querySelectorAll("[data-meridians]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        state.meridians = Number(button.getAttribute("data-meridians"));
+        rebuildGeometry(state.meridians);
+        rebuildActiveGeometry(state.meridians);
+        document.querySelectorAll("[data-meridians]").forEach(function (item) {
+          item.classList.toggle("active", Number(item.getAttribute("data-meridians")) === state.meridians);
+        });
+      });
+    });
+
+    document.getElementById("distance-range").addEventListener("input", function (event) {
+      var normalized = Number(event.target.value);
+      var newTarget = DISTANCE_MIN + normalized * (DISTANCE_MAX - DISTANCE_MIN);
+      stopDistanceAnimation(true);
+      synchronizeDistanceSequence(newTarget);
+      requestDistanceTarget(newTarget);
+    });
+
+    document.getElementById("distance-hud-range").addEventListener("input", function (event) {
+      var distance = Number(event.target.value);
+      stopDistanceAnimation(true);
+      state.distance = distance;
+      state.targetDistance = distance;
+      state.pendingDistance = null;
+      state.cameraPhase = "idle";
+      state.moveStartDistance = distance;
+      state.settledProgress = 1;
+      synchronizeDistanceSequence(distance);
+    });
+
+    document.getElementById("ci-opacity-range").addEventListener("input", function (event) {
+      var percentage = Number(event.target.value);
+      state.ciOpacity = percentage / 100;
+      document.getElementById("ci-opacity-value").textContent = percentage + "%";
+    });
+
+    document.getElementById("labels-button").addEventListener("click", function () {
+      state.labels = !state.labels;
+      app.classList.toggle("labels-hidden", !state.labels);
+      this.setAttribute("aria-pressed", String(state.labels));
+    });
+
+    function isCompactLayout() {
+      return Boolean(window.matchMedia && window.matchMedia("(max-width: 760px)").matches);
+    }
+
+    function setControlPanelCollapsed(collapsed) {
+      var panel = document.getElementById("control-panel");
+      var button = document.getElementById("collapse-panel");
+      panel.classList.toggle("collapsed", collapsed);
+      button.setAttribute("aria-expanded", String(!collapsed));
+      button.setAttribute("aria-label", collapsed ? "Expand control panel" : "Collapse control panel");
+    }
+
+    function setTheoryPanelCollapsed(collapsed) {
+      var panel = document.getElementById("theory-panel");
+      var button = document.getElementById("theory-collapse-button");
+      var body = document.getElementById("theory-panel-body");
+      panel.classList.toggle("collapsed", collapsed);
+      button.setAttribute("aria-expanded", String(!collapsed));
+      button.setAttribute("aria-label", collapsed ? "Expand explanation" : "Minimize explanation");
+      body.setAttribute("aria-hidden", String(collapsed));
+    }
+
+    document.getElementById("collapse-panel").addEventListener("click", function () {
+      var collapsed = !document.getElementById("control-panel").classList.contains("collapsed");
+      setControlPanelCollapsed(collapsed);
+      if (!collapsed && isCompactLayout()) setTheoryPanelCollapsed(true);
+    });
+
+    document.getElementById("theory-collapse-button").addEventListener("click", function () {
+      var collapsed = !document.getElementById("theory-panel").classList.contains("collapsed");
+      setTheoryPanelCollapsed(collapsed);
+      if (!collapsed && isCompactLayout()) setControlPanelCollapsed(true);
+    });
+
+    function resetCamera() {
+      state.camera.yaw = -0.54;
+      state.camera.pitch = 0.28;
+      state.camera.zoomFactor = 1;
+      state.camera.distance = automaticCameraDistance();
+    }
+
+    document.getElementById("reset-view").addEventListener("click", resetCamera);
+    glCanvas.addEventListener("dblclick", resetCamera);
+
+    glCanvas.addEventListener("pointerdown", function (event) {
+      setCameraRotationRunning(false);
+      updateMotionControls();
+      state.dragging = true;
+      state.pointerX = event.clientX;
+      state.pointerY = event.clientY;
+      glCanvas.setPointerCapture(event.pointerId);
+    });
+
+    glCanvas.addEventListener("pointermove", function (event) {
+      if (!state.dragging) {
+        return;
+      }
+      var dx = event.clientX - state.pointerX;
+      var dy = event.clientY - state.pointerY;
+      state.pointerX = event.clientX;
+      state.pointerY = event.clientY;
+      state.camera.yaw -= dx * 0.006;
+      state.camera.pitch = Math.max(-0.72, Math.min(0.82, state.camera.pitch + dy * 0.005));
+    });
+
+    function endPointer(event) {
+      state.dragging = false;
+      if (event.pointerId !== undefined && glCanvas.hasPointerCapture(event.pointerId)) {
+        glCanvas.releasePointerCapture(event.pointerId);
+      }
+    }
+
+    glCanvas.addEventListener("pointerup", endPointer);
+    glCanvas.addEventListener("pointercancel", endPointer);
+
+    glCanvas.addEventListener("wheel", function (event) {
+      event.preventDefault();
+      state.camera.zoomFactor *= Math.exp(event.deltaY * 0.0009);
+      state.camera.zoomFactor = Math.max(0.08, Math.min(2.2, state.camera.zoomFactor));
+    }, { passive: false });
+
+    window.addEventListener("message", function (event) {
+      if (event.data && event.data.type === "TUIDG_TAB_ACTIVE") {
+        state.hostTabActive = event.data.active !== false;
+        state.lastTime = performance.now();
+      }
+    });
+
+    document.addEventListener("visibilitychange", function () {
+      state.lastTime = performance.now();
+    });
+
+    window.addEventListener("resize", resize);
+    updateCenters();
+    resize();
+    if (isCompactLayout()) setTheoryPanelCollapsed(true);
+    updateModeText();
+    updateMotionControls();
+    requestAnimationFrame(animate);
+  }());
+  </script>
+</body>
+</html>
