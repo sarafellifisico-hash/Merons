@@ -226,10 +226,11 @@
         }
         #controls .controls-header { flex:none; }
         #controls .sim-subtitle { margin-bottom:11px; }
-        #controls .controls-tabs { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:6px; flex:none; margin:0 0 10px; }
-        #controls .controls-tab { text-align:center; padding:8px 4px; font:600 12px/1.15 "Instrument Sans",system-ui,sans-serif; }
+        #controls .controls-tabs { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:6px; flex:none; margin:0 0 10px; }
+        #controls .controls-tab { text-align:center; padding:8px 4px; font:600 13px/1.15 "Instrument Sans",system-ui,sans-serif; }
         #controls .controls-tab[aria-selected="true"] { background:#1a3650; border-color:#6cbaec; color:#e5f6ff; }
-        #controls .controls-inner { flex:0 1 auto; min-height:0; overflow-y:auto; overscroll-behavior:contain; padding-right:3px; }
+        #controls .controls-inner { flex:0 1 auto; min-height:0; overflow-y:auto; overflow-x:hidden; overscroll-behavior:contain; padding-right:3px; }
+        #controls .mono-small { overflow-wrap:anywhere; }
         #controls .controls-inner::-webkit-scrollbar { width:6px; }
         #controls .controls-inner::-webkit-scrollbar-thumb { background:var(--stroke); border-radius:8px; }
         #controls .controls-pane[hidden] { display:none; }
@@ -250,7 +251,7 @@
         }
         #controls .sim-eyebrow { margin:0 38px 5px 0; color:#7d8caa; font:700 10px "Fragment Mono",monospace; letter-spacing:.14em; text-transform:uppercase; }
         #controls .sim-title { margin:0 38px 4px 0; color:#f0f4ff!important; font:700 20px/1.15 "Instrument Sans",system-ui,sans-serif; letter-spacing:-.02em; }
-        #controls .sim-subtitle { margin:0 38px 16px 0; color:#8d9bb7; font:14px/1.45 "Instrument Sans",system-ui,sans-serif; }
+        #controls .sim-subtitle { margin:0 38px 11px 0; color:#8d9bb7; font:14px/1.45 "Instrument Sans",system-ui,sans-serif; }
         .toggle-btn { top:10px; right:10px; width:30px; min-width:30px; height:30px; min-height:30px; padding:0; display:grid; place-items:center; border-radius:9px; background:rgba(255,255,255,.07); border-color:rgba(132,204,229,.24); font:700 16px/1 "Fragment Mono",monospace; }
         .minimized { width:52px!important; height:52px!important; min-width:52px!important; min-height:52px!important; border-radius:16px!important; background:rgba(5,12,19,.91)!important; border-color:rgba(132,204,229,.22)!important; }
         .minimized .toggle-btn { width:30px; height:30px; min-width:30px; min-height:30px; padding:0; }
@@ -265,15 +266,17 @@
     <div id="controls">
         <button class="toggle-btn" onclick="togglePanel('controls', this)" title="Minimize control panel" aria-label="Minimize control panel" aria-expanded="true">−</button>
         <header class="controls-header">
-            <div class="sim-eyebrow">Meronic Model · Cyclical Interaction</div>
+            <div class="sim-eyebrow">Meronic Model · CI</div>
             <h2 class="sim-title">Cyclic Interaction</h2>
             <p class="sim-subtitle">Compalphas in a Vacuum Tube</p>
         </header>
         <nav class="controls-tabs" role="tablist" aria-label="Cyclical Interaction controls">
             <button type="button" class="controls-tab active" id="ciTabMotion" role="tab" aria-controls="ciPaneMotion" aria-selected="true" tabindex="0" data-ci-tab="motion">Oscillation</button>
             <button type="button" class="controls-tab" id="ciTabStructures" role="tab" aria-controls="ciPaneStructures" aria-selected="false" tabindex="-1" data-ci-tab="structures">Structures</button>
+            <button type="button" class="controls-tab" id="ciTabVisibility" role="tab" aria-controls="ciPaneVisibility" aria-selected="false" tabindex="-1" data-ci-tab="visibility">Visibility</button>
             <button type="button" class="controls-tab" id="ciTabFilters" role="tab" aria-controls="ciPaneFilters" aria-selected="false" tabindex="-1" data-ci-tab="filters">Polarization</button>
             <button type="button" class="controls-tab" id="ciTabDiagram" role="tab" aria-controls="ciPaneDiagram" aria-selected="false" tabindex="-1" data-ci-tab="diagram">Diagram</button>
+            <button type="button" class="controls-tab" id="ciTabReadouts" role="tab" aria-controls="ciPaneReadouts" aria-selected="false" tabindex="-1" data-ci-tab="readouts">Readouts</button>
         </nav>
         <div class="controls-inner">
             <section class="controls-pane" id="ciPaneMotion" role="tabpanel" aria-labelledby="ciTabMotion" data-ci-pane="motion">
@@ -291,27 +294,6 @@
                     <input type="range" id="gammaSlider" min="0" max="1" value="0" step="0.01">
                 </div>
                 <button id="btnReenergize" style="border-color:#00ff88; color:#00ff88;">↻ Re-energize System</button>
-        <div id="energyPanel">
-            <h3 style="margin:0 0 8px 0; color:#ffcc00; font-size:12px;">OSCILLATORY ENERGY — E ∝ A²·f²·ΣR²<sub>active</sub></h3>
-            <div class="mono-small">
-                <div><span class="highlight">E_total</span> = 2π²·ΣR²<sub>active</sub>·A²·f²·env² : <span id="eTotal" class="highlight">0</span></div>
-                <div style="display:flex; gap:6px; align-items:center; margin:6px 0;">
-                    <span style="width:32px;">E_kin</span>
-                    <div class="energy-bar-bg"><div id="eKinBar" style="height:100%; width:50%; background:linear-gradient(90deg,#00aaff,#00ffcc);"></div></div>
-                </div>
-                <div style="display:flex; gap:6px; align-items:center; margin-bottom:6px;">
-                    <span style="width:32px;">E_pot</span>
-                    <div class="energy-bar-bg"><div id="ePotBar" style="height:100%; width:50%; background:linear-gradient(90deg,#ff4444,#ffaa00);"></div></div>
-                </div>
-                <div>E_kin: <span id="eKin">0</span> | E_pot: <span id="ePot">0</span></div>
-                <div>Envelope: <span id="envelopeVal">100%</span> | γ·t: <span id="gammaT">0</span></div>
-                <div>Inertia ΣR² (active/total): <span id="inertiaVal">9.00 / 9.00</span></div>
-                <div>Mode: <span id="modeVal">9×R=1</span></div>
-                <div style="margin-top:6px; font-size:10px; color:#aaa;">When γ>0: A_eff = A·e<sup>-γ·Δt</sup> → E(t)=E₀·e<sup>-2γ·Δt</sup></div>
-                <div style="font-size:10px; color:#aaa;">100% reference: ΣR²=144 | A=180° | f=15Hz</div>
-            </div>
-        </div>
-
             </section>
             <section class="controls-pane" id="ciPaneStructures" role="tabpanel" aria-labelledby="ciTabStructures" data-ci-pane="structures" hidden>
                 <div class="pane-heading">Microscopic row</div>
@@ -333,7 +315,8 @@
                     <label for="metalphaCountSlider">Intermediate — Metalpha: <span id="metalphaCountValue">12</span> | CI Ø: <span id="metalphaCIDiameterValue">1.47</span></label>
                     <input type="range" id="metalphaCountSlider" min="1" max="12" value="12" step="1">
                 </div>
-                <div class="pane-separator"></div>
+            </section>
+            <section class="controls-pane" id="ciPaneVisibility" role="tabpanel" aria-labelledby="ciTabVisibility" data-ci-pane="visibility" hidden>
                 <div class="pane-heading">Visibility</div>
                 <div class="button-group">
                     <button id="btnToggleComphalphas" style="border-color:#ff4444; color:#ffaaaa;">👁 Hide Compalphas</button>
@@ -341,23 +324,6 @@
                     <button id="btnTogglePlasma" style="border-color:#00ffff; color:#88ffff;">👁 Show Plasma</button>
                     <button id="btnToggleVacuum" style="border-color:#8888ff; color:#aaaaff;">👁 Hide Vacuum Tube</button>
                 </div>
-        <div id="plasmaPanel" style="margin-top:12px; padding:8px; background: rgba(0,20,35,0.95); border:1px solid #00ffff; border-radius:6px;">
-            <h3 style="margin:0 0 6px 0; color:#00ffff; font-size:11px;">PLASMA BEAM — COLOR vs AMPLITUDE (0-90°)</h3>
-            <div class="mono-small" style="font-size:10px;">
-                <div>Color: <span id="plasmaColorLabel" style="font-weight:bold; color:#ff0000;">RED</span> | Band: <span id="plasmaBandLabel">0-12.86°</span> | Amp_eff: <span id="plasmaAmpLabel">20°</span></div>
-                <div>Energy/Intensity: <span id="plasmaEnergyLabel" style="color:#ffcc00;">E:0 | I:0</span> | Pulsing: <span style="color:#00ffff;">|sin(ωt)| + freq</span></div>
-                <div style="display:flex; gap:2px; margin-top:6px; height:10px;">
-                    <div style="flex:1; background:#ff0000; border-radius:2px;" title="0-12.86° RED"></div>
-                    <div style="flex:1; background:#ff8000; border-radius:2px;" title="12.86-25.71° ORANGE"></div>
-                    <div style="flex:1; background:#ffff00; border-radius:2px;" title="25.71-38.57° YELLOW"></div>
-                    <div style="flex:1; background:#00ff00; border-radius:2px;" title="38.57-51.43° GREEN"></div>
-                    <div style="flex:1; background:#0080ff; border-radius:2px;" title="51.43-64.29° BLUE"></div>
-                    <div style="flex:1; background:#8a2be2; border-radius:2px;" title="64.29-77.14° VIOLET"></div>
-                    <div style="flex:1; background:#ffffff; border-radius:2px;" title="77.14-90° WHITE"></div>
-                </div>
-                <div style="margin-top:4px; color:#aaa; font-size:9px;">90° / 7 ≈ 12.86° per band | >90° = WHITE | Macro = plasma only</div>
-            </div>
-        </div>
             </section>
             <section class="controls-pane" id="ciPaneFilters" role="tabpanel" aria-labelledby="ciTabFilters" data-ci-pane="filters" hidden>
                 <div class="pane-heading">Polarization — Middle → B</div>
@@ -375,6 +341,46 @@
                 <div class="pane-heading">Diagrama da Interação Cíclica</div>
                 <button type="button" id="btnOpenICDiagram" aria-controls="icDiagramContainer" aria-expanded="false">Open Cyclical Interaction Diagram</button>
                 <p class="pane-note">Explore the Alpha Axes, Alpha Planes, and Cyclical Interaction Circle of two neighboring Compalphas.</p>
+            </section>
+            <section class="controls-pane" id="ciPaneReadouts" role="tabpanel" aria-labelledby="ciTabReadouts" data-ci-pane="readouts" hidden>
+                <div class="pane-heading">Energy and plasma</div>
+                <div id="energyPanel">
+                    <h3 style="margin:0 0 8px 0; color:#ffcc00; font-size:12px;">OSCILLATORY ENERGY — E ∝ A²·f²·ΣR²<sub>active</sub></h3>
+                    <div class="mono-small">
+                        <div><span class="highlight">E_total</span> = 2π²·ΣR²<sub>active</sub>·A²·f²·env² : <span id="eTotal" class="highlight">0</span></div>
+                        <div style="display:flex; gap:6px; align-items:center; margin:6px 0;">
+                            <span style="width:32px;">E_kin</span>
+                            <div class="energy-bar-bg"><div id="eKinBar" style="height:100%; width:50%; background:linear-gradient(90deg,#00aaff,#00ffcc);"></div></div>
+                        </div>
+                        <div style="display:flex; gap:6px; align-items:center; margin-bottom:6px;">
+                            <span style="width:32px;">E_pot</span>
+                            <div class="energy-bar-bg"><div id="ePotBar" style="height:100%; width:50%; background:linear-gradient(90deg,#ff4444,#ffaa00);"></div></div>
+                        </div>
+                        <div>E_kin: <span id="eKin">0</span> | E_pot: <span id="ePot">0</span></div>
+                        <div>Envelope: <span id="envelopeVal">100%</span> | γ·t: <span id="gammaT">0</span></div>
+                        <div>Inertia ΣR² (active/total): <span id="inertiaVal">9.00 / 9.00</span></div>
+                        <div>Mode: <span id="modeVal">9×R=1</span></div>
+                        <div style="margin-top:6px; font-size:10px; color:#aaa;">When γ>0: A_eff = A·e<sup>-γ·Δt</sup> → E(t)=E₀·e<sup>-2γ·Δt</sup></div>
+                        <div style="font-size:10px; color:#aaa;">100% reference: ΣR²=144 | A=180° | f=15Hz</div>
+                    </div>
+                </div>
+                <div id="plasmaPanel" style="margin-top:12px; padding:8px; background: rgba(0,20,35,0.95); border:1px solid #00ffff; border-radius:6px;">
+                    <h3 style="margin:0 0 6px 0; color:#00ffff; font-size:11px;">PLASMA BEAM — COLOR vs AMPLITUDE (0-90°)</h3>
+                    <div class="mono-small" style="font-size:10px;">
+                        <div>Color: <span id="plasmaColorLabel" style="font-weight:bold; color:#ff0000;">RED</span> | Band: <span id="plasmaBandLabel">0-12.86°</span> | Amp_eff: <span id="plasmaAmpLabel">20°</span></div>
+                        <div>Energy/Intensity: <span id="plasmaEnergyLabel" style="color:#ffcc00;">E:0 | I:0</span> | Pulsing: <span style="color:#00ffff;">|sin(ωt)| + freq</span></div>
+                        <div style="display:flex; gap:2px; margin-top:6px; height:10px;">
+                            <div style="flex:1; background:#ff0000; border-radius:2px;" title="0-12.86° RED"></div>
+                            <div style="flex:1; background:#ff8000; border-radius:2px;" title="12.86-25.71° ORANGE"></div>
+                            <div style="flex:1; background:#ffff00; border-radius:2px;" title="25.71-38.57° YELLOW"></div>
+                            <div style="flex:1; background:#00ff00; border-radius:2px;" title="38.57-51.43° GREEN"></div>
+                            <div style="flex:1; background:#0080ff; border-radius:2px;" title="51.43-64.29° BLUE"></div>
+                            <div style="flex:1; background:#8a2be2; border-radius:2px;" title="64.29-77.14° VIOLET"></div>
+                            <div style="flex:1; background:#ffffff; border-radius:2px;" title="77.14-90° WHITE"></div>
+                        </div>
+                        <div style="margin-top:4px; color:#aaa; font-size:9px;">90° / 7 ≈ 12.86° per band | >90° = WHITE | Macro = plasma only</div>
+                    </div>
+                </div>
             </section>
         </div>
     </div>
