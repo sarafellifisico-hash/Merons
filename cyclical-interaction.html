@@ -240,6 +240,9 @@
         #controls .button-group { margin-top:0; }
         #controls .slider-container { margin-bottom:16px; }
         #controls .slider-container label { line-height:1.4; }
+        #controls .count-label { display:flex; justify-content:space-between; gap:8px; flex-wrap:wrap; }
+        #controls .count-label b { color:#a8c0ff; font-weight:700; }
+        #controls .count-label #compalphaCountValue { min-width:0; }
         #controls #energyPanel, #controls #plasmaPanel { margin-top:14px!important; }
         #controls.edge-hidden { transform:translateX(calc(-100% - 18px)); opacity:.2; pointer-events:none; }
         #controlsEdgeZone { display:none; }
@@ -301,7 +304,7 @@
                     <button id="btnDynamicRow" class="active">Dynamic Row — 9 Compalphas (R=1.00)</button>
                 </div>
                 <div class="slider-container" id="dynamicRowSettings">
-                    <label for="compalphaCountSlider">Dynamic Row — Compalphas: <span id="compalphaCountValue">9</span> | CI Ø: <span id="ciSizeValue">2.00</span></label>
+                    <label for="compalphaCountSlider" class="count-label"><span>Compalphas: <b id="compalphaCountValue">9</b></span><span>CI Ø <b id="ciSizeValue">2.00</b></span></label>
                     <input type="range" id="compalphaCountSlider" min="2" max="12" value="9" step="1">
                 </div>
                 <div class="pane-separator"></div>
@@ -312,7 +315,7 @@
                     <button id="btnViewMacroscopic">Macroscopic — Plasma</button>
                 </div>
                 <div class="slider-container" id="meronicCountSettings">
-                    <label for="metalphaCountSlider">Intermediate — Metalpha: <span id="metalphaCountValue">12</span> | CI Ø: <span id="metalphaCIDiameterValue">1.47</span></label>
+                    <label for="metalphaCountSlider" class="count-label"><span>Metalpha: <b id="metalphaCountValue">12</b></span><span>CI Ø <b id="metalphaCIDiameterValue">1.47</b></span></label>
                     <input type="range" id="metalphaCountSlider" min="1" max="12" value="12" step="1">
                 </div>
             </section>
