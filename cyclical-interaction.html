@@ -216,11 +216,37 @@
         }
         /* TUIDG unified simulation shell — matched to the Double Slit laboratory. */
         #controls {
-            top:12px; bottom:12px; left:12px; width:312px; max-width:calc(100vw - 24px);
+            top:12px; bottom:auto; left:12px; width:312px; max-width:calc(100vw - 24px);
+            height:auto; max-height:min(80vh,720px);
             padding:14px 14px 20px; border-radius:16px;
             border-color:rgba(132,204,229,.22); background:rgba(5,12,19,.91);
             box-shadow:0 20px 70px rgba(0,0,0,.48); backdrop-filter:blur(13px);
             font-family:"Instrument Sans",system-ui,sans-serif;
+            display:flex; flex-direction:column; overflow:hidden;
+        }
+        #controls .controls-header { flex:none; }
+        #controls .sim-subtitle { margin-bottom:11px; }
+        #controls .controls-tabs { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:6px; flex:none; margin:0 0 10px; }
+        #controls .controls-tab { text-align:center; padding:8px 4px; font:600 12px/1.15 "Instrument Sans",system-ui,sans-serif; }
+        #controls .controls-tab[aria-selected="true"] { background:#1a3650; border-color:#6cbaec; color:#e5f6ff; }
+        #controls .controls-inner { flex:0 1 auto; min-height:0; overflow-y:auto; overscroll-behavior:contain; padding-right:3px; }
+        #controls .controls-inner::-webkit-scrollbar { width:6px; }
+        #controls .controls-inner::-webkit-scrollbar-thumb { background:var(--stroke); border-radius:8px; }
+        #controls .controls-pane[hidden] { display:none; }
+        #controls .pane-heading { margin:4px 0 10px; color:#8ec5ff; font:700 11px/1.4 "Fragment Mono",monospace; letter-spacing:.06em; text-transform:uppercase; }
+        #controls .pane-note { margin:8px 0; color:#a6b2ca; font:13px/1.45 "Instrument Sans",system-ui,sans-serif; }
+        #controls .pane-separator { height:1px; background:#304153; margin:14px 0; }
+        #controls .button-group { margin-top:0; }
+        #controls .slider-container { margin-bottom:16px; }
+        #controls .slider-container label { line-height:1.4; }
+        #controls #energyPanel, #controls #plasmaPanel { margin-top:14px!important; }
+        #controls.edge-hidden { transform:translateX(calc(-100% - 18px)); opacity:.2; pointer-events:none; }
+        #controlsEdgeZone { display:none; }
+        @media (hover:hover) and (pointer:fine) {
+            #controls { transition:transform .24s ease,opacity .2s ease,width .2s ease,height .2s ease; }
+            #controlsEdgeZone { position:fixed; z-index:99; left:0; top:0; bottom:0; width:22px; display:block; }
+            #controlsEdgeZone::after { content:""; position:absolute; left:3px; top:50%; transform:translateY(-50%); height:66px; width:4px; border-radius:9px; background:#69d7f3; box-shadow:0 0 15px rgba(105,215,243,.5); opacity:.35; transition:opacity .2s ease; }
+            #controlsEdgeZone:hover::after, body.controls-edge-hidden #controlsEdgeZone::after { opacity:.95; }
         }
         #controls .sim-eyebrow { margin:0 38px 5px 0; color:#7d8caa; font:700 10px "Fragment Mono",monospace; letter-spacing:.14em; text-transform:uppercase; }
         #controls .sim-title { margin:0 38px 4px 0; color:#f0f4ff!important; font:700 20px/1.15 "Instrument Sans",system-ui,sans-serif; letter-spacing:-.02em; }
@@ -228,62 +254,43 @@
         .toggle-btn { top:10px; right:10px; width:30px; min-width:30px; height:30px; min-height:30px; padding:0; display:grid; place-items:center; border-radius:9px; background:rgba(255,255,255,.07); border-color:rgba(132,204,229,.24); font:700 16px/1 "Fragment Mono",monospace; }
         .minimized { width:52px!important; height:52px!important; min-width:52px!important; min-height:52px!important; border-radius:16px!important; background:rgba(5,12,19,.91)!important; border-color:rgba(132,204,229,.22)!important; }
         .minimized .toggle-btn { width:30px; height:30px; min-width:30px; min-height:30px; padding:0; }
-        @media (max-width:800px) { #controls { left:8px; top:auto; bottom:8px; width:calc(100vw - 16px); max-width:none; } #controls.minimized { left:8px; bottom:8px; } }
+        @media (max-width:800px) {
+            #controls { left:8px; top:auto; bottom:8px; width:calc(100vw - 16px); max-width:none; max-height:min(68vh,650px); }
+            #controls.minimized { left:8px; bottom:8px; }
+            #icDiagramContainer:not(.minimized) { top:8px; bottom:auto; height:min(70vh,620px); }
+        }
     </style>
 </head>
 <body>
     <div id="controls">
         <button class="toggle-btn" onclick="togglePanel('controls', this)" title="Minimize control panel" aria-label="Minimize control panel" aria-expanded="true">−</button>
-        <div class="sim-eyebrow">Meronic Model · Cyclical Interaction</div>
-        <h2 class="sim-title">Cyclic Interaction</h2>
-        <p class="sim-subtitle">Compalphas in a Vacuum Tube</p>
-
-<div class="divider"></div>
-
-        <div class="slider-container">
-            <label for="amplitudeSlider">Oscillatory Amplitude: <span id="amplitudeValue">20°</span> | <span id="amplitudeRadValue">0.349 rad</span></label>
-            <input type="range" id="amplitudeSlider" min="0" max="180" value="20" step="1">
-        </div>
-
-        <div class="slider-container">
-            <label for="frequencySlider">Oscillatory Frequency: <span id="frequencyValue">1.0Hz</span></label>
-            <input type="range" id="frequencySlider" min="0.1" max="15" value="1.0" step="0.1">
-        </div>
-
-        <div class="slider-container">
-            <label for="gammaSlider">Damping γ: <span id="gammaValue">0.00</span></label>
-            <input type="range" id="gammaSlider" min="0" max="1" value="0" step="0.01">
-        </div>
-
-        <div class="slider-container" id="dynamicRowSettings">
-            <label for="compalphaCountSlider">Dynamic Row — Compalphas: <span id="compalphaCountValue">9</span> | CI Ø: <span id="ciSizeValue">2.00</span></label>
-            <input type="range" id="compalphaCountSlider" min="2" max="12" value="9" step="1">
-        </div>
-
-        <div class="button-group">
-            <button id="btnDynamicRow" class="active">Dynamic Row — 9 Compalphas (R=1.00)</button>
-            <button id="btnMode4">Polarization — 3 positions × 3 planes</button>
-            <div style="height:1px; background:#666; margin:6px 0;"></div>
-            <div style="font-size:10px; color:#8ec5ff; margin-bottom:4px;">VISUAL SCALE</div>
-            <button id="btnViewMicroscopic">Microscopic — Compalphas</button>
-            <button id="btnViewIntermediate" class="active">Intermediate — 12 Metalpha</button>
-            <button id="btnViewMacroscopic">Macroscopic — Plasma</button>
-            <div style="height:1px; background:#666; margin:6px 0;"></div>
-            <div style="font-size:10px; color:#ffcc00; margin-bottom:4px;">FILTROS DE POLARIZAÇÃO — MEIO → B</div>
-            <button id="btnPV" style="border-color:#00ff88; color:#aaffcc;">◧ PV — Vertical (0°) Meio→B</button>
-            <button id="btnPO" style="border-color:#ffcc00; color:#ffeeaa;">◧ PO — Oblíqua (45°) Meio→B</button>
-            <button id="btnPH" style="border-color:#0080ff; color:#aaccff;">◧ PH — Horizontal (90°) Meio→B</button>
-            <button id="btnResetPol" style="border-color:#ff8800; color:#ffcc88;">↺ Reset Filtros</button>
-            <div style="height:1px; background:#444; margin:6px 0;"></div>
-            <button id="togglePlanoAlpha">Hide Alpha Planes</button>
-            <button id="btnReenergize" style="border-color:#00ff88; color:#00ff88;">↻ Re-energize System</button>
-            <div style="height:1px; background:#444; margin:6px 0;"></div>
-            <button id="btnToggleComphalphas" style="border-color:#ff4444; color:#ffaaaa;">👁 Hide Compalphas</button>
-            <button id="btnToggleMeronicMedium" style="border-color:#66b8ff; color:#b8dcff;">👁 Hide 12 Metalpha</button>
-            <button id="btnTogglePlasma" style="border-color:#00ffff; color:#88ffff;">👁 Show Plasma</button>
-            <button id="btnToggleVacuum" style="border-color:#8888ff; color:#aaaaff;">👁 Hide Vacuum Tube</button>
-        </div>
-
+        <header class="controls-header">
+            <div class="sim-eyebrow">Meronic Model · Cyclical Interaction</div>
+            <h2 class="sim-title">Cyclic Interaction</h2>
+            <p class="sim-subtitle">Compalphas in a Vacuum Tube</p>
+        </header>
+        <nav class="controls-tabs" role="tablist" aria-label="Cyclical Interaction controls">
+            <button type="button" class="controls-tab active" id="ciTabMotion" role="tab" aria-controls="ciPaneMotion" aria-selected="true" tabindex="0" data-ci-tab="motion">Oscillation</button>
+            <button type="button" class="controls-tab" id="ciTabStructures" role="tab" aria-controls="ciPaneStructures" aria-selected="false" tabindex="-1" data-ci-tab="structures">Structures</button>
+            <button type="button" class="controls-tab" id="ciTabFilters" role="tab" aria-controls="ciPaneFilters" aria-selected="false" tabindex="-1" data-ci-tab="filters">Polarization</button>
+            <button type="button" class="controls-tab" id="ciTabDiagram" role="tab" aria-controls="ciPaneDiagram" aria-selected="false" tabindex="-1" data-ci-tab="diagram">Diagram</button>
+        </nav>
+        <div class="controls-inner">
+            <section class="controls-pane" id="ciPaneMotion" role="tabpanel" aria-labelledby="ciTabMotion" data-ci-pane="motion">
+                <div class="pane-heading">Oscillation</div>
+                <div class="slider-container">
+                    <label for="amplitudeSlider">Oscillatory Amplitude: <span id="amplitudeValue">20°</span> | <span id="amplitudeRadValue">0.349 rad</span></label>
+                    <input type="range" id="amplitudeSlider" min="0" max="180" value="20" step="1">
+                </div>
+                <div class="slider-container">
+                    <label for="frequencySlider">Oscillatory Frequency: <span id="frequencyValue">1.0Hz</span></label>
+                    <input type="range" id="frequencySlider" min="0.1" max="15" value="1.0" step="0.1">
+                </div>
+                <div class="slider-container">
+                    <label for="gammaSlider">Damping γ: <span id="gammaValue">0.00</span></label>
+                    <input type="range" id="gammaSlider" min="0" max="1" value="0" step="0.01">
+                </div>
+                <button id="btnReenergize" style="border-color:#00ff88; color:#00ff88;">↻ Re-energize System</button>
         <div id="energyPanel">
             <h3 style="margin:0 0 8px 0; color:#ffcc00; font-size:12px;">OSCILLATORY ENERGY — E ∝ A²·f²·ΣR²<sub>active</sub></h3>
             <div class="mono-small">
@@ -305,6 +312,35 @@
             </div>
         </div>
 
+            </section>
+            <section class="controls-pane" id="ciPaneStructures" role="tabpanel" aria-labelledby="ciTabStructures" data-ci-pane="structures" hidden>
+                <div class="pane-heading">Microscopic row</div>
+                <div class="button-group">
+                    <button id="btnDynamicRow" class="active">Dynamic Row — 9 Compalphas (R=1.00)</button>
+                </div>
+                <div class="slider-container" id="dynamicRowSettings">
+                    <label for="compalphaCountSlider">Dynamic Row — Compalphas: <span id="compalphaCountValue">9</span> | CI Ø: <span id="ciSizeValue">2.00</span></label>
+                    <input type="range" id="compalphaCountSlider" min="2" max="12" value="9" step="1">
+                </div>
+                <div class="pane-separator"></div>
+                <div class="pane-heading">Visual scale</div>
+                <div class="button-group">
+                    <button id="btnViewMicroscopic">Microscopic — Compalphas</button>
+                    <button id="btnViewIntermediate" class="active">Intermediate — 12 Metalpha</button>
+                    <button id="btnViewMacroscopic">Macroscopic — Plasma</button>
+                </div>
+                <div class="slider-container" id="meronicCountSettings">
+                    <label for="metalphaCountSlider">Intermediate — Metalpha: <span id="metalphaCountValue">12</span> | CI Ø: <span id="metalphaCIDiameterValue">1.47</span></label>
+                    <input type="range" id="metalphaCountSlider" min="1" max="12" value="12" step="1">
+                </div>
+                <div class="pane-separator"></div>
+                <div class="pane-heading">Visibility</div>
+                <div class="button-group">
+                    <button id="btnToggleComphalphas" style="border-color:#ff4444; color:#ffaaaa;">👁 Hide Compalphas</button>
+                    <button id="btnToggleMeronicMedium" style="border-color:#66b8ff; color:#b8dcff;">👁 Hide 12 Metalpha</button>
+                    <button id="btnTogglePlasma" style="border-color:#00ffff; color:#88ffff;">👁 Show Plasma</button>
+                    <button id="btnToggleVacuum" style="border-color:#8888ff; color:#aaaaff;">👁 Hide Vacuum Tube</button>
+                </div>
         <div id="plasmaPanel" style="margin-top:12px; padding:8px; background: rgba(0,20,35,0.95); border:1px solid #00ffff; border-radius:6px;">
             <h3 style="margin:0 0 6px 0; color:#00ffff; font-size:11px;">PLASMA BEAM — COLOR vs AMPLITUDE (0-90°)</h3>
             <div class="mono-small" style="font-size:10px;">
@@ -322,7 +358,27 @@
                 <div style="margin-top:4px; color:#aaa; font-size:9px;">90° / 7 ≈ 12.86° per band | >90° = WHITE | Macro = plasma only</div>
             </div>
         </div>
+            </section>
+            <section class="controls-pane" id="ciPaneFilters" role="tabpanel" aria-labelledby="ciTabFilters" data-ci-pane="filters" hidden>
+                <div class="pane-heading">Polarization — Middle → B</div>
+                <div class="button-group">
+                    <button id="btnMode4">Polarization — 3 positions × 3 planes</button>
+                    <button id="btnPV" style="border-color:#00ff88; color:#aaffcc;">◧ PV — Vertical (0°) Meio→B</button>
+                    <button id="btnPO" style="border-color:#ffcc00; color:#ffeeaa;">◧ PO — Oblíqua (45°) Meio→B</button>
+                    <button id="btnPH" style="border-color:#0080ff; color:#aaccff;">◧ PH — Horizontal (90°) Meio→B</button>
+                    <button id="btnResetPol" style="border-color:#ff8800; color:#ffcc88;">↺ Reset Filtros</button>
+                </div>
+                <div class="pane-separator"></div>
+                <button id="togglePlanoAlpha">Hide Alpha Planes</button>
+            </section>
+            <section class="controls-pane" id="ciPaneDiagram" role="tabpanel" aria-labelledby="ciTabDiagram" data-ci-pane="diagram" hidden>
+                <div class="pane-heading">Diagrama da Interação Cíclica</div>
+                <button type="button" id="btnOpenICDiagram" aria-controls="icDiagramContainer" aria-expanded="false">Open Cyclical Interaction Diagram</button>
+                <p class="pane-note">Explore the Alpha Axes, Alpha Planes, and Cyclical Interaction Circle of two neighboring Compalphas.</p>
+            </section>
+        </div>
     </div>
+    <div id="controlsEdgeZone" aria-hidden="true"></div>
 
     <div id="icDiagramContainer">
         <div id="icResizeHandleEdge" title="Arraste para expandir para a esquerda"></div>
@@ -343,7 +399,7 @@
          os textos de cada função ficam no objeto FUNCTION_HELP, no início do JavaScript. -->
     <div id="meronicIntro" aria-hidden="true">
         <strong>INTERMEDIATE MERONIC VIEW</strong>
-        12 Metalpha Merons · 144 Compalphas · CI Ø 5.33
+        <div id="meronicCountSummary">12 Metalpha Merons · 144 Compalphas · CI Ø 1.47</div>
         <span id="meronicGeometryLabel">Equal axial distribution from electrode tip to electrode tip.</span>
         <span>No particles are emitted — the geometric meshes themselves oscillate.</span>
     </div>
@@ -374,10 +430,15 @@
                 if (count === 9) detail += ` This represents an extreme vacuum with a row of nine Merons, each represented here by a single Compalpha.`;
                 return detail;
             },
-            btnDynamicRow: `Returns to the dynamic single-row view. The quantity selected above determines the number of Compalphas, their equal spacing between the electrodes, and the automatic diameter of every Interaction Circle.`,
+            metalphaCountSlider: () => {
+                const count = Number(document.getElementById('metalphaCountSlider').value);
+                const diameter = document.getElementById('metalphaCIDiameterValue').textContent;
+                return `Intermediate view: ${count} Metalpha ${count === 1 ? 'Meron' : 'Merons'} with 12 Compalphas each. Their internal Alpha Point positions stay fixed while only the CI diameter changes to approximately meet Alpha Points of other Metalpha Merons. Current visible CI Ø = ${diameter}. This visual arrangement does not change microscopic energy calculations.`;
+            },
+            btnDynamicRow: `Returns to the dynamic single-row view. The Compalpha count in this section determines their equal spacing between the electrodes and the automatic diameter of every Interaction Circle.`,
             btnMode4: `What we have here is the phenomenon of "light polarization." If countless Merons (Compalphas) at A are oscillating across countless planes (V, H, O), and if the light reaching B passes through a material that restricts Compalpha oscillations to specific planes, then the Compalphas at B that relied on oscillations within the restricted planes would cease to oscillate.`,
             btnViewMicroscopic: `Microscopic view: shows the selected Dynamic Row or Polarization arrangement in full detail, including the Compalpha structure, Alpha Axes and optional Alpha Planes. Its blue and white CI layers use 50% opacity, while PA, EA and Alpha Planes retain their original clarity. This setting is independent from the more transparent intermediate Metalpha view.`,
-            btnViewIntermediate: `Intermediate Meronic view: exactly 12 Metalpha Merons are distributed at equal intervals in one axial row, with the first and last centered at the inner electrode tips. Each Metalpha contains 12 Compalphas, totaling 144 oscillating geometric meshes. Only one CI layer is drawn per Compalpha, using an independent opacity of 7.8%. The mathematical CI diameter remains 5.33; its visual-only scale gives a neutral CI an exact intersection with the center of every third neighbor. The displayed CI is approximately 2.33 times the glass-tube diameter and intentionally extends beyond it. The meshes oscillate directly with the selected amplitude, frequency and damping—no particles are emitted, absorbed or retransmitted. The energy panel remains governed by the selected microscopic Dynamic Row or Polarization model, so this didactic view does not alter the corrected mathematics.`,
+            btnViewIntermediate: `Intermediate Meronic view: choose 1 to 12 Metalpha Merons, each containing 12 Compalphas. Their centers are distributed along the electrode interval, with a single Metalpha centered between the tips. The Alpha Points keep their internal positions; the CI diameter adapts to approximately intersect Alpha Points of other Metalpha Merons. One CI layer is drawn per Compalpha at 7.8% opacity. The meshes oscillate in place, while microscopic Dynamic Row or Polarization settings continue to govern the energy calculation.`,
             btnViewMacroscopic: `Macroscopic view: hides both geometric scales and shows only their aggregate luminous plasma representation. Its color and intensity remain governed by the same corrected oscillatory model.`,
             btnPV: `In this position, the crystalline structure of the "polarizer" prevents Compalphas from oscillating in the Vertical Plane (VERTICAL OSCILLATIONS BLOCKED), allowing only oscillations from other planes of oscillation to pass through.`,
             btnPO: `In this position, the crystalline structure of the "polarizer" prevents Compalphas from oscillating in the oblique planes (OBLIQUE OSCILLATIONS BLOCKED), allowing only oscillations from other planes to pass through.`,
@@ -386,9 +447,10 @@
             togglePlanoAlpha: `Shows or hides the circular Alpha Plane of every visible Compalpha without changing its oscillation or its Interaction Circles.`,
             btnReenergize: `Restores the oscillatory envelope to 100%, resets damping γ to zero, and restarts the shared oscillatory phase from its neutral position.`,
             btnToggleComphalphas: `Independently shows or hides the detailed microscopic Compalpha representation. This is a visual control and does not change the simulation mathematics.`,
-            btnToggleMeronicMedium: `Independently shows or hides the intermediate ensemble of 12 Metalpha Merons (144 one-layer Compalpha meshes). This is a visual control and does not change the energy calculation.`,
+            btnToggleMeronicMedium: `Independently shows or hides the intermediate Metalpha Merons (12 Compalphas per Metalpha). This visual control does not change the energy calculation.`,
             btnTogglePlasma: `Shows or hides the macroscopic plasma beam. Its color follows the effective oscillatory amplitude, while its radial pulse remains synchronized with the Compalphas.`,
-            btnToggleVacuum: `Shows or hides the glass vacuum tube without changing any Compalpha, plasma, energy, or oscillation setting.`
+            btnToggleVacuum: `Shows or hides the glass vacuum tube without changing any Compalpha, plasma, energy, or oscillation setting.`,
+            btnOpenICDiagram: `Opens the Cyclical Interaction Diagram for a normalized neighboring Compalpha pair. It shows the Alpha Axes, Alpha Planes, Common Interaction Plane and the resulting interaction circle as the axes oscillate.`
         };
         const functionInfo = document.getElementById('functionInfo');
         let selectedHelpControlId = null;
@@ -409,18 +471,91 @@
             control.addEventListener('click', showHelp);
             control.addEventListener('input', showHelp);
         });
-        selectFunctionHelp('btnViewIntermediate');
+        selectFunctionHelp('amplitudeSlider');
+
+        const ciPanel = document.getElementById('controls');
+        const ciPanelBody = ciPanel.querySelector('.controls-inner');
+        const ciTabs = [...ciPanel.querySelectorAll('[data-ci-tab]')];
+        const ciPanes = [...ciPanel.querySelectorAll('[data-ci-pane]')];
+        function activateCITab(name) {
+            ciTabs.forEach(tab => {
+                const active = tab.dataset.ciTab === name;
+                tab.classList.toggle('active', active);
+                tab.setAttribute('aria-selected', String(active));
+                tab.tabIndex = active ? 0 : -1;
+            });
+            ciPanes.forEach(pane => {
+                const active = pane.dataset.ciPane === name;
+                pane.hidden = !active;
+            });
+            ciPanelBody.scrollTop = 0;
+        }
+        ciTabs.forEach((tab,index) => {
+            tab.addEventListener('click', () => activateCITab(tab.dataset.ciTab));
+            tab.addEventListener('keydown', event => {
+                if (!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Home','End'].includes(event.key)) return;
+                event.preventDefault();
+                const next = event.key === 'Home' ? 0 : event.key === 'End' ? ciTabs.length-1
+                    : (index + (event.key === 'ArrowLeft' || event.key === 'ArrowUp' ? -1 : 1) + ciTabs.length) % ciTabs.length;
+                activateCITab(ciTabs[next].dataset.ciTab);
+                ciTabs[next].focus();
+            });
+        });
 
         // --- FUNÇÃO PARA MINIMIZAR/MAXIMIZAR PAINÉIS ---
-        function togglePanel(panelId, button) {
+        function setPanelMinimized(panelId, minimized) {
             const panel = document.getElementById(panelId);
-            panel.classList.toggle('minimized');
-            const minimized = panel.classList.contains('minimized');
+            panel.classList.toggle('minimized', minimized);
+            const button = panel.querySelector('.toggle-btn');
             button.textContent = minimized ? '+' : '−';
-            button.title = minimized ? 'Expand panel' : 'Minimize panel';
+            button.title = `${minimized ? 'Expand' : 'Minimize'} ${panelId === 'controls' ? 'control panel' : 'diagram'}`;
             button.setAttribute('aria-label', button.title);
             button.setAttribute('aria-expanded', String(!minimized));
+            if (panelId === 'controls') {
+                revealCIControls();
+            } else {
+                const openButton = document.getElementById('btnOpenICDiagram');
+                openButton.textContent = minimized ? 'Open Cyclical Interaction Diagram' : 'Close Cyclical Interaction Diagram';
+                openButton.setAttribute('aria-expanded', String(!minimized));
+                openButton.classList.toggle('active', !minimized);
+            }
         }
+        function togglePanel(panelId) {
+            const panel = document.getElementById(panelId);
+            setPanelMinimized(panelId, !panel.classList.contains('minimized'));
+        }
+
+        const ciEdgeZone = document.getElementById('controlsEdgeZone');
+        const ciFinePointer = window.matchMedia('(hover:hover) and (pointer:fine)');
+        let ciHideTimer = 0;
+        function revealCIControls() {
+            clearTimeout(ciHideTimer);
+            ciPanel.classList.remove('edge-hidden');
+            document.body.classList.remove('controls-edge-hidden');
+        }
+        function hideCIControls() {
+            if (!ciFinePointer.matches || ciPanel.classList.contains('minimized') || ciPanel.matches(':hover')) return;
+            ciPanel.classList.add('edge-hidden');
+            document.body.classList.add('controls-edge-hidden');
+        }
+        function scheduleCIControlsHide(delay=450) {
+            clearTimeout(ciHideTimer);
+            ciHideTimer = setTimeout(hideCIControls, delay);
+        }
+        ciPanel.addEventListener('pointerenter', revealCIControls);
+        ciPanel.addEventListener('pointerleave', () => scheduleCIControlsHide());
+        ciPanel.addEventListener('focusin', revealCIControls);
+        ciPanel.addEventListener('focusout', () => scheduleCIControlsHide());
+        ciEdgeZone.addEventListener('pointerenter', revealCIControls);
+        ciFinePointer.addEventListener('change', revealCIControls);
+        scheduleCIControlsHide(2400);
+
+        document.getElementById('btnOpenICDiagram').addEventListener('click', () => {
+            const diagram = document.getElementById('icDiagramContainer');
+            const open = diagram.classList.contains('minimized');
+            setPanelMinimized('icDiagramContainer', !open);
+            if (open && window.innerWidth <= 800) setPanelMinimized('controls', true);
+        });
 
         // --- CID RESIZE PARA A ESQUERDA (custom) ---
         (function(){
@@ -478,14 +613,9 @@
 
 
 
-        // Auto-minimizar em telas pequenas no carregamento (Opcional, melhora a UX)
-        if (window.innerWidth <= 800) {
-            document.getElementById('controls').classList.add('minimized');
-            document.getElementById('icDiagramContainer').classList.add('minimized');
-            document.querySelectorAll('.toggle-btn').forEach(button => {
-                button.textContent='+'; button.title='Expand panel'; button.setAttribute('aria-label',button.title); button.setAttribute('aria-expanded','false');
-            });
-        }
+        // Start with the diagram tucked away; its control is in the Diagram tab.
+        setPanelMinimized('icDiagramContainer', true);
+        if (window.innerWidth <= 800) setPanelMinimized('controls', true);
 
         // ----- ORIGINAL 3D SCENE 100% - NO DISTORTION -----
         const scene = new THREE.Scene(); scene.background = new THREE.Color(0x020208);
@@ -594,8 +724,10 @@
         let oscillationPhase = 0;
         let lastFrameTime = performance.now()*0.001;
         let dynamicCompalphaCount = 9;
+        let metalphaCount = 12;
         let currentViewMode = 'dynamic';
         let pendingCountRebuild = 0;
+        let pendingMetalphaRebuild = 0;
         // Visibility states
         let comphalphasVisible = false;
         let meronicMediumVisible = true;
@@ -603,14 +735,11 @@
         let vacuumTubeVisible = true;
         let alphaPlanesVisible = true;
         let activeViewPreset = 'intermediate';
-        const MERON_COUNT = 12;
+        const MAX_METALPHA_COUNT = 12;
         const COMPHALPHAS_PER_MERON = 12;
         const MERONIC_CI_DIAMETER = 5.33;
-        const MERONIC_CI_RADIUS = MERONIC_CI_DIAMETER/2;
-        let meronicVisualScale = 0;
         let meronicVisibleCIDiameter = 0;
         let meronicCenterSpacing = 0;
-        const MERONIC_CROSSING_STEPS = 3;
         const MERONIC_COMPALPHA_OFFSET = 0.16;
         const COMPALPHA_CI_OPACITY = 0.50;
         const METALPHA_CI_OPACITY = 0.078;
@@ -620,8 +749,11 @@
         const meronicOscillationAxis = new THREE.Vector3(0,0,1);
         const meronicOscillationQuaternion = new THREE.Quaternion();
         let meronicMediumMaterial = null;
+        let meronicMediumGeometry = null;
+        const meronicPAGeometry = new THREE.SphereGeometry(0.028,8,6);
+        const meronicPAMaterial = new THREE.MeshBasicMaterial({color:0xff6464,transparent:true,opacity:0.8,depthWrite:false});
         let meronicRevealStart = performance.now()*0.001;
-        meronicMediumGroup.name = 'Intermediate_12_Metalpha';
+        meronicMediumGroup.name = 'Intermediate_Metalpha';
         meronicMediumGroup.visible = meronicMediumVisible;
         scene.add(meronicMediumGroup);
         // Polarization filter states
@@ -785,7 +917,9 @@
         }
         function createAlphaStructure(name,dir,pos,radius){ const g=new THREE.Group(); g.position.copy(pos); g.name=name; g.userData.interactionRadius=radius; const sph=new THREE.Mesh(new THREE.SphereGeometry(0.05,16,16), new THREE.MeshBasicMaterial({color:0xFF0000})); g.add(sph); const cg=new THREE.Group(); g.add(cg); createMeridianLayer(cg, radius,36,48,createCILineMaterial(0x1270ff)); createMeridianLayer(cg, radius*0.5,36,48,createCILineMaterial(0xffffff)); /* Plano Alpha circular: diâmetro igual ao diâmetro externo azul do Compalpha. */ const plane=new THREE.Mesh(new THREE.CircleGeometry(radius*2,96), new THREE.MeshBasicMaterial({color:0x00ff00, transparent:true, opacity:0.28, side:THREE.DoubleSide, depthWrite:false})); plane.rotation.x=Math.PI/2; plane.name=name+'_AlphaPlane'; plane.visible=alphaPlanesVisible; g.add(plane); const arrow=new THREE.ArrowHelper(dir, new THREE.Vector3(0,-dir.y*2.5,0), 5, 0xff0000,1,0.25); g.add(arrow); return g; }
 
-        function createMeronicMedium(){
+        function createMeronicMedium(count=metalphaCount){
+            count = Math.max(1, Math.min(MAX_METALPHA_COUNT, Math.round(count)));
+            metalphaCount = count;
             // Twelve normalized cuboctahedron vertices define the twelve
             // Compalpha orientations inside every Metalpha Meron.
             const vertices=[];
@@ -799,45 +933,58 @@
                 throw new Error('Metalpha topology must contain exactly 12 Compalphas.');
             }
 
-            // All 144 CI layers reuse one geometry and one material. The
-            // mathematical radius stays 2.665; only the displayed object is
-            // scaled so the ensemble can be inspected inside the glass tube.
-            const sharedGeometry=createMeridianGeometry(MERONIC_CI_RADIUS,18,24);
-            meronicMediumMaterial=new THREE.LineBasicMaterial({
-                color:0x5aafff,
-                transparent:true,
-                opacity:0,
-                blending:THREE.AdditiveBlending,
-                depthWrite:false,
-                depthTest:true
-            });
+            while(meronicMediumGroup.children.length){
+                meronicMediumGroup.remove(meronicMediumGroup.children[0]);
+            }
+            if(meronicMediumGeometry) meronicMediumGeometry.dispose();
+            meronicLayers.length=0;
+            if(!meronicMediumMaterial){
+                meronicMediumMaterial=new THREE.LineBasicMaterial({
+                    color:0x5aafff,
+                    transparent:true,
+                    opacity:0,
+                    blending:THREE.AdditiveBlending,
+                    depthWrite:false,
+                    depthTest:true
+                });
+            }
             const yAxis=new THREE.Vector3(0,1,0);
-            // The apex of each cone is the inner electrode tip. The twelve
-            // Metalpha centers occupy this entire interval at equal spacing.
+            // The apex of each cone is the inner electrode tip. Multiple
+            // Metalpha centers occupy this interval at equal spacing.
             const halfElectrodeTipLength=tipGeometry.parameters.height/2;
             const startX=coneLeft.position.x+halfElectrodeTipLength;
             const endX=coneRight.position.x-halfElectrodeTipLength;
-            meronicCenterSpacing=(endX-startX)/(MERON_COUNT-1);
+            meronicCenterSpacing=count>1 ? (endX-startX)/(count-1) : 0;
 
-            // A neutral CI crosses a center exactly three intervals away. The
-            // tiny offset term compensates for its Compalpha occupying a
-            // cuboctahedral vertex rather than the Metalpha's central point.
-            const crossingDistance=meronicCenterSpacing*MERONIC_CROSSING_STEPS;
-            meronicVisibleCIDiameter=crossingDistance+
-                (MERONIC_COMPALPHA_OFFSET*MERONIC_COMPALPHA_OFFSET)/crossingDistance;
-            meronicVisualScale=meronicVisibleCIDiameter/MERONIC_CI_DIAMETER;
+            // The nearest Metalpha PA sets the minimum CI diameter needed
+            // for a visible connection. The small offset term tolerates
+            // different cuboctahedral PA orientations.
+            const crossingDistance=meronicCenterSpacing;
+            meronicVisibleCIDiameter=count>1
+                ? crossingDistance+(MERONIC_COMPALPHA_OFFSET**2)/crossingDistance
+                : MERONIC_CI_DIAMETER;
+            // Rebuild the actual CI geometry; neither the Metalpha groups nor
+            // the PA positions are scaled when their count changes.
+            meronicMediumGeometry=createMeridianGeometry(meronicVisibleCIDiameter/2,18,24);
             const tubeRatio=meronicVisibleCIDiameter/tubeDiameter;
             const geometryLabel=document.getElementById('meronicGeometryLabel');
-            geometryLabel.textContent=`Visual CI Ø ${meronicVisibleCIDiameter.toFixed(2)} = ${tubeRatio.toFixed(2)}× tube Ø · crosses every third center.`;
+            geometryLabel.textContent=count>1
+                ? `CI Ø ${meronicVisibleCIDiameter.toFixed(2)} · visually reaches neighboring PA · ${tubeRatio.toFixed(2)}× tube Ø.`
+                : `One centered Metalpha · CI Ø ${meronicVisibleCIDiameter.toFixed(2)} · no neighboring PA.`;
+            document.getElementById('metalphaCountValue').textContent=count;
+            document.getElementById('metalphaCIDiameterValue').textContent=meronicVisibleCIDiameter.toFixed(2);
+            document.getElementById('meronicCountSummary').textContent=
+                `${count} Metalpha ${count===1?'Meron':'Merons'} · ${count*COMPHALPHAS_PER_MERON} Compalphas · CI Ø ${meronicVisibleCIDiameter.toFixed(2)}`;
+            meronicMediumGroup.name=`Intermediate_${count}_Metalpha`;
 
             // Make the first cuboctahedral Compalpha axis vertical. Its horn
             // torus then has an axial diameter that intersects the selected
             // neighboring center exactly at the neutral position.
             const alignmentQuaternion=new THREE.Quaternion().setFromUnitVectors(vertices[0],yAxis);
 
-            for(let meronIndex=0;meronIndex<MERON_COUNT;meronIndex++){
+            for(let meronIndex=0;meronIndex<count;meronIndex++){
                 const meron=new THREE.Group();
-                const t=meronIndex/(MERON_COUNT-1);
+                const t=count===1 ? 0.5 : meronIndex/(count-1);
                 meron.position.set(
                     THREE.MathUtils.lerp(startX,endX,t),
                     8,
@@ -853,24 +1000,29 @@
                 meron.name=`Metalpha_${meronIndex+1}`;
 
                 vertices.forEach((direction,compalphaIndex)=>{
-                    const layer=new THREE.LineSegments(sharedGeometry,meronicMediumMaterial);
+                    const layer=new THREE.LineSegments(meronicMediumGeometry,meronicMediumMaterial);
                     const baseQuaternion=new THREE.Quaternion().setFromUnitVectors(yAxis,direction);
                     layer.position.copy(direction).multiplyScalar(MERONIC_COMPALPHA_OFFSET);
                     layer.quaternion.copy(baseQuaternion);
-                    layer.scale.setScalar(meronicVisualScale);
                     layer.renderOrder=1;
                     layer.frustumCulled=false;
                     layer.name=`Metalpha_${meronIndex+1}_CI_${compalphaIndex+1}`;
                     layer.userData.baseQuaternion=baseQuaternion;
                     layer.userData.oscillationSign=(meronIndex+compalphaIndex)%2===0 ? 1 : -1;
                     meron.add(layer);
+                    const alphaPoint=new THREE.Mesh(meronicPAGeometry,meronicPAMaterial);
+                    alphaPoint.position.copy(layer.position);
+                    alphaPoint.name=`Metalpha_${meronIndex+1}_PA_${compalphaIndex+1}`;
+                    meron.add(alphaPoint);
                     meronicLayers.push(layer);
                 });
                 meronicMediumGroup.add(meron);
             }
-            if(meronicLayers.length!==MERON_COUNT*COMPHALPHAS_PER_MERON){
-                throw new Error('Intermediate view must contain exactly 144 CI meshes.');
+            if(meronicLayers.length!==count*COMPHALPHAS_PER_MERON){
+                throw new Error('Intermediate view must contain twelve CI meshes per Metalpha.');
             }
+            restartMeronicReveal();
+            updateVisibilityUI();
         }
 
         function clearComphalphas(){
@@ -935,9 +1087,10 @@
             compButton.textContent=comphalphasVisible ? '👁 Hide Compalphas' : '👁 Show Compalphas';
             compButton.style.borderColor=comphalphasVisible ? '#ff4444' : '#00ff88';
             const mediumButton=document.getElementById('btnToggleMeronicMedium');
-            mediumButton.textContent=meronicMediumVisible ? '👁 Hide 12 Metalpha' : '👁 Show 12 Metalpha';
+            mediumButton.textContent=meronicMediumVisible ? `👁 Hide ${metalphaCount} Metalpha` : `👁 Show ${metalphaCount} Metalpha`;
             mediumButton.style.borderColor=meronicMediumVisible ? '#66b8ff' : '#00ff88';
             document.getElementById('btnTogglePlasma').textContent=plasmaVisible ? '👁 Hide Plasma' : '👁 Show Plasma';
+            document.getElementById('btnViewIntermediate').textContent=`Intermediate — ${metalphaCount} Metalpha`;
 
             ['microscopic','intermediate','macroscopic'].forEach(mode=>{
                 const id='btnView'+mode.charAt(0).toUpperCase()+mode.slice(1);
@@ -1083,6 +1236,18 @@
                 pendingCountRebuild = 0;
                 createDynamicComphalphas(count);
                 if(selectedHelpControlId === 'compalphaCountSlider') selectFunctionHelp('compalphaCountSlider');
+            });
+        });
+        document.getElementById('metalphaCountSlider').addEventListener('input',(e)=>{
+            const count=Math.max(1,Math.min(MAX_METALPHA_COUNT,Math.round(Number(e.target.value))));
+            metalphaCount=count;
+            document.getElementById('metalphaCountValue').textContent=count;
+            if(pendingMetalphaRebuild) cancelAnimationFrame(pendingMetalphaRebuild);
+            pendingMetalphaRebuild=requestAnimationFrame(()=>{
+                pendingMetalphaRebuild=0;
+                createMeronicMedium(count);
+                applyViewPreset('intermediate');
+                if(selectedHelpControlId==='metalphaCountSlider') selectFunctionHelp('metalphaCountSlider');
             });
         });
         document.getElementById('btnReenergize').addEventListener('click',()=>{ 
@@ -1381,7 +1546,7 @@
                 }
             });
 
-            // Intermediate scale: the 144 one-layer CI meshes oscillate in
+            // Intermediate scale: twelve one-layer CI meshes per Metalpha oscillate in
             // place. No point, particle or packet translates through the tube.
             meronicLayers.forEach(layer=>{
                 const angle=layer.userData.oscillationSign*ampEff*sinW;
