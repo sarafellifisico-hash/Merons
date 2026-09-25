@@ -10,7 +10,10 @@
     return nativeRAF(runner);
   };
   addEventListener('message', event => {
-    if (event.data?.type === 'TUIDG_TAB_ACTIVE') paused = !event.data.active;
+    if (event.data?.type === 'TUIDG_TAB_ACTIVE') {
+      paused = !event.data.active;
+      dispatchEvent(new CustomEvent('tuidg-tab-activity'));
+    }
   });
 })();
 </script>
@@ -186,6 +189,7 @@ Check your Browserslist config to be sure that your targets are set up correctly
     color:#c4cee0;
   }
   .distance-stage.structures-toggle.off { color:#71829f; text-decoration:line-through; }
+  body:not(.builder-forces-active) #triadDistanceLabel { display:none; }
   #panel {
     position: fixed;
     left: 16px;
@@ -216,7 +220,7 @@ Check your Browserslist config to be sure that your targets are set up correctly
   .panel-tabs {
     flex: 0 0 auto;
     display:grid;
-    grid-template-columns:repeat(5, minmax(0,1fr));
+    grid-template-columns:repeat(6, minmax(0,1fr));
     gap:5px;
     padding:8px;
     border-bottom:1px solid rgba(255,255,255,.055);
@@ -229,7 +233,7 @@ Check your Browserslist config to be sure that your targets are set up correctly
     padding:7px 3px;
     color:#7888a6;
     background:transparent;
-    font-size:10.5px;
+    font-size:10px;
     line-height:1.1;
     font-weight:750;
     cursor:pointer;
@@ -237,6 +241,49 @@ Check your Browserslist config to be sure that your targets are set up correctly
   }
   .panel-tab:hover { color:#c6d3e9; background:#131c2b; }
   .panel-tab.active { color:#e5edff; border-color:#354b72; background:#19263d; box-shadow:inset 0 1px 0 rgba(255,255,255,.05); }
+  .builder-mode-switch {
+    flex:0 0 auto;
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:6px;
+    padding:9px 10px;
+    border-bottom:1px solid rgba(255,255,255,.08);
+    background:rgba(5,12,22,.58);
+  }
+  .builder-mode-button {
+    min-width:0;
+    padding:9px 5px;
+    border:1px solid rgba(105,215,243,.19);
+    border-radius:10px;
+    background:rgba(18,31,49,.8);
+    color:#a5b6cd;
+    font:700 11px/1.2 "Instrument Sans",system-ui,sans-serif;
+    cursor:pointer;
+  }
+  .builder-mode-button:hover { border-color:#69d7f3;color:#f0f9ff; }
+  .builder-mode-button.active {
+    border-color:#69d7f3;
+    background:rgba(38,93,116,.52);
+    color:#fff;
+    box-shadow:inset 0 1px rgba(255,255,255,.09);
+  }
+  .builder-mode-button:focus-visible { outline:2px solid #69d7f3;outline-offset:2px; }
+  .force-triad-grid,.force-action-grid,.force-scale-grid { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px; }
+  .force-scale-grid { grid-template-columns:repeat(3,minmax(0,1fr)); }
+  .force-action-grid { margin-top:8px; }
+  .force-action.wide { grid-column:1/-1; }
+  .force-action {
+    min-width:0;padding:9px 6px;
+    border:1px solid #344964;border-radius:9px;
+    background:#132034;color:#dbeaf6;
+    font:600 11px/1.3 "Instrument Sans",system-ui,sans-serif;
+    cursor:pointer;
+  }
+  .force-action:hover { border-color:#69d7f3;background:#183c50; }
+  .force-action.active { border-color:#69d7f3;background:#183c50;color:#fff; }
+  .force-action.off { color:#8292a8; }
+  .force-action:disabled { opacity:.48;cursor:not-allowed; }
+  .force-action:focus-visible { outline:2px solid #69d7f3;outline-offset:2px; }
   .panel-inner { flex:1 1 auto; min-height:0; overflow-y:auto; padding:12px; scrollbar-gutter:stable; }
   .panel-inner::-webkit-scrollbar { width:7px; }
   .panel-inner::-webkit-scrollbar-thumb { background:#29364d; border-radius:8px; }
@@ -489,6 +536,7 @@ Check your Browserslist config to be sure that your targets are set up correctly
   border-radius:14px;
 }
 #panel.minimized .panel-header,
+#panel.minimized .builder-mode-switch,
 #panel.minimized .panel-tabs,
 #panel.minimized .panel-inner { display:none; }
 
@@ -936,8 +984,13 @@ body.pair-mode #panel-build>.control-card:first-child{display:none}
     <div class="panel-subtitle">From Metalpha to 303 Metalpha Merons</div>
   </header>
 
+  <div class="builder-mode-switch" role="group" aria-label="Meronic Builder mode">
+    <button type="button" class="builder-mode-button active" data-builder-mode="build" aria-pressed="true">Construção Merônica</button>
+    <button type="button" class="builder-mode-button" data-builder-mode="forces" aria-pressed="false">Forças Merônicas</button>
+  </div>
   <nav class="panel-tabs" role="tablist" aria-label="Control categories">
     <button class="panel-tab active" type="button" role="tab" aria-selected="true" aria-controls="panel-build" data-panel-tab="build">Build</button>
+    <button class="panel-tab" type="button" role="tab" aria-selected="false" aria-controls="panel-forces" data-panel-tab="forces">Forces</button>
     <button class="panel-tab" type="button" role="tab" aria-selected="false" aria-controls="panel-interaction" data-panel-tab="interaction">Interaction</button>
     <button class="panel-tab" type="button" role="tab" aria-selected="false" aria-controls="panel-view" data-panel-tab="view">View</button>
     <button class="panel-tab" type="button" role="tab" aria-selected="false" aria-controls="panel-compare" data-panel-tab="compare">Compare</button>
@@ -956,8 +1009,56 @@ body.pair-mode #panel-build>.control-card:first-child{display:none}
       </div>
 
       <div class="control-card">
+        <div class="sec-title">Compalpha Detail</div>
+        <div class="control-row">
+          <div class="flex items-center justify-between gap-3">
+            <span class="text-[11.5px] text-[#8d9bb7]">Meridians</span>
+            <div class="flex gap-1.5">
+              <label class="chip"><input type="radio" name="meridians" value="12" class="sr-only"><span>12</span></label>
+              <label class="chip"><input type="radio" name="meridians" value="18" class="sr-only"><span>18</span></label>
+              <label class="chip"><input type="radio" name="meridians" value="36" class="sr-only" checked><span>36</span></label>
+            </div>
+          </div>
+          <label class="flex items-center gap-2.5 cursor-pointer mt-3 text-[12px]"><input type="checkbox" id="emphasizeMeridians" class="check"><span>Highlight Meridians</span></label>
+        </div>
+        <div class="control-row">
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-[11.5px] text-[#a6b2ca]">Circle smoothness</span>
+            <span class="mono text-[12px] text-[#d6e3ff]" id="meridianResVal">48</span>
+          </div>
+          <input type="range" id="meridianResolution" min="12" max="96" step="1" value="48">
+        </div>
+      </div>
+    </section>
+
+    <section id="panel-forces" class="panel-pane" role="tabpanel" data-panel-pane="forces" hidden>
+      <div class="control-card">
+        <div class="sec-title">Alpha Triads · Rotating Interaction</div>
+        <div class="force-triad-grid">
+          <button type="button" class="force-action" data-force-triad="0">Hide Tα 1</button>
+          <button type="button" class="force-action" data-force-triad="1">Hide Tα 2</button>
+          <button type="button" class="force-action" data-force-triad="2">Hide Tα 3</button>
+          <button type="button" class="force-action" data-force-triad="3">Hide Tα 4</button>
+        </div>
+        <div class="force-action-grid">
+          <button type="button" class="force-action" data-force-command="separateTriadsBtn">Separate Tα to Exd</button>
+          <button type="button" class="force-action" data-force-command="runRIBtn">Run Rotating Interaction</button>
+          <button type="button" class="force-action" data-force-command="toggleFiveMetalphasBtn">Hide Metalpha Structures</button>
+          <button type="button" class="force-action" data-force-command="returnToMeronModeBtn">Return to Meron Mode</button>
+        </div>
+      </div>
+      <div class="control-card">
+        <div class="sec-title">Three Rotating Interaction distances</div>
+        <div class="force-scale-grid">
+          <button type="button" class="force-action" data-force-distance="md">Md · 1</button>
+          <button type="button" class="force-action" data-force-distance="mod">Mod · 24</button>
+          <button type="button" class="force-action" data-force-distance="exd">Exd · 96</button>
+        </div>
+        <p class="panel-note">The scale buttons form the central Metalpha and four external Metalpha Merons.</p>
+      </div>
+      <div class="control-card">
         <div class="sec-title" id="circleTypesTitle">Circle Types and Diameters</div>
-          <div class="compact-checks">
+        <div class="compact-checks">
           <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" class="check layer-toggle" data-layer="0" checked><span><span class="legend-dot" style="background:#ffffff"></span>IMC · D 0.464</span></label>
           <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" class="check layer-toggle" data-layer="1" checked><span><span class="legend-dot" style="background:#446dff"></span>MC · D 1</span></label>
           <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" class="check layer-toggle" data-layer="2" checked><span><span class="legend-dot" style="background:#00e676"></span>IMoC · D 12</span></label>
@@ -966,7 +1067,6 @@ body.pair-mode #panel-build>.control-card:first-child{display:none}
           <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" class="check layer-toggle" data-layer="5" checked><span><span class="legend-dot" style="background:#ff0000"></span>ExC · D 96</span></label>
         </div>
       </div>
-
       <div class="control-card">
         <div class="sec-title">Meronic Geometry</div>
         <div class="control-row">
@@ -993,27 +1093,6 @@ body.pair-mode #panel-build>.control-card:first-child{display:none}
         </div>
       </div>
 
-      <div class="control-card">
-        <div class="sec-title">Compalpha Detail</div>
-        <div class="control-row">
-          <div class="flex items-center justify-between gap-3">
-            <span class="text-[11.5px] text-[#9baacc]">Meridians</span>
-            <div class="flex gap-1.5">
-              <label class="chip"><input type="radio" name="meridians" value="12" class="sr-only"><span>12</span></label>
-              <label class="chip"><input type="radio" name="meridians" value="18" class="sr-only"><span>18</span></label>
-              <label class="chip"><input type="radio" name="meridians" value="36" class="sr-only" checked><span>36</span></label>
-            </div>
-          </div>
-          <label class="flex items-center gap-2.5 cursor-pointer mt-3 text-[12px]"><input type="checkbox" id="emphasizeMeridians" class="check"><span>Highlight Meridians</span></label>
-        </div>
-        <div class="control-row">
-          <div class="flex items-center justify-between mb-1">
-            <span class="text-[11.5px] text-[#9baacc]">Circle smoothness</span>
-            <span class="mono text-[12px] text-[#d6e3ff]" id="meridianResVal">48</span>
-          </div>
-          <input type="range" id="meridianResolution" min="12" max="96" step="1" value="48">
-        </div>
-      </div>
     </section>
 
     <section id="panel-interaction" class="panel-pane" role="tabpanel" data-panel-pane="interaction" hidden>
@@ -2867,6 +2946,47 @@ const panel = document.getElementById('panel');
 const panelBody = panel.querySelector('.panel-inner');
 const panelTabs = [...panel.querySelectorAll('[data-panel-tab]')];
 const panelPanes = [...panel.querySelectorAll('[data-panel-pane]')];
+let lastForceControlsKey = '';
+
+function syncForceControls(force = false) {
+  const key = [
+    ...metalphaTriadVisible, triadsSeparated, riRunning,
+    fiveMeronRIDistanceMode, fiveMeronRIDistanceStage,
+    fiveMeronMetalphasVisible, currentMeronCount
+  ].join('|');
+  if (!force && key === lastForceControlsKey) return;
+  lastForceControlsKey = key;
+
+  document.querySelectorAll('[data-force-triad]').forEach(button => {
+    const index = Number(button.dataset.forceTriad);
+    const visible = metalphaTriadVisible[index] !== false;
+    button.textContent = (visible ? 'Hide' : 'Show') + ' Tα ' + (index + 1);
+    button.classList.toggle('off', !visible);
+    button.setAttribute('aria-pressed', String(visible));
+  });
+  document.querySelectorAll('[data-force-command]').forEach(button => {
+    const command = button.dataset.forceCommand;
+    const labels = {
+      separateTriadsBtn: triadsSeparated ? 'Join Tα · Exd' : 'Separate Tα to Exd',
+      runRIBtn: riRunning ? 'Stop Rotating Interaction' : 'Run Rotating Interaction',
+      toggleFiveMetalphasBtn: fiveMeronMetalphasVisible ? 'Hide Metalpha Structures' : 'Show Metalpha Structures',
+      returnToMeronModeBtn: 'Return to Meron Mode'
+    };
+    button.textContent = labels[command];
+    button.disabled = command === 'toggleFiveMetalphasBtn' && !(fiveMeronRIDistanceMode && currentMeronCount === 5);
+    const pressed = command === 'separateTriadsBtn' ? triadsSeparated
+      : command === 'runRIBtn' ? riRunning
+      : command === 'toggleFiveMetalphasBtn' && fiveMeronMetalphasVisible;
+    button.classList.toggle('active', pressed);
+    button.classList.toggle('off', command === 'toggleFiveMetalphasBtn' && !fiveMeronMetalphasVisible);
+    button.setAttribute('aria-pressed', String(pressed));
+  });
+  document.querySelectorAll('[data-force-distance]').forEach(button => {
+    const selected = fiveMeronRIDistanceMode && fiveMeronRIDistanceStage === button.dataset.forceDistance;
+    button.classList.toggle('active', selected);
+    button.setAttribute('aria-pressed', String(selected));
+  });
+}
 
 function activatePanelTab(tabName, remember = true) {
   panelTabs.forEach(tab => {
@@ -2881,10 +3001,39 @@ function activatePanelTab(tabName, remember = true) {
     pane.hidden = !selected;
   });
   panelBody.scrollTop = 0;
+  document.body.classList.toggle('builder-forces-active', tabName === 'forces');
+  document.querySelectorAll('[data-builder-mode]').forEach(button => {
+    const selected = button.dataset.builderMode === tabName;
+    button.classList.toggle('active', selected);
+    button.setAttribute('aria-pressed', String(selected));
+  });
+  if (tabName === 'forces') syncForceControls(true);
   if (remember) {
     try { localStorage.setItem('meronicBuilderActivePanelTab', tabName); } catch (_) {}
   }
 }
+
+document.querySelectorAll('[data-builder-mode]').forEach(button => {
+  button.addEventListener('click', () => activatePanelTab(button.dataset.builderMode));
+});
+document.querySelectorAll('[data-force-triad]').forEach(button => {
+  button.addEventListener('click', () => {
+    document.querySelector('.triad-toggle[data-triad="' + button.dataset.forceTriad + '"]')?.click();
+    syncForceControls(true);
+  });
+});
+document.querySelectorAll('[data-force-command]').forEach(button => {
+  button.addEventListener('click', () => {
+    document.getElementById(button.dataset.forceCommand)?.click();
+    syncForceControls(true);
+  });
+});
+document.querySelectorAll('[data-force-distance]').forEach(button => {
+  button.addEventListener('click', () => {
+    document.querySelector('[data-distance-stage="' + button.dataset.forceDistance + '"]')?.click();
+    syncForceControls(true);
+  });
+});
 
 panelTabs.forEach((tab, index) => {
   tab.addEventListener('click', () => activatePanelTab(tab.dataset.panelTab));
@@ -5257,6 +5406,7 @@ function applyFiveMeronMetalphaVisibility() {
     topButton.classList.toggle('off', active && !fiveMeronMetalphasVisible);
     topButton.setAttribute('aria-pressed', String(active && fiveMeronMetalphasVisible));
   }
+  syncForceControls();
 }
 
 function applyRIState() {
@@ -5279,6 +5429,7 @@ function applyRIState() {
     button.classList.toggle('running', riRunning);
     button.setAttribute('aria-pressed', String(riRunning));
   }
+  syncForceControls();
 }
 
 function animateTriadSeparation(separate) {
@@ -5309,6 +5460,7 @@ function animateTriadSeparation(separate) {
   button.textContent = separate ? 'Join Tα · Exd' : 'Separate Tα to Exd';
   button.classList.toggle('running', separate);
   button.setAttribute('aria-pressed', String(separate));
+  syncForceControls();
 }
 
 const FIVE_MERON_RI_DISTANCES = {
@@ -5329,6 +5481,7 @@ function syncFiveMeronRIDistanceUI() {
   syncMetalphaScriptUi();
   applyRIState();
   applyFiveMeronMetalphaVisibility();
+  syncForceControls();
 }
 
 function activateFiveMeronRIDistance(stageName, animate = true) {
@@ -5601,7 +5754,8 @@ function setupPresentationContextMenu() {
       return `<div class="context-title">1 · Meron Build</div><p class="context-copy">Choose any Meronic Mass from 1 to 303.</p>
         <div class="context-control"><label><span>Metalpha Merons · Mass Number</span><span><input class="context-number" type="number" min="1" max="303" step="1" value="${currentMeronCount}" data-context-meron-count></span></label></div>
         <div class="context-actions">${quickMasses.map(count=>button(`${count} ${count===1?'Meron':'Merons'}`,`data-context-meron="${count}"`,currentMeronCount===count?'active':'')).join('')}</div>
-        <p class="context-status">${document.getElementById('meronInfo').textContent}</p>`;
+        <p class="context-status">${document.getElementById('meronInfo').textContent}</p>
+        <div class="context-actions">${button('Open Construção Merônica','data-context-panel-tab="build"','wide')}</div>`;
     }
     if (category === 'layers') {
       const layers = [['IMC','0.464'],['MC','1'],['IMoC','12'],['MoC','24'],['IExC','48'],['ExC','96']];
@@ -5645,7 +5799,8 @@ function setupPresentationContextMenu() {
         ${button('Md · 1','data-context-ri-distance="md"',fiveMeronRIDistanceMode&&activeDistance==='md'?'active':'')}
         ${button('Mod · 24','data-context-ri-distance="mod"',fiveMeronRIDistanceMode&&activeDistance==='mod'?'active':'')}
         ${button('Exd · 96','data-context-ri-distance="exd"',fiveMeronRIDistanceMode&&activeDistance==='exd'?'active':'')}
-      </div></div>`;
+      </div></div>
+      <div class="context-actions">${button('Open Forças Merônicas','data-context-panel-tab="forces"','wide')}</div>`;
     }
     if (category === 'cyclic') {
       const amp = document.getElementById('danceAmp');
@@ -7230,6 +7385,7 @@ function syncMetalphaScriptUi() {
   separateButton.classList.toggle('running', triadsSeparated);
   separateButton.setAttribute('aria-pressed', String(triadsSeparated));
   updateRIDistancePresentation();
+  syncForceControls();
 }
 
 function applyScriptState(state) {
@@ -7737,7 +7893,7 @@ function animateToPairMode(newModeName){
 
   buildUniverse();
   syncMeronCountUI();syncMetalphaScriptUi();syncPairUI();
-  activatePanelTab('build');
+  activatePanelTab('forces');
 
   // Salva estado inicial de câmera
   const startCamPos = camera.position.clone();
@@ -7865,6 +8021,7 @@ document.getElementById('interMeronDist').addEventListener('input', e => {
 document.querySelectorAll('[data-distance-stage]').forEach(button => {
   button.addEventListener('click', () => {
     activateFiveMeronRIDistance(button.dataset.distanceStage, true);
+    syncForceControls();
   });
 });
 
@@ -7994,6 +8151,89 @@ window.addEventListener('resize', () => {
 
 let zoomedOut = false;
 let zoomAnimationFrame=null;
+let openingCameraSequence = null;
+
+function stopOpeningCameraSequence() {
+  if (!openingCameraSequence) return;
+  openingCameraSequence.active = false;
+  cancelAnimationFrame(openingCameraSequence.frame);
+  openingCameraSequence = null;
+  camera.clearViewOffset();
+  document.removeEventListener('pointerdown', stopOpeningCameraSequence, true);
+  document.removeEventListener('wheel', stopOpeningCameraSequence, true);
+  document.removeEventListener('keydown', stopOpeningCameraSequence, true);
+  document.removeEventListener('visibilitychange', resetOpeningCameraClock);
+  window.removeEventListener('tuidg-tab-activity', resetOpeningCameraClock);
+  window.removeEventListener('resize', stopOpeningCameraSequence, true);
+}
+
+function resetOpeningCameraClock() {
+  if (openingCameraSequence) openingCameraSequence.lastTime = 0;
+}
+
+function startOpeningCameraSequence() {
+  // Keep the exact camera pose that the Builder used before this introduction.
+  // The existing IMC/ExC button has a closer endpoint and is independent.
+  const finalPosition = camera.position.clone();
+  const finalTarget = controls.target.clone();
+  const direction = finalPosition.clone().sub(finalTarget).normalize();
+  const frame = presentationFrame();
+  const initialOffsetX = camera.view?.offsetX || 0;
+  const initialOffsetY = camera.view?.offsetY || 0;
+  const halfFov = THREE.MathUtils.degToRad(camera.fov) / 2;
+  const visibleFraction = Math.min(frame.width, frame.height) / window.innerHeight;
+  const fitHalfFov = Math.atan(Math.tan(halfFov) * visibleFraction);
+  // In this renderer a toroidal IC extends twice its geometry radius from
+  // its Alpha Axis.  Fit the complete ExC envelope to the visible height.
+  const outerRadius = currentDistance + 2 * LAYER_DEFS[5].r;
+  const startDistance = outerRadius / Math.sin(fitHalfFov) * 1.025;
+  const finalDistance = finalPosition.distanceTo(finalTarget);
+  camera.position.copy(finalTarget).addScaledVector(direction, startDistance);
+  camera.lookAt(finalTarget);
+  controls.update();
+
+  const sequence = {active: true, frame: 0, phase: 'hold', elapsed: 0, lastTime: 0};
+  openingCameraSequence = sequence;
+  document.addEventListener('pointerdown', stopOpeningCameraSequence, true);
+  document.addEventListener('wheel', stopOpeningCameraSequence, true);
+  document.addEventListener('keydown', stopOpeningCameraSequence, true);
+  document.addEventListener('visibilitychange', resetOpeningCameraClock);
+  window.addEventListener('tuidg-tab-activity', resetOpeningCameraClock);
+  window.addEventListener('resize', stopOpeningCameraSequence, true);
+
+  function step(now) {
+    if (!sequence.active) return;
+    sequence.elapsed += sequence.lastTime ? Math.max(0, now - sequence.lastTime) : 0;
+    sequence.lastTime = now;
+    if (sequence.phase === 'hold' && sequence.elapsed >= 3000) {
+      sequence.phase = 'zoom';
+      sequence.elapsed = 0;
+    }
+    if (sequence.phase === 'zoom') {
+      const progress = Math.min(sequence.elapsed / 3600, 1);
+      const eased = progress < .5 ? 2 * progress * progress : 1 - Math.pow(-2 * progress + 2, 2) / 2;
+      // Geometric distance interpolation makes each IC scale pass smoothly.
+      const distance = startDistance * Math.pow(finalDistance / startDistance, eased);
+      camera.position.copy(finalTarget).addScaledVector(direction, distance);
+      controls.target.copy(finalTarget);
+      camera.setViewOffset(
+        window.innerWidth, window.innerHeight,
+        initialOffsetX * (1 - eased), initialOffsetY * (1 - eased),
+        window.innerWidth, window.innerHeight
+      );
+      controls.update();
+      if (progress === 1) {
+        camera.position.copy(finalPosition);
+        controls.target.copy(finalTarget);
+        controls.update();
+        stopOpeningCameraSequence();
+        return;
+      }
+    }
+    sequence.frame = requestAnimationFrame(step);
+  }
+  sequence.frame = requestAnimationFrame(step);
+}
 
 updateReadyScriptDescription();
 loadAnimationScript();
@@ -8037,6 +8277,7 @@ function refreshPresentationFrame(){
 // Overlay changes do not move or zoom the pair. Reframe only on viewport resize.
 window.addEventListener('resize',refreshPresentationFrame);
 syncPairUI();
+startOpeningCameraSequence();
 </script>
 </body>
 </html>
