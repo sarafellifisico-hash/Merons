@@ -8293,6 +8293,30 @@ startOpeningCameraSequence();
   const notes=document.getElementById('pairNotes');
   const panel=document.getElementById('panel');
   const fine=matchMedia('(hover:hover) and (pointer:fine)');
+  if(!window.revealControlPanel){
+    const zone=document.getElementById('panelEdgeZone'),toggle=document.getElementById('toggleBtn');
+    let edgeTimer=0;
+    const reveal=()=>{clearTimeout(edgeTimer);panel.classList.remove('edge-hidden');document.body.classList.remove('panel-edge-hidden')};
+    const schedule=(delay=450)=>{clearTimeout(edgeTimer);edgeTimer=setTimeout(()=>{
+      if(fine.matches&&!panel.matches(':hover')&&!zone.matches(':hover')){
+        panel.classList.add('edge-hidden');document.body.classList.add('panel-edge-hidden');
+      }
+    },delay)};
+    zone.addEventListener('pointerenter',reveal);
+    zone.addEventListener('pointerleave',()=>schedule(650));
+    panel.addEventListener('pointerenter',reveal);
+    panel.addEventListener('pointerleave',()=>schedule());
+    panel.addEventListener('focusin',reveal);
+    panel.addEventListener('focusout',()=>schedule(750));
+    toggle.addEventListener('click',()=>{
+      reveal();const hidden=panel.classList.toggle('minimized');
+      document.body.classList.toggle('pair-panel-minimized',hidden);
+      toggle.textContent=hidden?'+':'−';
+      toggle.setAttribute('aria-expanded',String(!hidden));
+      toggle.setAttribute('aria-label',hidden?'Open control panel':'Minimize control panel');
+    });
+    schedule(2200);
+  }
   let noteTimer=0,noteHoldUntil=0;
   function hideNotes(){
     if(!notes.hidden&&!notes.classList.contains('collapsed'))notes.querySelector('#pairNotesToggle')?.click();
