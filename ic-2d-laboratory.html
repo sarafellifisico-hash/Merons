@@ -824,12 +824,11 @@ svg {
 <div id="ic2d-lab" aria-label="Integrated Cyclical Interaction 2D laboratory">
   <aside class="ic2d-panel">
     <button class="ic2d-panel-toggle" type="button" aria-label="Minimize control panel" aria-expanded="true">−</button>
+    <header class="ic2d-heading">
+      <h2>Diagramas da Interação Cíclica</h2>
+      <p class="ic2d-subtitle">Entre 2 e 3 Compalphas</p>
+    </header>
     <div class="ic2d-panel-inner">
-      <header class="ic2d-heading">
-        <div class="ic2d-eyebrow">Meronic Model · IC 2D Laboratory</div>
-        <h2>Cyclical Interaction</h2>
-        <p class="ic2d-subtitle">Interaction Circles between two or three Compalphas.</p>
-      </header>
 
       <section class="ic2d-section" aria-labelledby="ic2d-mode-label">
         <div class="ic2d-section-title" id="ic2d-mode-label">Interaction mode</div>
@@ -942,6 +941,24 @@ svg {
 #ic2d-lab .ic2d-info-toggle{width:110px;height:40px;font:700 11px "Instrument Sans",system-ui,sans-serif}
 @media(max-width:900px){#ic2d-lab.panel-collapsed{grid-template-columns:1fr}#ic2d-lab.panel-collapsed .ic2d-panel{width:128px;height:50px}}
 @media(prefers-reduced-motion:reduce){#ic2d-lab .ic2d-panel,#ic2d-lab .ic2d-mode-caption,#ic2d-lab button{transition:none!important}}
+/* Match the Meronic Builder's fixed heading, cards and control styling. */
+#ic2d-lab .ic2d-panel{height:fit-content;max-height:calc(100dvh - 24px);padding:0}
+#ic2d-lab .ic2d-heading{flex:none;padding:14px 97px 11px 15px;border-bottom:1px solid rgba(135,205,229,.2)}
+#ic2d-lab .ic2d-heading h2{margin:0 0 4px;color:#f0f4ff;font:700 20px/1.15 "Instrument Sans",system-ui,sans-serif;letter-spacing:-.02em}
+#ic2d-lab .ic2d-heading .ic2d-subtitle{margin:0;color:#8d9bb7;font:400 14px/1.45 "Instrument Sans",system-ui,sans-serif}
+#ic2d-lab .ic2d-panel-inner{flex:0 1 auto;padding:12px;scrollbar-gutter:stable}
+#ic2d-lab .ic2d-section,#ic2d-lab .ic2d-legend,#ic2d-lab .ic2d-section.ic2d-state{margin:0 0 10px;padding:12px;border:1px solid rgba(255,255,255,.065);border-radius:13px;background:rgba(19,27,42,.66);box-shadow:inset 0 1px 0 rgba(255,255,255,.025)}
+#ic2d-lab .ic2d-section:last-child,#ic2d-lab .ic2d-legend:last-child{margin-bottom:0}
+#ic2d-lab .ic2d-section-title{color:#8292b3;font:700 11px/1.35 "Instrument Sans",system-ui,sans-serif;letter-spacing:.11em}
+#ic2d-lab .ic2d-panel-inner button{border:1px solid #344964;border-radius:9px;background:#132034;color:#dbeaf6;font:600 11px/1.3 "Instrument Sans",system-ui,sans-serif}
+#ic2d-lab .ic2d-panel-inner button:hover,#ic2d-lab .ic2d-panel-inner button.active{border-color:#69d7f3;background:#183c50;color:#fff}
+#ic2d-lab input[type=range]{height:22px}
+#ic2d-lab input[type=range]::-moz-range-track{height:4px;background:#253247;border-radius:99px}
+#ic2d-lab input[type=range]::-moz-range-thumb{width:16px;height:16px;border:0;border-radius:50%;background:#e9f0ff;box-shadow:0 0 0 4px rgba(124,167,255,.14)}
+#ic2d-lab .ic2d-panel-toggle{top:10px;right:10px}
+#ic2d-lab #uiPanelPin{right:50px}
+#ic2d-lab.panel-collapsed .ic2d-heading{display:none}
+@media(max-width:900px){#ic2d-lab .ic2d-panel{height:fit-content;max-height:min(68dvh,650px)}#ic2d-lab.panel-collapsed .ic2d-panel{height:50px}}
 </style>
 
 <script>
