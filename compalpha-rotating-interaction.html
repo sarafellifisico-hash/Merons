@@ -3345,15 +3345,16 @@
   (()=>{
     const fine=matchMedia('(hover:hover) and (pointer:fine)');
     function autoCollapse(element,collapse,delay){
-      let timer=0;
+      let timer=0,holdUntil=0;
       const cancel=()=>clearTimeout(timer);
-      const schedule=wait=>{cancel();timer=setTimeout(()=>{if(!element.matches(':hover')&&!element.contains(document.activeElement))collapse()},wait)};
+      const schedule=wait=>{cancel();wait=Math.max(wait,holdUntil-Date.now());timer=setTimeout(()=>{if(!element.matches(':hover')&&!element.contains(document.activeElement))collapse()},wait)};
       element.addEventListener('pointerenter',cancel);
       element.addEventListener('pointerleave',()=>schedule(480));
       element.addEventListener('focusin',cancel);
       element.addEventListener('focusout',()=>schedule(750));
       document.addEventListener('pointerdown',event=>{if(!fine.matches&&!element.contains(event.target))collapse()},true);
       schedule(delay);
+      return ms=>{holdUntil=Date.now()+ms;schedule(ms)};
     }
     function setPanel(id,buttonId,hidden){
       const panel=document.getElementById(id),button=document.getElementById(buttonId);
@@ -3363,8 +3364,8 @@
       if(id==='theory-panel')document.getElementById('theory-panel-body').setAttribute('aria-hidden',String(hidden));
     }
     const controls=document.getElementById('control-panel'),theory=document.getElementById('theory-panel');
-    autoCollapse(controls,()=>setPanel('control-panel','collapse-panel',true),3200);
-    autoCollapse(theory,()=>setPanel('theory-panel','theory-collapse-button',true),3600);
+    const holdControls=autoCollapse(controls,()=>setPanel('control-panel','collapse-panel',true),3200);
+    const holdTheory=autoCollapse(theory,()=>setPanel('theory-panel','theory-collapse-button',true),3600);
     if(!window.__ri3dControlsReady){
       document.getElementById('collapse-panel').addEventListener('click',()=>{
         const hidden=!controls.classList.contains('collapsed');
@@ -3377,6 +3378,8 @@
         if(!hidden&&innerWidth<=760)setPanel('control-panel','collapse-panel',true);
       });
     }
+    document.getElementById('collapse-panel').addEventListener('click',()=>{if(!controls.classList.contains('collapsed'))holdControls(3000)});
+    document.getElementById('theory-collapse-button').addEventListener('click',()=>{if(!theory.classList.contains('collapsed'))holdTheory(6000)});
     const hud=document.querySelector('.distance-hud'),hudToggle=hud.querySelector('.distance-hud-toggle');
     function setHud(hidden){
       hud.classList.toggle('auto-hidden',hidden);
@@ -3384,8 +3387,8 @@
       hudToggle.setAttribute('aria-expanded',String(!hidden));
       hudToggle.setAttribute('aria-label',hidden?'Show distance readout':'Hide distance readout');
     }
-    hudToggle.addEventListener('click',()=>setHud(!hud.classList.contains('auto-hidden')));
-    autoCollapse(hud,()=>setHud(true),4400);
+    const holdHud=autoCollapse(hud,()=>setHud(true),4400);
+    hudToggle.addEventListener('click',()=>{const wasHidden=hud.classList.contains('auto-hidden');setHud(!wasHidden);if(wasHidden)holdHud(5000)});
     const tip=document.querySelector('.camera-tip'),tipToggle=tip.querySelector('.camera-tip-toggle');
     function setTip(hidden){
       tip.classList.toggle('auto-hidden',hidden);
@@ -3393,8 +3396,8 @@
       tipToggle.setAttribute('aria-expanded',String(!hidden));
       tipToggle.setAttribute('aria-label',hidden?'Show camera hint':'Hide camera hint');
     }
-    tipToggle.addEventListener('click',()=>setTip(!tip.classList.contains('auto-hidden')));
-    autoCollapse(tip,()=>setTip(true),5000);
+    const holdTip=autoCollapse(tip,()=>setTip(true),5000);
+    tipToggle.addEventListener('click',()=>{const wasHidden=tip.classList.contains('auto-hidden');setTip(!wasHidden);if(wasHidden)holdTip(6000)});
   })();
   </script>
 </body>
