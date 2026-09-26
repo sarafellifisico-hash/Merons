@@ -870,8 +870,8 @@ svg {
 
   <section class="ic2d-stage" aria-label="Animated Cyclical Interaction diagram">
     <canvas id="ic2d-canvas" width="1040" height="1040" role="img" aria-label="Cyclical Interaction between Compalphas A and B"></canvas>
-    <div class="ic2d-mode-caption" id="ic2d-mode-caption"><button class="ic2d-caption-toggle" type="button" aria-label="Show diagram caption" aria-expanded="false">i</button><span class="ic2d-caption-text">Compalphas A–B · Common Interaction Circle</span></div>
-    <button class="ic2d-info-toggle" type="button" aria-label="Show diagram measurements" title="Show diagram measurements" hidden>i</button>
+    <div class="ic2d-mode-caption" id="ic2d-mode-caption"><button class="ic2d-caption-toggle" type="button" aria-label="Show diagram caption" aria-expanded="false">ⓘ View</button><span class="ic2d-caption-text">Compalphas A–B · Common Interaction Circle</span></div>
+    <button class="ic2d-info-toggle" type="button" aria-label="Show diagram measurements" title="Show diagram measurements" hidden>ⓘ Readout</button>
   </section>
 </div>
 
@@ -929,6 +929,19 @@ svg {
 #ic2d-lab .ic2d-info-toggle{position:absolute;left:16px;top:16px;z-index:3;width:38px;height:38px;padding:0;font-size:18px;color:#a8cfff}
 #ic2d-lab button[hidden]{display:none!important}
 @media(max-width:900px){#ic2d-lab{grid-template-columns:1fr;height:100vh;min-height:0;padding:8px;overflow:hidden}#ic2d-lab .ic2d-panel{position:absolute;z-index:5;left:8px;right:8px;bottom:8px;width:auto;height:330px;max-height:calc(100vh - 16px)}#ic2d-lab .ic2d-stage{height:100%;border-radius:16px}#ic2d-lab.panel-collapsed{grid-template-columns:1fr}#ic2d-lab.panel-collapsed .ic2d-panel{left:8px;right:auto;bottom:8px;width:52px;height:52px}}
+#ic2d-lab.panel-collapsed{grid-template-columns:128px minmax(0,1fr)}
+#ic2d-lab.panel-collapsed .ic2d-panel{width:128px;height:50px;min-height:50px;box-shadow:0 8px 26px #0008}
+#ic2d-lab.panel-collapsed .ic2d-panel-toggle{width:120px;height:42px;min-width:120px;min-height:42px;display:flex;align-items:center;justify-content:center;gap:7px;margin:4px;color:#bdeaff}
+#ic2d-lab.panel-collapsed .ic2d-panel-toggle::after{content:"Controls";font:700 12px "Instrument Sans",system-ui,sans-serif}
+#ic2d-lab #uiPanelPin{position:absolute;right:48px;top:10px;z-index:4;min-width:42px;height:30px;padding:0 5px;border-color:#466479;background:#132034;color:#c8ddec;font:700 11px "Instrument Sans",system-ui,sans-serif}
+#ic2d-lab #uiPanelPin[aria-pressed="true"]{background:#1a4055;border-color:#69d7f3;color:#fff}
+#ic2d-lab.panel-collapsed #uiPanelPin{display:none}
+#ic2d-lab .ic2d-heading{padding-right:83px}
+#ic2d-lab .ic2d-mode-caption.auto-hidden{width:86px;height:40px}
+#ic2d-lab .ic2d-mode-caption.auto-hidden .ic2d-caption-toggle{width:78px;height:32px;font:700 11px "Instrument Sans",system-ui,sans-serif}
+#ic2d-lab .ic2d-info-toggle{width:110px;height:40px;font:700 11px "Instrument Sans",system-ui,sans-serif}
+@media(max-width:900px){#ic2d-lab.panel-collapsed{grid-template-columns:1fr}#ic2d-lab.panel-collapsed .ic2d-panel{width:128px;height:50px}}
+@media(prefers-reduced-motion:reduce){#ic2d-lab .ic2d-panel,#ic2d-lab .ic2d-mode-caption,#ic2d-lab button{transition:none!important}}
 </style>
 
 <script>
@@ -1028,21 +1041,28 @@ svg {
   amp.addEventListener('input',sync);freq.addEventListener('input',sync);
   playButton.addEventListener('click',()=>{playing=!playing;playButton.textContent=playing?'Pause':'Play';if(!playing&&mode==='triad')time=Math.PI/2});
   resetButton.addEventListener('click',()=>{settings[mode]=mode==='triad'?{amp:45,freq:.6}:{amp:20,freq:.6};amp.value=settings[mode].amp;freq.value=settings[mode].freq;time=mode==='triad'?Math.PI/2:0;playing=true;playButton.textContent='Pause';sync()});
-  function setPanelCollapsed(collapsed){root.classList.toggle('panel-collapsed',collapsed);panelToggle.textContent=collapsed?'+':'−';panelToggle.setAttribute('aria-label',collapsed?'Expand control panel':'Minimize control panel');panelToggle.setAttribute('aria-expanded',String(!collapsed))}
-  panelToggle.addEventListener('click',()=>{const wasHidden=root.classList.contains('panel-collapsed');setPanelCollapsed(!wasHidden);if(wasHidden)holdPanel(3000)});
+  function setPanelCollapsed(collapsed){
+    root.classList.toggle('panel-collapsed',collapsed);
+    if(collapsed){panel.classList.remove('ui-pinned');pin.textContent='Pin';pin.setAttribute('aria-pressed','false')}
+    panelToggle.textContent=collapsed?'+':'−';panelToggle.setAttribute('aria-label',collapsed?'Expand control panel':'Minimize control panel');panelToggle.setAttribute('aria-expanded',String(!collapsed));
+  }
+  const panel=root.querySelector('.ic2d-panel');
+  const pin=document.createElement('button');pin.id='uiPanelPin';pin.type='button';pin.textContent='Pin';pin.title='Keep controls open';
+  pin.setAttribute('aria-label','Keep controls open');pin.setAttribute('aria-pressed','false');panel.appendChild(pin);
+  pin.addEventListener('click',()=>{const pinned=panel.classList.toggle('ui-pinned');pin.textContent=pinned?'Unpin':'Pin';pin.setAttribute('aria-pressed',String(pinned));pin.setAttribute('aria-label',pinned?'Allow controls to auto-hide':'Keep controls open');if(!pinned)holdPanel(1300)});
+  panelToggle.addEventListener('click',()=>{const wasHidden=root.classList.contains('panel-collapsed');setPanelCollapsed(!wasHidden);if(wasHidden)holdPanel(5000)});
   function autoHide(element,hide,initialDelay){
     let timer=0,holdUntil=0;const fine=matchMedia('(hover:hover) and (pointer:fine)');
     const cancel=()=>clearTimeout(timer);
-    const schedule=delay=>{cancel();delay=Math.max(delay,holdUntil-Date.now());timer=setTimeout(()=>{if(!element.matches(':hover'))hide()},delay)};
+    const schedule=delay=>{cancel();delay=Math.max(delay,holdUntil-Date.now());timer=setTimeout(()=>{if(!element.classList.contains('ui-pinned')&&!element.matches(':hover')&&!element.contains(document.activeElement))hide()},delay)};
     element.addEventListener('pointerenter',cancel);
-    element.addEventListener('pointerleave',()=>schedule(480));
+    element.addEventListener('pointerleave',()=>schedule(950));
     element.addEventListener('focusin',cancel);
     element.addEventListener('focusout',()=>schedule(750));
-    document.addEventListener('pointerdown',event=>{if(!fine.matches&&!element.contains(event.target))hide()},true);
+    document.addEventListener('pointerdown',event=>{if(!fine.matches&&!element.contains(event.target)&&!element.classList.contains('ui-pinned'))hide()},true);
     schedule(initialDelay);
     return delay=>{holdUntil=Date.now()+delay;schedule(delay)};
   }
-  const panel=root.querySelector('.ic2d-panel');
   const holdPanel=autoHide(panel,()=>setPanelCollapsed(true),3400);
   const captionToggle=caption.querySelector('.ic2d-caption-toggle');
   function setCaptionHidden(hidden){caption.classList.toggle('auto-hidden',hidden);captionToggle.setAttribute('aria-expanded',String(!hidden))}
@@ -1051,7 +1071,7 @@ svg {
   let infoTimer=0;
   function setCanvasInfoVisible(visible){canvasInfoVisible=visible;infoToggle.hidden=visible;draw()}
   function scheduleInfoHide(delay){clearTimeout(infoTimer);infoTimer=setTimeout(()=>setCanvasInfoVisible(false),delay)}
-  infoToggle.addEventListener('click',()=>{setCanvasInfoVisible(true);if(matchMedia('(hover:hover) and (pointer:fine)').matches)scheduleInfoHide(9000)});
+  infoToggle.addEventListener('click',()=>{setCanvasInfoVisible(true);if(matchMedia('(hover:hover) and (pointer:fine)').matches)scheduleInfoHide(12000)});
   document.addEventListener('pointerdown',event=>{
     if(!matchMedia('(hover:hover) and (pointer:fine)').matches&&canvasInfoVisible&&!infoToggle.contains(event.target))setCanvasInfoVisible(false);
   },true);
