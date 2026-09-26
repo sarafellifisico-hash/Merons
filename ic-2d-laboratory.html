@@ -870,7 +870,8 @@ svg {
 
   <section class="ic2d-stage" aria-label="Animated Cyclical Interaction diagram">
     <canvas id="ic2d-canvas" width="1040" height="1040" role="img" aria-label="Cyclical Interaction between Compalphas A and B"></canvas>
-    <div class="ic2d-mode-caption" id="ic2d-mode-caption">Compalphas A–B · Common Interaction Circle</div>
+    <div class="ic2d-mode-caption" id="ic2d-mode-caption"><button class="ic2d-caption-toggle" type="button" aria-label="Show diagram caption" aria-expanded="false">i</button><span class="ic2d-caption-text">Compalphas A–B · Common Interaction Circle</span></div>
+    <button class="ic2d-info-toggle" type="button" aria-label="Show diagram measurements" title="Show diagram measurements" hidden>i</button>
   </section>
 </div>
 
@@ -885,9 +886,10 @@ svg {
   overflow:hidden;background:var(--ic-ink);color:var(--ic-text);font-family:"Instrument Sans",system-ui,sans-serif;
 }
 #ic2d-lab *{box-sizing:border-box}
-#ic2d-lab .ic2d-panel{position:relative;height:100%;overflow-y:auto;padding:14px 14px 20px;border:1px solid rgba(132,204,229,.22);border-radius:16px;background:rgba(5,12,19,.91);box-shadow:0 20px 70px rgba(0,0,0,.48);backdrop-filter:blur(13px);transition:width .2s,height .2s,padding .2s}
-#ic2d-lab .ic2d-panel::-webkit-scrollbar{width:8px}
-#ic2d-lab .ic2d-panel::-webkit-scrollbar-thumb{background:var(--ic-stroke);border-radius:8px}
+#ic2d-lab .ic2d-panel{position:relative;height:100%;display:flex;flex-direction:column;overflow:hidden;padding:14px 14px 20px;border:1px solid rgba(132,204,229,.22);border-radius:16px;background:rgba(5,12,19,.91);box-shadow:0 20px 70px rgba(0,0,0,.48);backdrop-filter:blur(13px);transition:width .2s,height .2s,padding .2s}
+#ic2d-lab .ic2d-panel-inner{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;scrollbar-gutter:stable;padding-right:3px}
+#ic2d-lab .ic2d-panel-inner::-webkit-scrollbar{width:7px}
+#ic2d-lab .ic2d-panel-inner::-webkit-scrollbar-thumb{background:var(--ic-stroke);border-radius:8px}
 #ic2d-lab .ic2d-panel-toggle{position:absolute;right:10px;top:10px;z-index:3;width:30px;min-width:30px;height:30px;min-height:30px;padding:0;display:grid;place-items:center;border:1px solid rgba(132,204,229,.24);border-radius:9px;background:rgba(255,255,255,.07);color:#edf7fb;font:700 16px/1 "Fragment Mono",monospace;cursor:pointer}
 #ic2d-lab.panel-collapsed{grid-template-columns:52px minmax(0,1fr)}
 #ic2d-lab.panel-collapsed .ic2d-panel{width:52px;height:52px;padding:0;overflow:hidden;display:grid;place-items:center}
@@ -920,6 +922,12 @@ svg {
 #ic2d-lab .ic2d-stage{position:relative;min-width:0;height:100%;display:grid;place-items:center;overflow:hidden;border:1px solid rgba(132,204,229,.12);border-radius:16px;background:radial-gradient(circle at center,#0d1722 0%,#020208 76%);box-shadow:inset 0 0 80px #000}
 #ic2d-lab canvas{display:block;width:min(100%,1040px);height:min(100%,1040px);object-fit:contain;aspect-ratio:1;background:transparent}
 #ic2d-lab .ic2d-mode-caption{position:absolute;left:16px;bottom:14px;padding:7px 10px;border:1px solid #26334a;border-radius:10px;background:rgba(12,16,25,.8);color:#8fa0bd;font:10px "Fragment Mono",monospace;backdrop-filter:blur(10px)}
+#ic2d-lab .ic2d-caption-toggle{display:none}
+#ic2d-lab .ic2d-mode-caption.auto-hidden{width:38px;height:38px;padding:3px;display:grid;place-items:center}
+#ic2d-lab .ic2d-mode-caption.auto-hidden .ic2d-caption-text{display:none}
+#ic2d-lab .ic2d-mode-caption.auto-hidden .ic2d-caption-toggle{display:grid;place-items:center;width:30px;height:30px;padding:0;font-size:16px;color:#a8cfff}
+#ic2d-lab .ic2d-info-toggle{position:absolute;left:16px;top:16px;z-index:3;width:38px;height:38px;padding:0;font-size:18px;color:#a8cfff}
+#ic2d-lab button[hidden]{display:none!important}
 @media(max-width:900px){#ic2d-lab{grid-template-columns:1fr;height:100vh;min-height:0;padding:8px;overflow:hidden}#ic2d-lab .ic2d-panel{position:absolute;z-index:5;left:8px;right:8px;bottom:8px;width:auto;height:330px;max-height:calc(100vh - 16px)}#ic2d-lab .ic2d-stage{height:100%;border-radius:16px}#ic2d-lab.panel-collapsed{grid-template-columns:1fr}#ic2d-lab.panel-collapsed .ic2d-panel{left:8px;right:auto;bottom:8px;width:52px;height:52px}}
 </style>
 
@@ -938,9 +946,10 @@ svg {
   const stateValue=document.getElementById('ic2d-state-value');
   const stateCopy=document.getElementById('ic2d-state-copy');
   const caption=document.getElementById('ic2d-mode-caption');
+  const infoToggle=root.querySelector('.ic2d-info-toggle');
   const panelToggle=root.querySelector('.ic2d-panel-toggle');
   const modes=[...root.querySelectorAll('.ic2d-mode')];
-  let mode='compalphas',playing=true,tabActive=true,time=0,last=performance.now();
+  let mode='compalphas',playing=true,tabActive=true,time=0,last=performance.now(),canvasInfoVisible=true;
   const settings={compalphas:{amp:20,freq:.6},magnets:{amp:20,freq:.6},triad:{amp:45,freq:.6}};
   const modeMeta={
     compalphas:{title:'Compalphas A–B · Common Interaction Circle',aria:'Cyclical Interaction between Compalphas A and B'},
@@ -971,7 +980,7 @@ svg {
     ctx.restore();
   }
   function grid(){ctx.save();ctx.strokeStyle='rgba(255,255,255,.045)';ctx.lineWidth=1;for(let p=0;p<=1040;p+=80){line(p,0,p,1040,'rgba(255,255,255,.045)',1);line(0,p,1040,p,'rgba(255,255,255,.045)',1)}ctx.restore()}
-  function info(lines,warning=false){ctx.save();ctx.fillStyle='rgba(5,8,14,.82)';ctx.fillRect(16,16,700,92);ctx.strokeStyle='rgba(122,168,255,.18)';ctx.strokeRect(16,16,700,92);ctx.font='600 16px Fragment Mono, monospace';lines.forEach((text,i)=>{ctx.fillStyle=i===0?(warning?'#ffe06b':'#7aa8ff'):i===1?'#dde6f6':'#8d9bb7';ctx.fillText(text,28,43+i*25)});ctx.restore()}
+  function info(lines,warning=false){if(!canvasInfoVisible)return;ctx.save();ctx.fillStyle='rgba(5,8,14,.82)';ctx.fillRect(16,16,700,92);ctx.strokeStyle='rgba(122,168,255,.18)';ctx.strokeRect(16,16,700,92);ctx.font='600 16px Fragment Mono, monospace';lines.forEach((text,i)=>{ctx.fillStyle=i===0?(warning?'#ffe06b':'#7aa8ff'):i===1?'#dde6f6':'#8d9bb7';ctx.fillText(text,28,43+i*25)});ctx.restore()}
   function drawMagnet(x,y,angle){const length=126,width=30;ctx.save();ctx.translate(x,y);ctx.rotate(angle);ctx.fillStyle='#ef4343';ctx.fillRect(0,-width/2,length/2,width);ctx.fillStyle='#2387df';ctx.fillRect(-length/2,-width/2,length/2,width);ctx.strokeStyle='#e9f0ff';ctx.lineWidth=3;ctx.strokeRect(-length/2,-width/2,length,width);line(0,-width/2,0,width/2,'#e9f0ff',2);ctx.fillStyle='#fff';ctx.font='700 14px Fragment Mono, monospace';ctx.textAlign='center';ctx.fillText('N',length/4,5);ctx.fillText('S',-length/4,5);ctx.restore()}
 
   function drawPair(isMagnet){
@@ -1014,12 +1023,38 @@ svg {
   function draw(){ctx.clearRect(0,0,1040,1040);grid();if(mode==='triad')drawTriad();else drawPair(mode==='magnets')}
   function animate(now){const dt=Math.min((now-last)/1000,.05);last=now;if(tabActive){if(playing)time+=dt*(+freq.value)*Math.PI*.9;draw()}requestAnimationFrame(animate)}
   function sync(){const value=+amp.value;ampValue.textContent=mode==='triad'?`±${value.toFixed(1)}° · ${(2*value).toFixed(1)}° p-p`:`${value.toFixed(0)}°`;freqValue.textContent=`${(+freq.value).toFixed(2)} Hz`;settings[mode]={amp:value,freq:+freq.value}}
-  function selectMode(next){settings[mode]={amp:+amp.value,freq:+freq.value};mode=next;modes.forEach(button=>button.classList.toggle('active',button.dataset.mode===mode));amp.max=mode==='triad'?60:70;amp.step=mode==='triad'?.5:1;ampLabel.textContent=mode==='triad'?'Maximum individual excursion':'Oscillatory amplitude';amp.value=settings[mode].amp;freq.value=settings[mode].freq;caption.textContent=modeMeta[mode].title;canvas.setAttribute('aria-label',modeMeta[mode].aria);time=mode==='triad'?Math.PI/2:0;sync();draw()}
+  function selectMode(next){settings[mode]={amp:+amp.value,freq:+freq.value};mode=next;modes.forEach(button=>button.classList.toggle('active',button.dataset.mode===mode));amp.max=mode==='triad'?60:70;amp.step=mode==='triad'?.5:1;ampLabel.textContent=mode==='triad'?'Maximum individual excursion':'Oscillatory amplitude';amp.value=settings[mode].amp;freq.value=settings[mode].freq;caption.querySelector('.ic2d-caption-text').textContent=modeMeta[mode].title;canvas.setAttribute('aria-label',modeMeta[mode].aria);time=mode==='triad'?Math.PI/2:0;sync();draw()}
   modes.forEach(button=>button.addEventListener('click',()=>selectMode(button.dataset.mode)));
   amp.addEventListener('input',sync);freq.addEventListener('input',sync);
   playButton.addEventListener('click',()=>{playing=!playing;playButton.textContent=playing?'Pause':'Play';if(!playing&&mode==='triad')time=Math.PI/2});
   resetButton.addEventListener('click',()=>{settings[mode]=mode==='triad'?{amp:45,freq:.6}:{amp:20,freq:.6};amp.value=settings[mode].amp;freq.value=settings[mode].freq;time=mode==='triad'?Math.PI/2:0;playing=true;playButton.textContent='Pause';sync()});
-  panelToggle.addEventListener('click',()=>{root.classList.toggle('panel-collapsed');const collapsed=root.classList.contains('panel-collapsed');panelToggle.textContent=collapsed?'+':'−';panelToggle.setAttribute('aria-label',collapsed?'Expand control panel':'Minimize control panel');panelToggle.setAttribute('aria-expanded',String(!collapsed))});
+  function setPanelCollapsed(collapsed){root.classList.toggle('panel-collapsed',collapsed);panelToggle.textContent=collapsed?'+':'−';panelToggle.setAttribute('aria-label',collapsed?'Expand control panel':'Minimize control panel');panelToggle.setAttribute('aria-expanded',String(!collapsed))}
+  panelToggle.addEventListener('click',()=>setPanelCollapsed(!root.classList.contains('panel-collapsed')));
+  function autoHide(element,hide,initialDelay){
+    let timer=0;const fine=matchMedia('(hover:hover) and (pointer:fine)');
+    const cancel=()=>clearTimeout(timer);
+    const schedule=delay=>{cancel();timer=setTimeout(()=>{if(!element.matches(':hover'))hide()},delay)};
+    element.addEventListener('pointerenter',cancel);
+    element.addEventListener('pointerleave',()=>schedule(480));
+    element.addEventListener('focusin',cancel);
+    element.addEventListener('focusout',()=>schedule(750));
+    document.addEventListener('pointerdown',event=>{if(!fine.matches&&!element.contains(event.target))hide()},true);
+    schedule(initialDelay);
+  }
+  const panel=root.querySelector('.ic2d-panel');
+  autoHide(panel,()=>setPanelCollapsed(true),3400);
+  const captionToggle=caption.querySelector('.ic2d-caption-toggle');
+  function setCaptionHidden(hidden){caption.classList.toggle('auto-hidden',hidden);captionToggle.setAttribute('aria-expanded',String(!hidden))}
+  captionToggle.addEventListener('click',()=>setCaptionHidden(false));
+  autoHide(caption,()=>setCaptionHidden(true),4500);
+  let infoTimer=0;
+  function setCanvasInfoVisible(visible){canvasInfoVisible=visible;infoToggle.hidden=visible;draw()}
+  function scheduleInfoHide(delay){clearTimeout(infoTimer);infoTimer=setTimeout(()=>setCanvasInfoVisible(false),delay)}
+  infoToggle.addEventListener('click',()=>{setCanvasInfoVisible(true);if(matchMedia('(hover:hover) and (pointer:fine)').matches)scheduleInfoHide(9000)});
+  document.addEventListener('pointerdown',event=>{
+    if(!matchMedia('(hover:hover) and (pointer:fine)').matches&&canvasInfoVisible&&!infoToggle.contains(event.target))setCanvasInfoVisible(false);
+  },true);
+  scheduleInfoHide(5200);
   addEventListener('message',event=>{if(event.data?.type==='TUIDG_TAB_ACTIVE')tabActive=!!event.data.active});
   sync();requestAnimationFrame(animate);
 })();
