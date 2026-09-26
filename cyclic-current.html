@@ -63,23 +63,50 @@
     .note.auto-hidden button{width:100%;height:100%;min-height:30px;font-size:12px}
     @media(max-width:720px){.panel:not(.minimized) ~ .note{left:8px}.panel.minimized ~ .note{left:8px;bottom:66px}.panel.minimized ~ .explanation{left:8px}.top{margin-right:92px}}
     @media(prefers-reduced-motion:reduce){.panel{transition:none!important}}
+    /* Builder-style cards and fixed heading; panel height follows the controls. */
+    .panel:not(.minimized){bottom:auto;height:fit-content;max-height:calc(100dvh - 24px);padding:0}
+    .panel .top{flex:none;margin:0;padding:14px 97px 11px 15px;border-bottom:1px solid rgba(135,205,229,.2)}
+    .panel .top h1{margin:0 0 4px;color:#f0f4ff;font:700 20px/1.15 "Instrument Sans",system-ui,sans-serif;letter-spacing:-.02em}
+    .panel .top p{margin:0;color:#8d9bb7;font:400 14px/1.45 "Instrument Sans",system-ui,sans-serif}
+    .panel:not(.minimized) .panel-inner{flex:0 1 auto;padding:12px}
+    .panel-inner .control-card{min-width:0;margin:0 0 10px;padding:12px;border:1px solid rgba(255,255,255,.065);border-radius:13px;background:rgba(19,27,42,.66);box-shadow:inset 0 1px 0 rgba(255,255,255,.025)}
+    .panel-inner .control-card:last-child{margin-bottom:0}
+    .panel-inner .control-card h2{margin:0 0 9px;color:#8292b3;font:700 11px/1.35 "Instrument Sans",system-ui,sans-serif;letter-spacing:.11em}
+    .panel-inner .row{margin:10px 0 5px;font-size:12px}
+    .panel-inner .row label{color:#a6b2ca}
+    .panel-inner .row .value{color:#d6e3ff;font:600 12px "Fragment Mono",ui-monospace,monospace}
+    .panel-inner button,.panel-inner select{border:1px solid #344964;border-radius:9px;background:#132034;color:#dbeaf6;font:600 11px/1.3 "Instrument Sans",system-ui,sans-serif}
+    .panel-inner button:hover,.panel-inner button.active{border-color:#69d7f3;background:#183c50;color:#fff}
+    .panel-inner input[type=range]{height:22px}
+    .panel-inner input[type=range]::-moz-range-track{height:4px;background:#253247;border-radius:99px}
+    .panel-inner input[type=range]::-moz-range-thumb{width:16px;height:16px;border:0;border-radius:50%;background:#e9f0ff;box-shadow:0 0 0 4px rgba(124,167,255,.14)}
+    .panel-inner input[type=checkbox]{accent-color:#7aa8ff}
+    .panel-inner .legend{margin-top:12px}
+    .panel.minimized .top{display:none}
+    #uiPanelPin{right:50px;min-width:42px;border-color:#466479;background:#132034;color:#c8ddec;font:700 11px "Instrument Sans",system-ui,sans-serif}
+    #panelToggle{font:700 16px/1 "Fragment Mono",monospace}
+    @media(max-width:720px){.panel:not(.minimized){top:auto;bottom:8px;max-height:min(68dvh,650px)}}
   </style>
 </head>
 <body>
   <div id="scene"></div>
   <aside class="panel">
     <button id="panelToggle" title="Minimize control panel" aria-label="Minimize control panel" aria-expanded="true">−</button>
+    <header class="top"><h1>Interação Cíclica</h1><p>Com amplitude “corrente elétrica”</p></header>
     <div class="panel-inner">
-    <header class="top"><div class="eyebrow">Meronic Model · Cyclic Current</div><h1>Permanent Magnet Electric Generator</h1><p>Two nested transparent cups: outer magnetic rotor and inner fixed stator.</p></header>
-    <button id="explainOpen" type="button" aria-haspopup="dialog" aria-controls="explanation" style="width:100%;margin:0 0 18px">Read the presentation text</button>
-    <h2>Generator Controls</h2>
+    <section class="control-card"><button id="explainOpen" type="button" aria-haspopup="dialog" aria-controls="explanation" style="width:100%">Read the presentation text</button></section>
+    <section class="control-card"><h2>Rotação e corrente</h2>
     <div class="row"><label for="speed">Rotor speed</label><span class="value" id="rpm">36 rpm</span></div>
     <input id="speed" type="range" min="0" max="120" value="36" step="1" aria-label="Rotor speed">
     <div class="row"><label for="mode">Cyclic Current</label><select id="mode"><option value="ac">Alternating (AC)</option><option value="dc+">Direct (+)</option><option value="dc-">Direct (−)</option></select></div>
+    </section>
+    <section class="control-card"><h2>Amplitude e indução</h2>
     <div class="row"><label for="amplitude">Maximum amplitude</label><span class="value" id="ampValue">45°</span></div>
     <input id="amplitude" type="range" min="0" max="90" value="45" step="1" aria-label="Maximum Alpha Axis amplitude">
     <div class="row"><label for="inductionWindow">Induction window</label><span class="value" id="windowValue">16° (±8°)</span></div>
     <input id="inductionWindow" type="range" min="12" max="20" value="16" step="1" aria-label="Total angular induction window">
+    </section>
+    <section class="control-card"><h2>Exibição</h2>
     <div class="actions"><button id="toggle">Start</button><button id="reset">Reset view</button></div>
     <div class="actions"><button id="field">Show flux</button><button id="micro">Microscopic view</button></div>
     <div class="row"><label for="meterAuto">Voltmeter follows camera</label><input id="meterAuto" type="checkbox" checked></div>
@@ -88,6 +115,7 @@
     <div class="row"><label for="housing">Transparent supports</label><input id="housing" type="checkbox" checked></div>
     <div class="row"><label for="labels">Identify poles</label><input id="labels" type="checkbox" checked></div>
     <div class="legend"><span><i class="dot n"></i>North</span><span><i class="dot s"></i>South</span><span><i class="dot" style="background:#d8752f"></i>Copper</span><span><i class="dot" style="background:#ff4545"></i>Flux</span></div>
+    </section>
     </div>
   </aside>
   <div class="note" id="cameraNote"><button type="button" id="cameraNoteToggle" aria-label="Hide camera instructions" aria-expanded="true">−</button><span class="note-text">Drag to rotate the camera · scroll to zoom</span></div><div class="badge">LED + voltmeter · illustrative voltage scale</div>
