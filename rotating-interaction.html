@@ -8119,8 +8119,6 @@ function animate(now = performance.now()){
     } else renderSceneWithCinematicOverlay(renderer, camera, window.innerWidth, window.innerHeight);
   }
 }
-animate();
-
 window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
@@ -8146,42 +8144,53 @@ function stopOpeningCameraSequence() {
   document.removeEventListener('keydown', stopOpeningCameraSequence, true);
   document.removeEventListener('visibilitychange', resetOpeningCameraClock);
   window.removeEventListener('tuidg-tab-activity', resetOpeningCameraClock);
-  window.removeEventListener('resize', stopOpeningCameraSequence, true);
+  window.removeEventListener('resize', updateOpeningCameraOnResize);
 }
 
 function resetOpeningCameraClock() {
   if (openingCameraSequence) openingCameraSequence.lastTime = 0;
 }
 
+function updateOpeningCameraOnResize() {
+  const sequence = openingCameraSequence;
+  if (!sequence?.active) return;
+  sequence.startDistance = sequence.getStartDistance();
+  if (sequence.phase === 'hold') {
+    camera.position.copy(sequence.target).addScaledVector(sequence.direction, sequence.startDistance);
+    controls.update();
+  }
+}
+
 function startOpeningCameraSequence() {
-  // Keep the exact camera pose that the Builder used before this introduction.
-  // The existing IMC/ExC button has a closer endpoint and is independent.
+  // Keep the Builder's original close view as the endpoint of this introduction.
+  // Both endpoints look at the true center, regardless of the control panel.
   const finalPosition = camera.position.clone();
-  const finalTarget = controls.target.clone();
+  const finalTarget = getMetalphaCenter();
   const direction = finalPosition.clone().sub(finalTarget).normalize();
-  const frame = presentationFrame();
-  const initialOffsetX = camera.view?.offsetX || 0;
-  const initialOffsetY = camera.view?.offsetY || 0;
-  const halfFov = THREE.MathUtils.degToRad(camera.fov) / 2;
-  const visibleFraction = Math.min(frame.width, frame.height) / window.innerHeight;
-  const fitHalfFov = Math.atan(Math.tan(halfFov) * visibleFraction);
   // In this renderer a toroidal IC extends twice its geometry radius from
   // its Alpha Axis.  Fit the complete ExC envelope to the visible height.
   const outerRadius = currentDistance + 2 * LAYER_DEFS[5].r;
-  const startDistance = outerRadius / Math.sin(fitHalfFov) * 1.025;
+  const getStartDistance = () => {
+    const halfFov = THREE.MathUtils.degToRad(camera.fov) / 2;
+    return outerRadius / Math.sin(halfFov) * 1.025;
+  };
+  const startDistance = getStartDistance();
   const finalDistance = finalPosition.distanceTo(finalTarget);
+  camera.clearViewOffset();
+  controls.target.copy(finalTarget);
   camera.position.copy(finalTarget).addScaledVector(direction, startDistance);
   camera.lookAt(finalTarget);
   controls.update();
 
-  const sequence = {active: true, frame: 0, phase: 'hold', elapsed: 0, lastTime: 0};
+  const sequence = {active: true, frame: 0, phase: 'hold', elapsed: 0, lastTime: 0,
+    target: finalTarget, direction, startDistance, getStartDistance};
   openingCameraSequence = sequence;
   document.addEventListener('pointerdown', stopOpeningCameraSequence, true);
   document.addEventListener('wheel', stopOpeningCameraSequence, true);
   document.addEventListener('keydown', stopOpeningCameraSequence, true);
   document.addEventListener('visibilitychange', resetOpeningCameraClock);
   window.addEventListener('tuidg-tab-activity', resetOpeningCameraClock);
-  window.addEventListener('resize', stopOpeningCameraSequence, true);
+  window.addEventListener('resize', updateOpeningCameraOnResize);
 
   function step(now) {
     if (!sequence.active) return;
@@ -8195,14 +8204,9 @@ function startOpeningCameraSequence() {
       const progress = Math.min(sequence.elapsed / 3600, 1);
       const eased = progress < .5 ? 2 * progress * progress : 1 - Math.pow(-2 * progress + 2, 2) / 2;
       // Geometric distance interpolation makes each IC scale pass smoothly.
-      const distance = startDistance * Math.pow(finalDistance / startDistance, eased);
+      const distance = sequence.startDistance * Math.pow(finalDistance / sequence.startDistance, eased);
       camera.position.copy(finalTarget).addScaledVector(direction, distance);
       controls.target.copy(finalTarget);
-      camera.setViewOffset(
-        window.innerWidth, window.innerHeight,
-        initialOffsetX * (1 - eased), initialOffsetY * (1 - eased),
-        window.innerWidth, window.innerHeight
-      );
       controls.update();
       if (progress === 1) {
         camera.position.copy(finalPosition);
@@ -8260,6 +8264,8 @@ function refreshPresentationFrame(){
 window.addEventListener('resize',refreshPresentationFrame);
 syncPairUI();
 startOpeningCameraSequence();
+// The first rendered frame must already show the centered ExC overview.
+animate();
 </script>
 <script>
 // Auto-collapse the pair explanation and keep the mobile control-panel handle available.
