@@ -92,21 +92,21 @@
   <div id="scene"></div>
   <aside class="panel">
     <button id="panelToggle" title="Minimize control panel" aria-label="Minimize control panel" aria-expanded="true">−</button>
-    <header class="top"><h1>Interação Cíclica</h1><p>Com amplitude “corrente elétrica”</p></header>
+    <header class="top"><h1>Cyclical Interaction</h1><p>With “Electric Current” Amplitude</p></header>
     <div class="panel-inner">
     <section class="control-card"><button id="explainOpen" type="button" aria-haspopup="dialog" aria-controls="explanation" style="width:100%">Read the presentation text</button></section>
-    <section class="control-card"><h2>Rotação e corrente</h2>
+    <section class="control-card"><h2>Rotor and Current</h2>
     <div class="row"><label for="speed">Rotor speed</label><span class="value" id="rpm">36 rpm</span></div>
     <input id="speed" type="range" min="0" max="120" value="36" step="1" aria-label="Rotor speed">
     <div class="row"><label for="mode">Cyclic Current</label><select id="mode"><option value="ac">Alternating (AC)</option><option value="dc+">Direct (+)</option><option value="dc-">Direct (−)</option></select></div>
     </section>
-    <section class="control-card"><h2>Amplitude e indução</h2>
+    <section class="control-card"><h2>Amplitude and Induction</h2>
     <div class="row"><label for="amplitude">Maximum amplitude</label><span class="value" id="ampValue">45°</span></div>
     <input id="amplitude" type="range" min="0" max="90" value="45" step="1" aria-label="Maximum Alpha Axis amplitude">
     <div class="row"><label for="inductionWindow">Induction window</label><span class="value" id="windowValue">16° (±8°)</span></div>
     <input id="inductionWindow" type="range" min="12" max="20" value="16" step="1" aria-label="Total angular induction window">
     </section>
-    <section class="control-card"><h2>Exibição</h2>
+    <section class="control-card"><h2>Display</h2>
     <div class="actions"><button id="toggle">Start</button><button id="reset">Reset view</button></div>
     <div class="actions"><button id="field">Show flux</button><button id="micro">Microscopic view</button></div>
     <div class="row"><label for="meterAuto">Voltmeter follows camera</label><input id="meterAuto" type="checkbox" checked></div>
