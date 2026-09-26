@@ -350,6 +350,7 @@
       overflow-y: auto;
       overscroll-behavior: contain;
       padding: 14px;
+      scrollbar-gutter: stable;
       scrollbar-color: rgba(145, 167, 184, 0.35) transparent;
       scrollbar-width: thin;
       transition: opacity 140ms ease;
@@ -463,6 +464,7 @@
       overflow-y: auto;
       overscroll-behavior: contain;
       padding: 16px 17px 17px;
+      scrollbar-gutter: stable;
       scrollbar-color: rgba(145, 167, 184, 0.35) transparent;
       scrollbar-width: thin;
     }
@@ -1472,6 +1474,23 @@
     body.moving-in .distance-hud {
       border-color: rgba(255,82,119,0.36);
     }
+    .distance-hud:not(.auto-hidden) { padding-right: 48px; }
+    .distance-hud-toggle, .camera-tip-toggle {
+      border: 1px solid var(--line-strong); border-radius: 8px;
+      background: rgba(94,231,242,.09); color: var(--cyan);
+      cursor: pointer; font: 700 16px/1 Inter, sans-serif;
+    }
+    .distance-hud-toggle { position:absolute; top:8px; right:8px; width:28px; height:28px; }
+    .distance-hud.auto-hidden {
+      left:50%; right:auto; width:44px; min-width:44px; height:44px;
+      padding:6px; transform:translateX(-50%); overflow:hidden;
+    }
+    .distance-hud.auto-hidden > :not(.distance-hud-toggle) { display:none; }
+    .distance-hud.auto-hidden .distance-hud-toggle { position:static; width:30px; height:30px; }
+    .camera-tip-toggle { width:28px; height:28px; flex:0 0 28px; padding:0; }
+    .camera-tip.auto-hidden { width:44px; height:44px; padding:7px; }
+    .camera-tip.auto-hidden > :not(.camera-tip-toggle) { display:none; }
+    @media (max-width:760px) { .camera-tip { display:flex; } }
     .ci-layer-readout {
       transition: opacity 280ms ease, filter 280ms ease;
     }
@@ -1665,6 +1684,7 @@
       <div class="interface-badge attraction" id="interface-badge">Attraction · CCI clockwise</div>
 
       <section class="distance-hud" aria-label="Current Compalpha separation">
+        <button class="distance-hud-toggle" type="button" aria-label="Hide distance readout" aria-expanded="true" title="Hide distance readout">−</button>
         <div class="distance-topline">
           <div class="distance-readout"><strong id="distance-value">96</strong><span>Md between Alpha Points</span></div>
           <div class="force-readout attraction" id="force-readout"><span>|F<sub>RI</sub>| / F₀</span><strong id="force-hud-value">1.085 × 10⁻⁴</strong></div>
@@ -1685,6 +1705,7 @@
       </section>
 
       <div class="camera-tip">
+        <button class="camera-tip-toggle" type="button" aria-label="Hide camera hint" aria-expanded="true" title="Hide camera hint">−</button>
         <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="3" width="10" height="17" rx="5"/><path d="M12 3v5"/></svg>
         <span>Auto-orbit · Stop/start in panel · Drag to take control · Scroll to zoom</span>
       </div>
@@ -3250,6 +3271,52 @@
       setTheoryPanelCollapsed(collapsed);
       if (!collapsed && isCompactLayout()) setControlPanelCollapsed(true);
     });
+
+    function autoCollapseOnIdle(element, collapse, delay) {
+      var timer = 0;
+      var finePointer = window.matchMedia("(hover:hover) and (pointer:fine)");
+      function cancel() { window.clearTimeout(timer); }
+      function schedule(wait) {
+        cancel();
+        timer = window.setTimeout(function () {
+          if (!element.matches(":hover")) collapse();
+        }, wait);
+      }
+      element.addEventListener("pointerenter", cancel);
+      element.addEventListener("pointerleave", function () { schedule(480); });
+      element.addEventListener("focusin", cancel);
+      element.addEventListener("focusout", function () { schedule(750); });
+      document.addEventListener("pointerdown", function (event) {
+        if (!finePointer.matches && !element.contains(event.target)) collapse();
+      }, true);
+      schedule(delay);
+      return schedule;
+    }
+
+    var hud = document.querySelector(".distance-hud");
+    var hudToggle = hud.querySelector(".distance-hud-toggle");
+    function setHudHidden(hidden) {
+      hud.classList.toggle("auto-hidden", hidden);
+      hudToggle.textContent = hidden ? "+" : "−";
+      hudToggle.setAttribute("aria-expanded", String(!hidden));
+      hudToggle.setAttribute("aria-label", hidden ? "Show distance readout" : "Hide distance readout");
+    }
+    hudToggle.addEventListener("click", function () { setHudHidden(!hud.classList.contains("auto-hidden")); });
+
+    var cameraTip = document.querySelector(".camera-tip");
+    var cameraTipToggle = cameraTip.querySelector(".camera-tip-toggle");
+    function setCameraTipHidden(hidden) {
+      cameraTip.classList.toggle("auto-hidden", hidden);
+      cameraTipToggle.textContent = hidden ? "i" : "−";
+      cameraTipToggle.setAttribute("aria-expanded", String(!hidden));
+      cameraTipToggle.setAttribute("aria-label", hidden ? "Show camera hint" : "Hide camera hint");
+    }
+    cameraTipToggle.addEventListener("click", function () { setCameraTipHidden(!cameraTip.classList.contains("auto-hidden")); });
+
+    autoCollapseOnIdle(document.getElementById("control-panel"), function () { setControlPanelCollapsed(true); }, 3200);
+    autoCollapseOnIdle(document.getElementById("theory-panel"), function () { setTheoryPanelCollapsed(true); }, 3600);
+    autoCollapseOnIdle(hud, function () { setHudHidden(true); }, 4400);
+    autoCollapseOnIdle(cameraTip, function () { setCameraTipHidden(true); }, 5000);
 
     function resetCamera() {
       state.camera.yaw = -0.54;
