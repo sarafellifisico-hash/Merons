@@ -658,7 +658,7 @@
             if(ciFinePointer.matches)return;
             const diagram=document.getElementById('icDiagramContainer');
             if(!ciPanel.contains(event.target)&&!ciEdgeZone.contains(event.target)&&!ciPanel.classList.contains('ui-pinned'))setPanelMinimized('controls',true);
-            if(!diagram.contains(event.target)&&event.target.id!=='btnOpenICDiagram')setPanelMinimized('icDiagramContainer',true);
+            if(!diagram.contains(event.target)&&event.target.id!=='btnOpenICDiagram'&&!diagram.classList.contains('ui-pinned'))setPanelMinimized('icDiagramContainer',true);
         },true);
         const ciDiagram=document.getElementById('icDiagramContainer');
         let diagramTimer=0,diagramHoldUntil=0;
