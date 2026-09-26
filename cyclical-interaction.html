@@ -284,7 +284,7 @@
         #controls.edge-hidden{opacity:0;pointer-events:none}
         #controls.minimized{display:none!important}
         #controls .sim-title,#controls .sim-subtitle{margin-right:84px}
-        #ciPanelPin,#ciDiagramPin{position:absolute;top:10px;right:49px;z-index:141;min-width:42px;height:30px;padding:0 6px;border:1px solid #466479;border-radius:8px;background:#132034;color:#c8ddec;font:700 11px "Instrument Sans",system-ui,sans-serif;cursor:pointer}
+        #ciPanelPin,#ciDiagramPin{position:absolute;top:10px;right:49px;z-index:141;width:48px;min-width:48px;height:30px;padding:0 5px;border:1px solid #466479;border-radius:8px;background:#132034;color:#c8ddec;font:700 11px "Instrument Sans",system-ui,sans-serif;text-align:center;white-space:nowrap;cursor:pointer}
         #ciPanelPin[aria-pressed="true"],#ciDiagramPin[aria-pressed="true"]{border-color:#69d7f3;background:#1a4055;color:#fff}
         #icDiagramContainer.minimized{width:120px!important;min-width:120px!important;height:44px!important;min-height:44px!important}
         #icDiagramContainer.minimized .toggle-btn{display:flex;align-items:center;justify-content:center;gap:5px;width:112px;height:36px;padding:0;font:700 12px "Instrument Sans",system-ui,sans-serif;color:#bdeaff}
@@ -324,8 +324,8 @@
     <div id="controls">
         <button class="toggle-btn" onclick="togglePanel('controls', this)" title="Minimize control panel" aria-label="Minimize control panel" aria-expanded="true">−</button>
         <header class="controls-header">
-            <h2 class="sim-title">Interação Cíclica</h2>
-            <p class="sim-subtitle">Entre Compalphas e Mérons Metalpha</p>
+            <h2 class="sim-title">Cyclical Interaction</h2>
+            <p class="sim-subtitle">Between Compalphas and Metalpha Merons</p>
         </header>
         <nav class="controls-tabs" role="tablist" aria-label="Cyclical Interaction controls">
             <button type="button" class="controls-tab active" id="ciTabMotion" role="tab" aria-controls="ciPaneMotion" aria-selected="true" tabindex="0" data-ci-tab="motion">Oscillation</button>
@@ -404,7 +404,7 @@
             </section>
             <section class="controls-pane" id="ciPaneDiagram" role="tabpanel" aria-labelledby="ciTabDiagram" data-ci-pane="diagram" hidden>
                 <div class="control-card">
-                <div class="pane-heading">Diagrama da Interação Cíclica</div>
+                <div class="pane-heading">Cyclical Interaction Diagram</div>
                 <button type="button" id="btnOpenICDiagram" aria-controls="icDiagramContainer" aria-expanded="false">Open Cyclical Interaction Diagram</button>
                 <p class="pane-note">Explore the Alpha Axes, Alpha Planes, and Cyclical Interaction Circle of two neighboring Compalphas.</p>
                 </div>
@@ -457,7 +457,7 @@
         <div id="icResizeHandleEdge" title="Arraste para expandir para a esquerda"></div>
         <div id="icResizeHandle" title="Arraste para a esquerda para aumentar — cresce para a esquerda"></div>
         <button class="toggle-btn" onclick="togglePanel('icDiagramContainer', this)" title="Minimize diagram" aria-label="Minimize diagram" aria-expanded="true">−</button>
-        <h3>Diagrama da Interação Cíclica</h3>
+        <h3>Cyclical Interaction Diagram</h3>
         <div class="ic-content">
         <canvas id="icCanvas" width="800" height="800"></canvas>
         <div class="ic-legend">
@@ -783,36 +783,35 @@
         const dirLight=new THREE.DirectionalLight(0xffffff,1.0); dirLight.position.set(10,20,15); dirLight.castShadow=true; scene.add(dirLight);
         const backLight=new THREE.DirectionalLight(0x6bafff,0.5); backLight.position.set(-10,10,-10); scene.add(backLight);
 
-        // ----- MODERN LAB BENCH / INTEGRATED POWER BASE -----
-        const metalMaterial=new THREE.MeshStandardMaterial({color:0xb8c1cc,metalness:0.88,roughness:0.24});
-        const darkMetalMaterial=new THREE.MeshStandardMaterial({color:0x27303b,metalness:0.72,roughness:0.32});
-        const baseMaterial=new THREE.MeshStandardMaterial({color:0x343b46,metalness:0.55,roughness:0.36});
-        const base=new THREE.Mesh(new THREE.BoxGeometry(20,1,12),baseMaterial);
-        base.position.set(0,0.7,0); base.receiveShadow=true; base.castShadow=true; scene.add(base);
-        const benchTop=new THREE.Mesh(new THREE.BoxGeometry(20.35,0.16,12.35),darkMetalMaterial);
-        benchTop.position.set(0,1.27,0); benchTop.castShadow=true; scene.add(benchTop);
-        const fascia=new THREE.Mesh(new THREE.BoxGeometry(19.4,0.58,0.12),new THREE.MeshStandardMaterial({color:0x111722,metalness:0.45,roughness:0.3}));
-        fascia.position.set(0,0.72,6.05); scene.add(fascia);
-        [-8.7,8.7].forEach(x=>{
-            [-4.8,4.8].forEach(z=>{
-                const foot=new THREE.Mesh(new THREE.CylinderGeometry(.34,.42,.42,32),darkMetalMaterial);
-                foot.position.set(x,0.21,z); foot.castShadow=true; scene.add(foot);
-            });
-        });
+        // Matte raised bench, ceramic end mounts and polished electrode rods.
+        const metalMaterial=new THREE.MeshStandardMaterial({color:0xd2e1e9,metalness:0.92,roughness:0.16});
+        const darkMetalMaterial=new THREE.MeshStandardMaterial({color:0x17212c,metalness:0.58,roughness:0.46});
+        const baseMaterial=new THREE.MeshStandardMaterial({color:0x101820,metalness:0.18,roughness:0.79});
+        const base=new THREE.Mesh(new THREE.BoxGeometry(21.2,0.88,12.2),baseMaterial);
+        base.position.set(0,0.72,0); base.receiveShadow=true; base.castShadow=true; scene.add(base);
+        const benchTop=new THREE.Mesh(new THREE.BoxGeometry(21.45,0.14,12.45),baseMaterial);
+        benchTop.position.set(0,1.24,0); benchTop.receiveShadow=true; benchTop.castShadow=true; scene.add(benchTop);
+        const fascia=new THREE.Mesh(new THREE.BoxGeometry(20.9,0.16,0.12),darkMetalMaterial);
+        fascia.position.set(0,0.48,6.13); scene.add(fascia);
+        [-8.8,8.8].forEach(x=>[-4.8,4.8].forEach(z=>{
+            const foot=new THREE.Mesh(new THREE.CylinderGeometry(.28,.32,.30,24),darkMetalMaterial);
+            foot.position.set(x,0.15,z); foot.castShadow=true; scene.add(foot);
+        }));
 
-        // Slim, cylindrical electrodes with insulated supports.
-        const electrodeGeometry=new THREE.CylinderGeometry(0.18,0.18,2.1,32);
-        const rodLeft=new THREE.Mesh(electrodeGeometry,metalMaterial); rodLeft.position.set(-9.75,8,0); rodLeft.rotation.z=-Math.PI/2; scene.add(rodLeft);
-        const rodRight=new THREE.Mesh(electrodeGeometry,metalMaterial); rodRight.position.set(9.75,8,0); rodRight.rotation.z=Math.PI/2; scene.add(rodRight);
+        const electrodeGeometry=new THREE.CylinderGeometry(0.16,0.16,2.8,32);
+        const rodLeft=new THREE.Mesh(electrodeGeometry,metalMaterial); rodLeft.position.set(-10.05,8,0); rodLeft.rotation.z=-Math.PI/2; scene.add(rodLeft);
+        const rodRight=new THREE.Mesh(electrodeGeometry,metalMaterial); rodRight.position.set(10.05,8,0); rodRight.rotation.z=Math.PI/2; scene.add(rodRight);
         const tipGeometry=new THREE.ConeGeometry(0.25,0.82,32);
         const coneLeft=new THREE.Mesh(tipGeometry,metalMaterial); coneLeft.position.set(-8.72,8,0); coneLeft.rotation.z=-Math.PI/2; scene.add(coneLeft);
         const coneRight=new THREE.Mesh(tipGeometry,metalMaterial); coneRight.position.set(8.72,8,0); coneRight.rotation.z=Math.PI/2; scene.add(coneRight);
-        const ceramicMaterial=new THREE.MeshStandardMaterial({color:0xe7edf5,metalness:0.05,roughness:0.32});
+        const ceramicMaterial=new THREE.MeshStandardMaterial({color:0xe8f1fa,metalness:0.04,roughness:0.24});
         [-10.3,10.3].forEach(x=>{
-            const support=new THREE.Mesh(new THREE.CylinderGeometry(.42,.52,1.35,32),ceramicMaterial);
+            const support=new THREE.Mesh(new THREE.CylinderGeometry(.45,.61,1.35,32),ceramicMaterial);
             support.position.set(x,7.15,0); support.castShadow=true; scene.add(support);
-            const collar=new THREE.Mesh(new THREE.TorusGeometry(.48,.10,12,40),darkMetalMaterial);
-            collar.position.set(x,7.82,0); collar.rotation.x=Math.PI/2; scene.add(collar);
+            const collar=new THREE.Mesh(new THREE.TorusGeometry(.48,.085,12,48),darkMetalMaterial);
+            collar.position.set(x,7.84,0); collar.rotation.x=Math.PI/2; scene.add(collar);
+            const rimCap=new THREE.Mesh(new THREE.CylinderGeometry(.45,.45,.10,32),darkMetalMaterial);
+            rimCap.position.set(x,7.86,0); scene.add(rimCap);
         });
 
         const totalLength=Math.abs(rodRight.position.x-rodLeft.position.x);
@@ -820,46 +819,80 @@
         // Conventional alpha transparency keeps the additive plasma visible.
         // MeshPhysicalMaterial transmission in Three.js r134 samples an
         // intermediate opaque pass that omits transparent plasma layers.
-        const glassMaterial=new THREE.MeshPhysicalMaterial({color:0xd9f2ff,metalness:0,roughness:0.10,transmission:0,transparent:true,opacity:0.18,side:THREE.DoubleSide,depthWrite:false,depthTest:true,clearcoat:1,clearcoatRoughness:0.04});
+        const glassMaterial=new THREE.MeshPhysicalMaterial({color:0xb4e0ff,metalness:0,roughness:0.10,transmission:0,transparent:true,opacity:0.12,side:THREE.DoubleSide,depthWrite:false,depthTest:true,clearcoat:1,clearcoatRoughness:0.04});
         const glassTubeGroup=new THREE.Group(); const cylGeo=new THREE.CylinderGeometry(tubeRadius,tubeRadius,cylLength,96,1,false); const cylMesh=new THREE.Mesh(cylGeo,glassMaterial); cylMesh.rotation.z=Math.PI/2; cylMesh.renderOrder=2; glassTubeGroup.add(cylMesh);
-        const rimMaterial=new THREE.MeshStandardMaterial({color:0x8795a8,metalness:.9,roughness:.18});
+        const rimMaterial=new THREE.MeshStandardMaterial({color:0x293540,metalness:.88,roughness:.2});
         [-cylLength/2,cylLength/2].forEach(x=>{
-            const rim=new THREE.Mesh(new THREE.TorusGeometry(tubeRadius,0.12,16,64),rimMaterial);
+            const rim=new THREE.Mesh(new THREE.TorusGeometry(tubeRadius,0.095,16,64),rimMaterial);
             rim.position.x=x; rim.rotation.y=Math.PI/2; glassTubeGroup.add(rim);
+            const polishedEdge=new THREE.Mesh(new THREE.TorusGeometry(tubeRadius,0.022,8,64),metalMaterial);
+            polishedEdge.position.x=x+(x<0?-0.07:0.07); polishedEdge.rotation.y=Math.PI/2; glassTubeGroup.add(polishedEdge);
         });
         glassTubeGroup.position.set((rodLeft.position.x+rodRight.position.x)/2,8,0); scene.add(glassTubeGroup);
-        const edgeMat=new THREE.MeshBasicMaterial({color:0x88ddff,wireframe:true,transparent:true,opacity:0.06,depthWrite:false}); const edgeCyl=new THREE.Mesh(new THREE.CylinderGeometry(tubeRadius*1.001,tubeRadius*1.001,cylLength,32),edgeMat); edgeCyl.rotation.z=Math.PI/2; edgeCyl.renderOrder=3; glassTubeGroup.add(edgeCyl);
+        // A single faint glass lattice catches the light without obscuring the moving CI meshes.
+        const lattice=[]; const shellRadius=tubeRadius*1.004;
+        for(let i=0;i<=44;i++){
+            const x=-cylLength/2+cylLength*i/44;
+            for(let j=0;j<48;j++){
+                const a=j*Math.PI/24, b=(j+1)*Math.PI/24;
+                lattice.push(x,shellRadius*Math.cos(a),shellRadius*Math.sin(a),x,shellRadius*Math.cos(b),shellRadius*Math.sin(b));
+            }
+        }
+        for(let j=0;j<48;j++){
+            const a=j*Math.PI/24, y=shellRadius*Math.cos(a),z=shellRadius*Math.sin(a);
+            lattice.push(-cylLength/2,y,z,cylLength/2,y,z);
+        }
+        const latticeGeometry=new THREE.BufferGeometry();latticeGeometry.setAttribute('position',new THREE.Float32BufferAttribute(lattice,3));
+        const latticeMesh=new THREE.LineSegments(latticeGeometry,new THREE.LineBasicMaterial({color:0x82cfff,transparent:true,opacity:0.07,depthWrite:false}));
+        latticeMesh.renderOrder=3;glassTubeGroup.add(latticeMesh);
 
-        // Thick L-shaped conductors: vertical descent, rounded 90° bend and
-        // horizontal run to the battery terminals integrated into the bench.
-        const positiveMaterial=new THREE.MeshStandardMaterial({color:0xe84a5f,metalness:.55,roughness:.26});
-        const negativeMaterial=new THREE.MeshStandardMaterial({color:0x3478df,metalness:.55,roughness:.26});
+        // A small front-mounted dimmer echoes the reference; the amplitude slider turns its knob.
+        const dimmerX=2.2;
+        const dimmerCase=new THREE.Mesh(new THREE.BoxGeometry(2.6,.72,1.85),darkMetalMaterial);
+        dimmerCase.position.set(dimmerX,1.67,5.0); dimmerCase.castShadow=true;scene.add(dimmerCase);
+        const dialCanvas=document.createElement('canvas');dialCanvas.width=512;dialCanvas.height=320;
+        const dialCtx=dialCanvas.getContext('2d');
+        const dialFill=dialCtx.createLinearGradient(0,0,512,320);dialFill.addColorStop(0,'#444f5a');dialFill.addColorStop(1,'#1b232c');
+        dialCtx.fillStyle=dialFill;dialCtx.fillRect(0,0,512,320);
+        dialCtx.strokeStyle='#82909c';dialCtx.lineWidth=6;dialCtx.strokeRect(8,8,496,304);
+        dialCtx.fillStyle='#e3edf5';dialCtx.textAlign='center';dialCtx.font='bold 32px sans-serif';dialCtx.fillText('DIMMER',256,54);
+        dialCtx.strokeStyle='#d3e6ef';dialCtx.lineWidth=8;dialCtx.beginPath();dialCtx.arc(256,175,94,Math.PI*1.08,Math.PI*1.92);dialCtx.stroke();
+        dialCtx.font='22px sans-serif';dialCtx.fillText('OFF',88,269);dialCtx.fillText('ON',425,269);
+        const dialFace=new THREE.Mesh(new THREE.PlaneGeometry(2.42,1.63),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(dialCanvas),side:THREE.DoubleSide}));
+        dialFace.rotation.x=-Math.PI/2;dialFace.position.set(dimmerX,2.04,5.0);scene.add(dialFace);
+        [-1.08,1.08].forEach(x=>[-.65,.65].forEach(z=>{
+            const screw=new THREE.Mesh(new THREE.CylinderGeometry(.048,.048,.016,12),metalMaterial);
+            screw.position.set(dimmerX+x,2.055,5.0+z);scene.add(screw);
+        }));
+        const dimmerKnob=new THREE.Group();dimmerKnob.position.set(dimmerX,2.18,5.10);
+        const knobBody=new THREE.Mesh(new THREE.CylinderGeometry(.24,.27,.25,32),darkMetalMaterial);dimmerKnob.add(knobBody);
+        const knobCap=new THREE.Mesh(new THREE.CylinderGeometry(.21,.21,.035,32),metalMaterial);knobCap.position.y=.14;dimmerKnob.add(knobCap);
+        const knobPointer=new THREE.Mesh(new THREE.BoxGeometry(.045,.035,.19),darkMetalMaterial);knobPointer.position.set(0,.17,-.11);dimmerKnob.add(knobPointer);
+        dimmerKnob.rotation.y=-Math.PI*.65+Math.PI*1.3*(20/180);scene.add(dimmerKnob);
+
+        // Insulated blue and copper leads follow the two edges of the slab.
+        const positiveMaterial=new THREE.MeshStandardMaterial({color:0xa94a16,metalness:.22,roughness:.48});
+        const negativeMaterial=new THREE.MeshStandardMaterial({color:0x147eae,metalness:.22,roughness:.48});
         function addTerminal(x,material){
-            const terminal=new THREE.Mesh(new THREE.CylinderGeometry(.30,.30,.42,32),material);
-            terminal.position.set(x,1.52,4.7); terminal.castShadow=true; scene.add(terminal);
+            const terminal=new THREE.Mesh(new THREE.CylinderGeometry(.23,.23,.20,24),material);
+            terminal.position.set(x,1.42,5.52);terminal.castShadow=true;scene.add(terminal);
         }
         function addCable(points,material){
-            const cable=new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points),64,.19,16,false),material);
-            cable.castShadow=true; scene.add(cable);
+            const cable=new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points),96,.17,12,false),material);
+            cable.castShadow=true;scene.add(cable);
         }
-        addTerminal(-7.4,negativeMaterial); addTerminal(7.4,positiveMaterial);
+        addTerminal(dimmerX-1.42,negativeMaterial);addTerminal(dimmerX+1.42,positiveMaterial);
         addCable([
-            new THREE.Vector3(-10.3,7.0,0),
-            new THREE.Vector3(-10.3,3.0,0),
-            new THREE.Vector3(-10.3,2.0,0.10),
-            new THREE.Vector3(-10.3,1.72,0.55),
-            new THREE.Vector3(-10.0,1.72,1.15),
-            new THREE.Vector3(-8.8,1.72,3.1),
-            new THREE.Vector3(-7.4,1.72,4.7)
+            new THREE.Vector3(-10.3,7.0,0),new THREE.Vector3(-10.4,3.0,.1),
+            new THREE.Vector3(-10.4,1.52,2.4),new THREE.Vector3(-10.3,1.52,4.7),
+            new THREE.Vector3(-9.8,1.52,5.55),new THREE.Vector3(-6.0,1.52,5.55),
+            new THREE.Vector3(dimmerX-1.42,1.52,5.52)
         ],negativeMaterial);
         addCable([
-            new THREE.Vector3(10.3,7.0,0),
-            new THREE.Vector3(10.3,3.0,0),
-            new THREE.Vector3(10.3,2.0,0.10),
-            new THREE.Vector3(10.3,1.72,0.55),
-            new THREE.Vector3(10.0,1.72,1.15),
-            new THREE.Vector3(8.8,1.72,3.1),
-            new THREE.Vector3(7.4,1.72,4.7)
+            new THREE.Vector3(10.3,7.0,0),new THREE.Vector3(10.4,3.0,.1),
+            new THREE.Vector3(10.4,1.52,2.4),new THREE.Vector3(10.3,1.52,4.7),
+            new THREE.Vector3(9.8,1.52,5.55),new THREE.Vector3(6.0,1.52,5.55),
+            new THREE.Vector3(dimmerX+1.42,1.52,5.52)
         ],positiveMaterial);
         const grid=new THREE.GridHelper(32,32,0x243044,0x151c29); grid.position.y=0.01; scene.add(grid);
 
@@ -1360,7 +1393,7 @@
             comphalphas.forEach(c=>{ const p=c.getObjectByName(c.name+'_AlphaPlane'); if(p) p.visible=alphaPlanesVisible; });
             document.getElementById('togglePlanoAlpha').textContent = alphaPlanesVisible ? 'Hide Alpha Planes' : 'Show Alpha Planes';
         });
-        document.getElementById('amplitudeSlider').addEventListener('input',(e)=>{ const deg=parseFloat(e.target.value); amplitude=deg*Math.PI/180; document.getElementById('amplitudeValue').textContent=deg+'°'; document.getElementById('amplitudeRadValue').textContent=amplitude.toFixed(3)+' rad'; });
+        document.getElementById('amplitudeSlider').addEventListener('input',(e)=>{ const deg=parseFloat(e.target.value); amplitude=deg*Math.PI/180; dimmerKnob.rotation.y=-Math.PI*.65+Math.PI*1.3*(deg/180); document.getElementById('amplitudeValue').textContent=deg+'°'; document.getElementById('amplitudeRadValue').textContent=amplitude.toFixed(3)+' rad'; });
         // --- FIXED FREQUENCY LISTENER ---
         document.getElementById('frequencySlider').addEventListener('input',(e)=>{ 
             frequency=parseFloat(e.target.value); 
