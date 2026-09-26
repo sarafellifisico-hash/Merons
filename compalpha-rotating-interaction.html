@@ -1492,6 +1492,20 @@
     .camera-tip.auto-hidden > :not(.camera-tip-toggle) { display:none; }
     .fallback.visible { z-index:10; }
     @media (max-width:760px) { .camera-tip { display:flex; } }
+    .control-panel.collapsed,.theory-panel.collapsed{width:124px;height:46px;max-height:46px;box-shadow:0 8px 26px #0008}
+    .theory-panel.collapsed{width:110px}
+    .control-panel.collapsed .panel-header,.theory-panel.collapsed .theory-panel-header{height:44px;min-height:44px;padding:0 5px;justify-content:center}
+    .control-panel.collapsed .collapse-button,.theory-panel.collapsed .theory-collapse-button{width:100%;height:36px;display:flex;align-items:center;justify-content:center;gap:7px;border-color:rgba(94,231,242,.35);background:#102638;color:#bbecf7;font:700 12px "Instrument Sans",system-ui,sans-serif}
+    .control-panel.collapsed .collapse-button::after{content:"Controls"}
+    .theory-panel.collapsed .theory-collapse-button::after{content:"Guide"}
+    .ui-panel-pin{position:absolute;top:9px;right:48px;z-index:30;min-width:42px;height:30px;padding:0 6px;border:1px solid rgba(94,231,242,.3);border-radius:8px;background:#132034;color:#c8ddec;font:700 11px "Instrument Sans",system-ui,sans-serif;cursor:pointer}
+    .ui-panel-pin[aria-pressed="true"]{background:#1a4055;border-color:#69d7f3;color:#fff}
+    .control-panel:not(.collapsed) .panel-header,.theory-panel:not(.collapsed) .theory-panel-header{padding-right:92px}
+    .distance-hud.auto-hidden{width:122px;min-width:122px;height:44px}
+    .distance-hud.auto-hidden .distance-hud-toggle{width:110px;height:32px;font:700 11px "Instrument Sans",system-ui,sans-serif}
+    .camera-tip.auto-hidden{width:98px;height:44px;padding:6px}
+    .camera-tip.auto-hidden .camera-tip-toggle{width:86px;height:30px;flex:1;font:700 11px "Instrument Sans",system-ui,sans-serif}
+    @media(max-width:760px){.distance-hud.auto-hidden{left:50%;right:auto;transform:translateX(-50%)}.control-panel.collapsed,.theory-panel.collapsed{max-height:46px}}
     .ci-layer-readout {
       transition: opacity 280ms ease, filter 280ms ease;
     }
@@ -3348,23 +3362,35 @@
     function autoCollapse(element,collapse,delay){
       let timer=0,holdUntil=0;
       const cancel=()=>clearTimeout(timer);
-      const schedule=wait=>{cancel();wait=Math.max(wait,holdUntil-Date.now());timer=setTimeout(()=>{if(!element.matches(':hover')&&!element.contains(document.activeElement))collapse()},wait)};
+      const schedule=wait=>{cancel();wait=Math.max(wait,holdUntil-Date.now());timer=setTimeout(()=>{if(!element.classList.contains('ui-pinned')&&!element.matches(':hover')&&!element.contains(document.activeElement))collapse()},wait)};
       element.addEventListener('pointerenter',cancel);
-      element.addEventListener('pointerleave',()=>schedule(480));
+      element.addEventListener('pointerleave',()=>schedule(950));
       element.addEventListener('focusin',cancel);
       element.addEventListener('focusout',()=>schedule(750));
-      document.addEventListener('pointerdown',event=>{if(!fine.matches&&!element.contains(event.target))collapse()},true);
+      document.addEventListener('pointerdown',event=>{if(!fine.matches&&!element.contains(event.target)&&!element.classList.contains('ui-pinned'))collapse()},true);
       schedule(delay);
       return ms=>{holdUntil=Date.now()+ms;schedule(ms)};
     }
     function setPanel(id,buttonId,hidden){
       const panel=document.getElementById(id),button=document.getElementById(buttonId);
       panel.classList.toggle('collapsed',hidden);
+      if(hidden){panel.classList.remove('ui-pinned');const pin=panel.querySelector('.ui-panel-pin');if(pin){pin.textContent='Pin';pin.setAttribute('aria-pressed','false')}}
       button.setAttribute('aria-expanded',String(!hidden));
       button.setAttribute('aria-label',hidden?(id==='control-panel'?'Expand control panel':'Expand explanation'):(id==='control-panel'?'Collapse control panel':'Minimize explanation'));
       if(id==='theory-panel')document.getElementById('theory-panel-body').setAttribute('aria-hidden',String(hidden));
     }
     const controls=document.getElementById('control-panel'),theory=document.getElementById('theory-panel');
+    function addPin(panel){
+      const pin=document.createElement('button');pin.type='button';pin.className='ui-panel-pin';pin.textContent='Pin';
+      pin.title='Keep panel open';pin.setAttribute('aria-label','Keep panel open');pin.setAttribute('aria-pressed','false');
+      panel.appendChild(pin);
+      pin.addEventListener('click',()=>{
+        const pinned=panel.classList.toggle('ui-pinned');
+        pin.textContent=pinned?'Unpin':'Pin';pin.setAttribute('aria-pressed',String(pinned));
+        pin.setAttribute('aria-label',pinned?'Allow panel to auto-hide':'Keep panel open');
+      });
+    }
+    addPin(controls);addPin(theory);
     const holdControls=autoCollapse(controls,()=>setPanel('control-panel','collapse-panel',true),3200);
     const holdTheory=autoCollapse(theory,()=>setPanel('theory-panel','theory-collapse-button',true),3600);
     if(!window.__ri3dControlsReady){
@@ -3379,12 +3405,12 @@
         if(!hidden&&innerWidth<=760)setPanel('control-panel','collapse-panel',true);
       });
     }
-    document.getElementById('collapse-panel').addEventListener('click',()=>{if(!controls.classList.contains('collapsed'))holdControls(3000)});
-    document.getElementById('theory-collapse-button').addEventListener('click',()=>{if(!theory.classList.contains('collapsed'))holdTheory(6000)});
+    document.getElementById('collapse-panel').addEventListener('click',()=>{if(controls.classList.contains('collapsed'))setPanel('control-panel','collapse-panel',true);else holdControls(5000)});
+    document.getElementById('theory-collapse-button').addEventListener('click',()=>{if(theory.classList.contains('collapsed'))setPanel('theory-panel','theory-collapse-button',true);else holdTheory(8000)});
     const hud=document.querySelector('.distance-hud'),hudToggle=hud.querySelector('.distance-hud-toggle');
     function setHud(hidden){
       hud.classList.toggle('auto-hidden',hidden);
-      hudToggle.textContent=hidden?'+':'−';
+      hudToggle.textContent=hidden?'◉ Distance':'−';
       hudToggle.setAttribute('aria-expanded',String(!hidden));
       hudToggle.setAttribute('aria-label',hidden?'Show distance readout':'Hide distance readout');
     }
@@ -3393,7 +3419,7 @@
     const tip=document.querySelector('.camera-tip'),tipToggle=tip.querySelector('.camera-tip-toggle');
     function setTip(hidden){
       tip.classList.toggle('auto-hidden',hidden);
-      tipToggle.textContent=hidden?'i':'−';
+      tipToggle.textContent=hidden?'ⓘ Camera':'−';
       tipToggle.setAttribute('aria-expanded',String(!hidden));
       tipToggle.setAttribute('aria-label',hidden?'Show camera hint':'Hide camera hint');
     }
