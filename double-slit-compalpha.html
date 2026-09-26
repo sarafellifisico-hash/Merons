@@ -31,13 +31,25 @@
     .exp-box p{margin:0;font-size:.70rem;line-height:1.5;color:#c2d4db}
     
     @media(max-width:820px){html,body{overflow:auto}.app{min-height:850px}.titlebar,.app.panel-minimized .titlebar{left:15px;right:15px}.badge{display:none}.panel{top:auto;left:8px;right:8px;bottom:8px;width:auto;height:330px}.panel.minimized{left:8px;right:auto;bottom:8px;width:52px;height:52px}.legend,.app.panel-minimized .legend{bottom:348px;max-width:calc(100% - 24px);left:12px}.app.panel-minimized .legend{bottom:72px}.tip,.app.panel-minimized .tip{top:88px;left:12px;max-width:260px}#viewport{bottom:332px;height:calc(100% - 332px)}.panel-minimized #viewport{bottom:0;height:100%}.explanation{left:8px;right:8px;top:8px;bottom:348px}.explanation-body{padding:15px 17px 24px}.explanation-body article{font-size:.94rem}}
+    /* Keep scroll thumbs inside the panel frames, including at their limits. */
+    .panel-scroll,.explanation-body{min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;scrollbar-gutter:stable}
+    .panel-scroll{padding-bottom:20px}.explanation-body{flex:1}
+    .tip,.legend{pointer-events:auto}
+    .legend .auto-content{display:flex;gap:7px 13px;flex-wrap:wrap}
+    .auto-indicator{display:none;width:30px;height:30px;min-height:30px;padding:0;place-items:center;border-color:rgba(53,217,255,.55);background:#0c2635;color:#a9eaff;font-size:17px}
+    .tip.auto-hidden,.legend.auto-hidden,.exp-box.auto-hidden{width:38px!important;height:38px!important;max-width:none!important;padding:3px!important;overflow:hidden;display:grid;place-items:center}
+    .tip.auto-hidden .auto-content,.legend.auto-hidden .auto-content,.exp-box.auto-hidden .auto-content{display:none}
+    .auto-hidden .auto-indicator{display:grid}
+    .exp-box.auto-hidden{z-index:7}
+    #explanationIndicator{position:absolute;top:12px;right:12px;z-index:7;width:38px;height:38px;padding:0;border-color:rgba(53,217,255,.55);background:#0c2635;color:#a9eaff;font-size:18px}
+    .explanation.open + #explanationIndicator{display:none}
   </style>
 </head>
 <body>
   <main class="app">
     <canvas id="viewport" aria-label="Interactive double-slit scene with oscillating Compalphas"></canvas>
     <header class="titlebar"><div><h1>Double Slit and the Geometric Mesh of Compalphas</h1><p class="subtitle">Light interference without waves or particles</p></div><div class="badge" id="statusBadge">CI running</div></header>
-    <div class="tip" id="tip">Drag to rotate the camera and use the wheel to zoom. Use <strong>Top view</strong> for an orthographic view without 3D perspective.</div>
+    <div class="tip" id="tip"><button class="auto-indicator" type="button" aria-label="Show camera instructions" aria-expanded="false">i</button><div class="auto-content">Drag to rotate the camera and use the wheel to zoom. Use <strong>Top view</strong> for an orthographic view without 3D perspective.</div></div>
     <aside class="panel" id="controlPanel" aria-label="Scene controls">
       <div class="panel-head"><div class="panel-copy"><strong>3D Laboratory</strong><small>In realistic mode, each numbered position is represented by a translucent Metalpha mesh containing 12 Compalphas.</small></div><button class="panel-toggle" id="panelToggle" type="button" aria-label="Minimize controls" aria-expanded="true">−</button></div>
       <div class="panel-scroll">
@@ -55,12 +67,12 @@
       </div>
     </aside>
     <div id="explanatoryLayer" class="explanatory-layer">
-      <div id="expBox1" class="exp-box" style="left:36%;top:6%"><h5 class="att">POINT 1 — ATTENUATION</h5><p>At this point the orders from S1 and S2 arrive with opposite parity. Same Compalpha is forced +10° EA up by one row and -10° EA down by the other. Opposite → attenuation / cancellation.</p></div>
-      <div id="expBox2" class="exp-box" style="left:51%;top:6%"><h5 class="amp">POINT 2 — AMPLIFICATION</h5><p>At this point orders arrive with same parity from S1 and S2. Same Compalpha is forced +10° up by both rows (or both down). Concordance → amplification / reinforcement.</p></div>
-      <div id="expBox3" class="exp-box" style="left:66%;top:6%"><h5 class="att">POINT 3 — ATTENUATION</h5><p>Mirrored from Point 1, opposite parity again. +10° up vs -10° down on the same Alpha Point. Mismatch → cancellation.</p></div>
+      <div id="expBox1" class="exp-box" style="left:36%;top:6%"><button class="auto-indicator" type="button" aria-label="Show Point 1 explanation" aria-expanded="false">i</button><div class="auto-content"><h5 class="att">POINT 1 — ATTENUATION</h5><p>At this point the orders from S1 and S2 arrive with opposite parity. Same Compalpha is forced +10° EA up by one row and -10° EA down by the other. Opposite → attenuation / cancellation.</p></div></div>
+      <div id="expBox2" class="exp-box" style="left:51%;top:6%"><button class="auto-indicator" type="button" aria-label="Show Point 2 explanation" aria-expanded="false">i</button><div class="auto-content"><h5 class="amp">POINT 2 — AMPLIFICATION</h5><p>At this point orders arrive with same parity from S1 and S2. Same Compalpha is forced +10° up by both rows (or both down). Concordance → amplification / reinforcement.</p></div></div>
+      <div id="expBox3" class="exp-box" style="left:66%;top:6%"><button class="auto-indicator" type="button" aria-label="Show Point 3 explanation" aria-expanded="false">i</button><div class="auto-content"><h5 class="att">POINT 3 — ATTENUATION</h5><p>Mirrored from Point 1, opposite parity again. +10° up vs -10° down on the same Alpha Point. Mismatch → cancellation.</p></div></div>
       <svg id="expArrows" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none"><g id="arrowLines"></g><defs><marker id="arrowHeadBlue" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill="rgba(100,170,255,.9)"/></marker><marker id="arrowHeadPink" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill="rgba(255,138,241,.9)"/></marker></defs></svg>
     </div>
-    <div class="legend" aria-label="Legend"><span style="--c:#58a7ff">AA from S1</span><span style="--c:#ff5262">AA from S2</span><span style="--c:#ff5262">Alpha Point</span><span style="--c:#35d9ff">IC from S1</span><span style="--c:#ff6a76">IC from S2</span></div>
+    <div class="legend" aria-label="Legend"><button class="auto-indicator" type="button" aria-label="Show legend" aria-expanded="false">i</button><div class="auto-content"><span style="--c:#58a7ff">AA from S1</span><span style="--c:#ff5262">AA from S2</span><span style="--c:#ff5262">Alpha Point</span><span style="--c:#35d9ff">IC from S1</span><span style="--c:#ff6a76">IC from S2</span></div></div>
     <section class="explanation" id="explanation" role="dialog" aria-modal="true" aria-labelledby="explanationTitle">
       <div class="explanation-head"><div><h2 id="explanationTitle">The Double Slit and the Geometric Mechanism of Cyclic Interaction</h2><p>Explanatory narrative for the interactive presentation</p></div><button class="explanation-close" id="explainClose" type="button">Close</button></div>
       <div class="explanation-body"><article>
@@ -98,7 +110,69 @@
         <p>This presentation does not, by itself, constitute experimental proof of the existence of Compalphas. It shows that, once the structure proposed by the Meronic Model is admitted, it becomes possible to formulate a visual, continuous, and causal mechanism for the formation of the interference pattern—without resorting to the idea of an entity that must simultaneously be a wave and a particle.</p>
       </article></div>
     </section>
+    <button id="explanationIndicator" type="button" aria-label="Open presentation explanation" title="Open presentation explanation">i</button>
   </main>
+  <script>
+  (()=>{
+    const app=document.querySelector('.app');
+    const fine=matchMedia('(hover:hover) and (pointer:fine)');
+    const panel=document.getElementById('controlPanel');
+    const panelToggle=document.getElementById('panelToggle');
+    function setPanelHidden(hidden){
+      panel.classList.toggle('minimized',hidden);
+      app.classList.toggle('panel-minimized',hidden);
+      panelToggle.textContent=hidden?'+':'−';
+      panelToggle.setAttribute('aria-label',hidden?'Expand controls':'Minimize controls');
+      panelToggle.setAttribute('aria-expanded',String(!hidden));
+    }
+    function autoHide(element,hide,initialDelay=3500){
+      let timer=0;
+      const cancel=()=>clearTimeout(timer);
+      const schedule=delay=>{cancel();timer=setTimeout(()=>{if(!element.matches(':hover'))hide()},delay)};
+      element.addEventListener('pointerenter',cancel);
+      element.addEventListener('pointerleave',()=>schedule(480));
+      element.addEventListener('focusin',cancel);
+      element.addEventListener('focusout',()=>schedule(700));
+      document.addEventListener('pointerdown',event=>{
+        if(!fine.matches&&!element.contains(event.target))hide();
+      },true);
+      if(initialDelay>=0)schedule(initialDelay);
+      return schedule;
+    }
+    panelToggle.addEventListener('click',()=>setPanelHidden(!panel.classList.contains('minimized')));
+    autoHide(panel,()=>setPanelHidden(true),3300);
+
+    document.querySelectorAll('#tip,.legend,.exp-box').forEach((box,index)=>{
+      const indicator=box.querySelector('.auto-indicator');
+      function setHidden(hidden){
+        box.classList.toggle('auto-hidden',hidden);
+        indicator.setAttribute('aria-expanded',String(!hidden));
+      }
+      indicator.addEventListener('click',()=>setHidden(false));
+      autoHide(box,()=>setHidden(true),index<2?4000:4600);
+    });
+
+    const explanation=document.getElementById('explanation');
+    const explanationIndicator=document.getElementById('explanationIndicator');
+    const explainOpen=document.getElementById('explainOpen');
+    const explainClose=document.getElementById('explainClose');
+    const scheduleExplanationHide=autoHide(explanation,closeExplanation,-1);
+    function openExplanation(){
+      explanation.classList.add('open');
+      explainClose.focus({preventScroll:true});
+      if(fine.matches)scheduleExplanationHide(9000);
+    }
+    function closeExplanation(){
+      if(!explanation.classList.contains('open'))return;
+      explanation.classList.remove('open');
+      (panel.classList.contains('minimized')?explanationIndicator:explainOpen).focus({preventScroll:true});
+    }
+    explainOpen.addEventListener('click',openExplanation);
+    explanationIndicator.addEventListener('click',openExplanation);
+    explainClose.addEventListener('click',closeExplanation);
+    addEventListener('keydown',event=>{if(event.key==='Escape')closeExplanation()});
+  })();
+  </script>
   <script>
   (()=>{"use strict";
     const $=id=>document.getElementById(id),canvas=$("viewport"),ctx=canvas.getContext("2d",{alpha:false});
@@ -207,7 +281,7 @@
     canvas.addEventListener("pointerdown",e=>{pointer={down:true,x:e.clientX,y:e.clientY,moved:false};canvas.setPointerCapture(e.pointerId);canvas.classList.add("dragging")});
     canvas.addEventListener("pointermove",e=>{if(!pointer.down)return;const dx=e.clientX-pointer.x,dy=e.clientY-pointer.y;pointer.x=e.clientX;pointer.y=e.clientY;if(Math.abs(dx)+Math.abs(dy)>1)pointer.moved=true;if(camera.orthographic)camera.orthographic=false;camera.yaw+=dx*.006;camera.pitch=clamp(camera.pitch+dy*.005,-1.35,1.48)});
     const release=e=>{pointer.down=false;canvas.classList.remove("dragging");try{canvas.releasePointerCapture(e.pointerId)}catch(_){}};canvas.addEventListener("pointerup",release);canvas.addEventListener("pointercancel",release);canvas.addEventListener("wheel",e=>{e.preventDefault();camera.distance=clamp(camera.distance*Math.exp(e.deltaY*.001),9,48)},{passive:false});
-    ui.play.addEventListener("click",()=>{running=!running;ui.play.textContent=running?"Pause CI":"Resume CI";ui.play.classList.toggle("active",running);ui.statusBadge.textContent=running?"CI running":"CI paused"});ui.resetView.addEventListener("click",()=>resetCamera(false));ui.topView.addEventListener("click",()=>resetCamera(true));ui.caSimple.addEventListener("click",()=>setCaMode("simple"));ui.caRealistic.addEventListener("click",()=>setCaMode("realistic"));ui.panelToggle.addEventListener("click",()=>{const minimized=ui.controlPanel.classList.toggle("minimized");app.classList.toggle("panel-minimized",minimized);ui.panelToggle.textContent=minimized?"+":"−";ui.panelToggle.setAttribute("aria-label",minimized?"Expand controls":"Minimize controls");ui.panelToggle.setAttribute("aria-expanded",String(!minimized));resize()});ui.explainOpen.addEventListener("click",()=>{ui.explanation.classList.add("open");ui.explainClose.focus()});ui.explainClose.addEventListener("click",()=>{ui.explanation.classList.remove("open");ui.explainOpen.focus()});addEventListener("keydown",event=>{if(event.key==="Escape"&&ui.explanation.classList.contains("open")){ui.explanation.classList.remove("open");ui.explainOpen.focus()}});
+    ui.play.addEventListener("click",()=>{running=!running;ui.play.textContent=running?"Pause CI":"Resume CI";ui.play.classList.toggle("active",running);ui.statusBadge.textContent=running?"CI running":"CI paused"});ui.resetView.addEventListener("click",()=>resetCamera(false));ui.topView.addEventListener("click",()=>resetCamera(true));ui.caSimple.addEventListener("click",()=>setCaMode("simple"));ui.caRealistic.addEventListener("click",()=>setCaMode("realistic"));
     ui.point1.addEventListener("click",()=>setPointMode("1"));ui.point2.addEventListener("click",()=>setPointMode("2"));ui.point3.addEventListener("click",()=>setPointMode("3"));ui.pointAll.addEventListener("click",()=>setPointMode("all"));ui.count.addEventListener("input",()=>{baseCount=Number(ui.count.value);ui.countOut.value=baseCount;setPointMode(pointMode)});ui.amplitude.addEventListener("input",()=>{const value=Number(ui.amplitude.value);rows.forEach(row=>row.amplitude=value);ui.ampOut.value=value+"°"});ui.frequency.addEventListener("input",()=>{const value=Number(ui.frequency.value);rows.forEach(row=>row.frequency=value);ui.freqOut.value=value.toFixed(2)+" Hz"});ui.ciOpacity.addEventListener("input",()=>{ui.opacityOut.value=Math.round(Number(ui.ciOpacity.value)*100)+"%"});
     ui.resetRows.addEventListener("click",()=>setPointMode(pointMode));addEventListener("message",event=>{if(event.data&&event.data.type==="TUIDG_TAB_ACTIVE"){tabVisible=Boolean(event.data.active);last=performance.now()}});
     new ResizeObserver(resize).observe(canvas);resize();syncRowUI();updateOutcomeUI();setCaMode("simple");requestAnimationFrame(animate);
