@@ -54,11 +54,11 @@
       <button class="tab" id="tab-double-slit" role="tab" aria-selected="false" aria-controls="panel-double-slit" data-target="double-slit" tabindex="-1">Double Slit</button>
       <button class="tab" id="tab-current" role="tab" aria-selected="false" aria-controls="panel-current" data-target="current" tabindex="-1">Cyclic Current</button>
     </nav>
-    <div class="tools"><span class="number" id="mechanismNumber">Mechanism 01 / 06</span><a class="external" id="openStandalone" href="rotating-interaction.html" target="_blank" rel="noopener" title="Open the active simulation in a separate window"><span>Open separately</span> ↗</a></div>
+    <div class="tools"><span class="number" id="mechanismNumber">Mechanism 01 / 06</span><a class="external" id="openStandalone" href="rotating-interaction.html?v=d2fb85d" target="_blank" rel="noopener" title="Open the active simulation in a separate window"><span>Open separately</span> ↗</a></div>
   </header>
 
   <main class="stage">
-    <iframe class="sim active" id="panel-rotating" role="tabpanel" aria-labelledby="tab-rotating" title="Meronic Builder — Up to 303" src="rotating-interaction.html" data-key="rotating"></iframe>
+    <iframe class="sim active" id="panel-rotating" role="tabpanel" aria-labelledby="tab-rotating" title="Meronic Builder — Up to 303" src="rotating-interaction.html?v=d2fb85d" data-key="rotating"></iframe>
     <iframe class="sim" id="panel-compalpha-ri" role="tabpanel" aria-labelledby="tab-compalpha-ri" title="TUIDG Rotating Interaction — Two Compalphas" data-src="compalpha-rotating-interaction.html" data-key="compalpha-ri"></iframe>
     <iframe class="sim" id="panel-cyclical" role="tabpanel" aria-labelledby="tab-cyclical" title="Cyclical Interaction 2D–3D" data-src="cyclical-interaction.html" data-key="cyclical"></iframe>
     <iframe class="sim" id="panel-laboratory" role="tabpanel" aria-labelledby="tab-laboratory" title="Cyclical Interaction 2D Laboratory" data-src="ic-2d-laboratory.html" data-key="laboratory"></iframe>
@@ -71,7 +71,7 @@
     (() => {
       const order = ['rotating','compalpha-ri','cyclical','laboratory','double-slit','current'];
       const labels = {
-        rotating:'rotating-interaction.html',
+        rotating:'rotating-interaction.html?v=d2fb85d',
         'compalpha-ri':'compalpha-rotating-interaction.html',
         cyclical:'cyclical-interaction.html',
         laboratory:'ic-2d-laboratory.html',
