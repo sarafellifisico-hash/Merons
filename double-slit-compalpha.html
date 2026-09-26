@@ -44,13 +44,31 @@
     #explanationIndicator{position:absolute;top:78px;right:12px;z-index:7;width:38px;height:38px;padding:0;border-color:rgba(53,217,255,.55);background:#0c2635;color:#a9eaff;font-size:18px}
     .explanation.open + #explanationIndicator{display:none}
     @media(max-width:820px){#explanationIndicator{top:118px}}
+    .panel.minimized{width:128px;height:50px;box-shadow:0 8px 26px #0008}
+    .app.panel-minimized .titlebar{left:152px}
+    .panel.minimized .panel-head{height:48px;padding:4px;border:0}
+    .panel.minimized .panel-toggle{display:flex;align-items:center;justify-content:center;gap:8px;width:118px;height:40px;min-height:40px;color:#bdeaff;font-size:15px}
+    .panel.minimized .panel-toggle::after{content:"Controls";font:700 12px "Instrument Sans",system-ui,sans-serif}
+    #uiPanelPin{position:absolute;z-index:6;top:14px;right:48px;min-width:42px;height:30px;min-height:30px;padding:0 6px;border-color:rgba(53,217,255,.4);background:#132034;color:#c8ddec;font-size:11px}
+    #uiPanelPin[aria-pressed="true"]{background:#1a4055;border-color:#69d7f3;color:#fff}
+    .panel.minimized #uiPanelPin{display:none}
+    .panel:not(.minimized) .panel-head{padding-right:94px}
+    .tip.auto-hidden{width:98px!important;height:40px!important}
+    .legend.auto-hidden{width:88px!important;height:40px!important}
+    .exp-box.auto-hidden{width:42px!important;height:42px!important}
+    .tip.auto-hidden .auto-indicator,.legend.auto-hidden .auto-indicator{width:100%;height:32px;font:700 11px "Instrument Sans",system-ui,sans-serif}
+    .exp-box.auto-hidden .auto-indicator{width:34px;height:34px;border-radius:9px;font:700 14px "Instrument Sans",system-ui,sans-serif}
+    #explanationIndicator{width:94px;height:42px;display:flex;align-items:center;justify-content:center;gap:6px;font:700 12px "Instrument Sans",system-ui,sans-serif}
+    .explanation.open + #explanationIndicator{display:none}
+    @media(max-width:820px){.panel.minimized{width:128px;height:50px}.app.panel-minimized .titlebar{left:15px}}
+    @media(prefers-reduced-motion:reduce){.panel,.tip,.legend,.exp-box,#explanationIndicator{transition:none!important}}
   </style>
 </head>
 <body>
   <main class="app">
     <canvas id="viewport" aria-label="Interactive double-slit scene with oscillating Compalphas"></canvas>
     <header class="titlebar"><div><h1>Double Slit and the Geometric Mesh of Compalphas</h1><p class="subtitle">Light interference without waves or particles</p></div><div class="badge" id="statusBadge">CI running</div></header>
-    <div class="tip" id="tip"><button class="auto-indicator" type="button" aria-label="Show camera instructions" aria-expanded="false">i</button><div class="auto-content">Drag to rotate the camera and use the wheel to zoom. Use <strong>Top view</strong> for an orthographic view without 3D perspective.</div></div>
+    <div class="tip" id="tip"><button class="auto-indicator" type="button" aria-label="Show camera instructions" aria-expanded="false">ⓘ Camera</button><div class="auto-content">Drag to rotate the camera and use the wheel to zoom. Use <strong>Top view</strong> for an orthographic view without 3D perspective.</div></div>
     <aside class="panel" id="controlPanel" aria-label="Scene controls">
       <div class="panel-head"><div class="panel-copy"><strong>3D Laboratory</strong><small>In realistic mode, each numbered position is represented by a translucent Metalpha mesh containing 12 Compalphas.</small></div><button class="panel-toggle" id="panelToggle" type="button" aria-label="Minimize controls" aria-expanded="true">−</button></div>
       <div class="panel-scroll">
@@ -68,12 +86,12 @@
       </div>
     </aside>
     <div id="explanatoryLayer" class="explanatory-layer">
-      <div id="expBox1" class="exp-box" style="left:36%;top:6%"><button class="auto-indicator" type="button" aria-label="Show Point 1 explanation" aria-expanded="false">i</button><div class="auto-content"><h5 class="att">POINT 1 — ATTENUATION</h5><p>At this point the orders from S1 and S2 arrive with opposite parity. Same Compalpha is forced +10° EA up by one row and -10° EA down by the other. Opposite → attenuation / cancellation.</p></div></div>
-      <div id="expBox2" class="exp-box" style="left:51%;top:6%"><button class="auto-indicator" type="button" aria-label="Show Point 2 explanation" aria-expanded="false">i</button><div class="auto-content"><h5 class="amp">POINT 2 — AMPLIFICATION</h5><p>At this point orders arrive with same parity from S1 and S2. Same Compalpha is forced +10° up by both rows (or both down). Concordance → amplification / reinforcement.</p></div></div>
-      <div id="expBox3" class="exp-box" style="left:66%;top:6%"><button class="auto-indicator" type="button" aria-label="Show Point 3 explanation" aria-expanded="false">i</button><div class="auto-content"><h5 class="att">POINT 3 — ATTENUATION</h5><p>Mirrored from Point 1, opposite parity again. +10° up vs -10° down on the same Alpha Point. Mismatch → cancellation.</p></div></div>
+      <div id="expBox1" class="exp-box" style="left:36%;top:6%"><button class="auto-indicator" type="button" aria-label="Show Point 1 explanation" title="Point 1 · Attenuation" aria-expanded="false">1</button><div class="auto-content"><h5 class="att">POINT 1 — ATTENUATION</h5><p>At this point the orders from S1 and S2 arrive with opposite parity. Same Compalpha is forced +10° EA up by one row and -10° EA down by the other. Opposite → attenuation / cancellation.</p></div></div>
+      <div id="expBox2" class="exp-box" style="left:51%;top:6%"><button class="auto-indicator" type="button" aria-label="Show Point 2 explanation" title="Point 2 · Amplification" aria-expanded="false">2</button><div class="auto-content"><h5 class="amp">POINT 2 — AMPLIFICATION</h5><p>At this point orders arrive with same parity from S1 and S2. Same Compalpha is forced +10° up by both rows (or both down). Concordance → amplification / reinforcement.</p></div></div>
+      <div id="expBox3" class="exp-box" style="left:66%;top:6%"><button class="auto-indicator" type="button" aria-label="Show Point 3 explanation" title="Point 3 · Attenuation" aria-expanded="false">3</button><div class="auto-content"><h5 class="att">POINT 3 — ATTENUATION</h5><p>Mirrored from Point 1, opposite parity again. +10° up vs -10° down on the same Alpha Point. Mismatch → cancellation.</p></div></div>
       <svg id="expArrows" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none"><g id="arrowLines"></g><defs><marker id="arrowHeadBlue" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill="rgba(100,170,255,.9)"/></marker><marker id="arrowHeadPink" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill="rgba(255,138,241,.9)"/></marker></defs></svg>
     </div>
-    <div class="legend" aria-label="Legend"><button class="auto-indicator" type="button" aria-label="Show legend" aria-expanded="false">i</button><div class="auto-content"><span style="--c:#58a7ff">AA from S1</span><span style="--c:#ff5262">AA from S2</span><span style="--c:#ff5262">Alpha Point</span><span style="--c:#35d9ff">IC from S1</span><span style="--c:#ff6a76">IC from S2</span></div></div>
+    <div class="legend" aria-label="Legend"><button class="auto-indicator" type="button" aria-label="Show legend" aria-expanded="false">Legend</button><div class="auto-content"><span style="--c:#58a7ff">AA from S1</span><span style="--c:#ff5262">AA from S2</span><span style="--c:#ff5262">Alpha Point</span><span style="--c:#35d9ff">IC from S1</span><span style="--c:#ff6a76">IC from S2</span></div></div>
     <section class="explanation" id="explanation" role="dialog" aria-modal="true" aria-labelledby="explanationTitle">
       <div class="explanation-head"><div><h2 id="explanationTitle">The Double Slit and the Geometric Mechanism of Cyclic Interaction</h2><p>Explanatory narrative for the interactive presentation</p></div><button class="explanation-close" id="explainClose" type="button">Close</button></div>
       <div class="explanation-body"><article>
@@ -111,7 +129,7 @@
         <p>This presentation does not, by itself, constitute experimental proof of the existence of Compalphas. It shows that, once the structure proposed by the Meronic Model is admitted, it becomes possible to formulate a visual, continuous, and causal mechanism for the formation of the interference pattern—without resorting to the idea of an entity that must simultaneously be a wave and a particle.</p>
       </article></div>
     </section>
-    <button id="explanationIndicator" type="button" aria-label="Open presentation explanation" title="Open presentation explanation">i</button>
+    <button id="explanationIndicator" type="button" aria-label="Open presentation explanation" title="Open presentation explanation">ⓘ Guide</button>
   </main>
   <script>
   (()=>{
@@ -121,6 +139,7 @@
     const panelToggle=document.getElementById('panelToggle');
     function setPanelHidden(hidden){
       panel.classList.toggle('minimized',hidden);
+      if(hidden){panel.classList.remove('ui-pinned');pin.textContent='Pin';pin.setAttribute('aria-pressed','false')}
       app.classList.toggle('panel-minimized',hidden);
       panelToggle.textContent=hidden?'+':'−';
       panelToggle.setAttribute('aria-label',hidden?'Expand controls':'Minimize controls');
@@ -129,18 +148,26 @@
     function autoHide(element,hide,initialDelay=3500){
       let timer=0,holdUntil=0;
       const cancel=()=>clearTimeout(timer);
-      const schedule=delay=>{cancel();delay=Math.max(delay,holdUntil-Date.now());timer=setTimeout(()=>{if(!element.matches(':hover'))hide()},delay)};
+      const schedule=delay=>{cancel();delay=Math.max(delay,holdUntil-Date.now());timer=setTimeout(()=>{if(!element.classList.contains('ui-pinned')&&!element.matches(':hover')&&!element.contains(document.activeElement))hide()},delay)};
       element.addEventListener('pointerenter',cancel);
-      element.addEventListener('pointerleave',()=>schedule(480));
+      element.addEventListener('pointerleave',()=>schedule(950));
       element.addEventListener('focusin',cancel);
       element.addEventListener('focusout',()=>schedule(700));
       document.addEventListener('pointerdown',event=>{
-        if(!fine.matches&&!element.contains(event.target))hide();
+        if(!fine.matches&&!element.contains(event.target)&&!element.classList.contains('ui-pinned'))hide();
       },true);
       if(initialDelay>=0)schedule(initialDelay);
       return delay=>{holdUntil=Date.now()+delay;schedule(delay)};
     }
-    panelToggle.addEventListener('click',()=>{const wasHidden=panel.classList.contains('minimized');setPanelHidden(!wasHidden);if(wasHidden)holdPanel(3000)});
+    const pin=document.createElement('button');pin.id='uiPanelPin';pin.type='button';pin.textContent='Pin';
+    pin.title='Keep controls open';pin.setAttribute('aria-label','Keep controls open');pin.setAttribute('aria-pressed','false');
+    panel.appendChild(pin);
+    pin.addEventListener('click',()=>{
+      const pinned=panel.classList.toggle('ui-pinned');pin.textContent=pinned?'Unpin':'Pin';
+      pin.setAttribute('aria-pressed',String(pinned));pin.setAttribute('aria-label',pinned?'Allow controls to auto-hide':'Keep controls open');
+      if(!pinned)holdPanel(1300);
+    });
+    panelToggle.addEventListener('click',()=>{const wasHidden=panel.classList.contains('minimized');setPanelHidden(!wasHidden);if(wasHidden)holdPanel(5000)});
     const holdPanel=autoHide(panel,()=>setPanelHidden(true),3300);
 
     document.querySelectorAll('#tip,.legend,.exp-box').forEach((box,index)=>{
@@ -157,11 +184,9 @@
     const explanationIndicator=document.getElementById('explanationIndicator');
     const explainOpen=document.getElementById('explainOpen');
     const explainClose=document.getElementById('explainClose');
-    const holdExplanation=autoHide(explanation,closeExplanation,-1);
     function openExplanation(){
       explanation.classList.add('open');
       explainClose.focus({preventScroll:true});
-      if(fine.matches)holdExplanation(9000);
     }
     function closeExplanation(){
       if(!explanation.classList.contains('open'))return;
@@ -171,6 +196,9 @@
     explainOpen.addEventListener('click',openExplanation);
     explanationIndicator.addEventListener('click',openExplanation);
     explainClose.addEventListener('click',closeExplanation);
+    document.addEventListener('pointerdown',event=>{
+      if(explanation.classList.contains('open')&&!explanation.contains(event.target)&&!explainOpen.contains(event.target))closeExplanation();
+    },true);
     addEventListener('keydown',event=>{if(event.key==='Escape')closeExplanation()});
   })();
   </script>
