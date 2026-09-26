@@ -915,6 +915,11 @@ body.panel-edge-hidden #panelEdgeZone{opacity:1;visibility:visible;pointer-event
 #pairNotes.collapsed #pairNotesToggle{min-width:84px;min-height:36px;color:#a9eaff}
 @media(max-width:760px){#panelEdgeZone{left:8px;top:8px}#panel.edge-hidden{transform:none!important}#uiPanelPin{top:10px}}
 @media(prefers-reduced-motion:reduce){#panel,#panelEdgeZone{transition:none!important}}
+/* Size to the active controls; the body scrolls only when it reaches the viewport. */
+#panel:not(.minimized){bottom:auto;height:fit-content;max-height:calc(100dvh - 24px)}
+#panel .panel-inner{flex:0 1 auto}
+#panelEdgeZone .edge-plus{font:700 16px/1 "Fragment Mono",ui-monospace,monospace}
+@media(max-width:760px){#panel:not(.minimized){top:auto;bottom:8px;max-height:calc(100dvh - 16px)}}
 </style>
 </head>
 <body>
@@ -997,13 +1002,13 @@ body.panel-edge-hidden #panelEdgeZone{opacity:1;visibility:visible;pointer-event
 </div>
 
 <section id="pairNotes" hidden aria-live="polite"></section>
-<button id="panelEdgeZone" type="button" aria-controls="panel" aria-expanded="true" aria-label="Open controls" title="Open controls">☷ <span>Controls</span></button>
+<button id="panelEdgeZone" type="button" aria-controls="panel" aria-expanded="true" aria-label="Open controls" title="Open controls"><span class="edge-plus" aria-hidden="true">+</span><span>Controls</span></button>
 <aside id="panel" aria-label="Meronic Builder controls">
   <button id="toggleBtn" title="Minimize control panel" aria-label="Minimize control panel" aria-expanded="true">−</button>
 
   <header class="panel-header">
-    <div class="panel-title">Meronic Builder</div>
-    <div class="panel-subtitle">From Metalpha to 303 Metalpha Merons</div>
+    <div class="panel-title">Construtor Merônico</div>
+    <div class="panel-subtitle">Do Méron Metalpha ao Méron 303</div>
   </header>
 
   <div class="builder-mode-switch" role="group" aria-label="Meronic Builder mode">
