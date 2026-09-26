@@ -126,9 +126,9 @@
       panelToggle.setAttribute('aria-expanded',String(!hidden));
     }
     function autoHide(element,hide,initialDelay=3500){
-      let timer=0;
+      let timer=0,holdUntil=0;
       const cancel=()=>clearTimeout(timer);
-      const schedule=delay=>{cancel();timer=setTimeout(()=>{if(!element.matches(':hover'))hide()},delay)};
+      const schedule=delay=>{cancel();delay=Math.max(delay,holdUntil-Date.now());timer=setTimeout(()=>{if(!element.matches(':hover'))hide()},delay)};
       element.addEventListener('pointerenter',cancel);
       element.addEventListener('pointerleave',()=>schedule(480));
       element.addEventListener('focusin',cancel);
@@ -137,10 +137,10 @@
         if(!fine.matches&&!element.contains(event.target))hide();
       },true);
       if(initialDelay>=0)schedule(initialDelay);
-      return schedule;
+      return delay=>{holdUntil=Date.now()+delay;schedule(delay)};
     }
-    panelToggle.addEventListener('click',()=>setPanelHidden(!panel.classList.contains('minimized')));
-    autoHide(panel,()=>setPanelHidden(true),3300);
+    panelToggle.addEventListener('click',()=>{const wasHidden=panel.classList.contains('minimized');setPanelHidden(!wasHidden);if(wasHidden)holdPanel(3000)});
+    const holdPanel=autoHide(panel,()=>setPanelHidden(true),3300);
 
     document.querySelectorAll('#tip,.legend,.exp-box').forEach((box,index)=>{
       const indicator=box.querySelector('.auto-indicator');
@@ -148,19 +148,19 @@
         box.classList.toggle('auto-hidden',hidden);
         indicator.setAttribute('aria-expanded',String(!hidden));
       }
-      indicator.addEventListener('click',()=>setHidden(false));
-      autoHide(box,()=>setHidden(true),index<2?4000:4600);
+      indicator.addEventListener('click',()=>{setHidden(false);holdBox(6500)});
+      const holdBox=autoHide(box,()=>setHidden(true),index<2?4000:4600);
     });
 
     const explanation=document.getElementById('explanation');
     const explanationIndicator=document.getElementById('explanationIndicator');
     const explainOpen=document.getElementById('explainOpen');
     const explainClose=document.getElementById('explainClose');
-    const scheduleExplanationHide=autoHide(explanation,closeExplanation,-1);
+    const holdExplanation=autoHide(explanation,closeExplanation,-1);
     function openExplanation(){
       explanation.classList.add('open');
       explainClose.focus({preventScroll:true});
-      if(fine.matches)scheduleExplanationHide(9000);
+      if(fine.matches)holdExplanation(9000);
     }
     function closeExplanation(){
       if(!explanation.classList.contains('open'))return;
