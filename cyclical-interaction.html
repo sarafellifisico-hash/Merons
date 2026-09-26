@@ -544,6 +544,7 @@
                 openButton.classList.toggle('active', !minimized);
                 if(!minimized){
                     clearTimeout(diagramTimer);
+                    diagramHoldUntil=Date.now()+6500;
                     diagramTimer=setTimeout(()=>{if(!panel.matches(':hover'))setPanelMinimized(panelId,true)},6500);
                 }
             }
@@ -556,13 +557,14 @@
         const ciEdgeZone = document.getElementById('controlsEdgeZone');
         const ciFinePointer = window.matchMedia('(hover:hover) and (pointer:fine)');
         function autoCollapseBox(box, toggle, delay=4200) {
-            let timer=0;
+            let timer=0,holdUntil=0;
             const setHidden=hidden=>{
                 box.classList.toggle('auto-hidden',hidden);
                 toggle.setAttribute('aria-expanded',String(!hidden));
             };
             const schedule=(wait=480)=>{
                 clearTimeout(timer);
+                wait=Math.max(wait,holdUntil-Date.now());
                 timer=setTimeout(()=>{if(!box.matches(':hover')&&!box.contains(document.activeElement))setHidden(true)},wait);
             };
             box.addEventListener('pointerenter',()=>clearTimeout(timer));
@@ -572,13 +574,14 @@
             toggle.addEventListener('click',()=>{
                 setHidden(false);
                 toggle.blur();
+                holdUntil=Date.now()+8000;
                 schedule(8000);
             });
             document.addEventListener('pointerdown',event=>{
                 if(!ciFinePointer.matches&&!box.contains(event.target))setHidden(true);
             },true);
             schedule(delay);
-            return {show:()=>{setHidden(false);schedule(delay)},hide:()=>{clearTimeout(timer);setHidden(true)}};
+            return {show:()=>{setHidden(false);holdUntil=Date.now()+delay;schedule(delay)},hide:()=>{clearTimeout(timer);holdUntil=0;setHidden(true)}};
         }
         const functionInfoBox=autoCollapseBox(functionInfo,document.getElementById('functionInfoToggle'),4500);
         const meronicIntroBox=autoCollapseBox(document.getElementById('meronicIntro'),document.getElementById('meronicIntroToggle'),5000);
@@ -613,10 +616,10 @@
             if(!diagram.contains(event.target)&&event.target.id!=='btnOpenICDiagram')setPanelMinimized('icDiagramContainer',true);
         },true);
         const ciDiagram=document.getElementById('icDiagramContainer');
-        let diagramTimer=0;
+        let diagramTimer=0,diagramHoldUntil=0;
         ciDiagram.addEventListener('pointerleave',()=>{
             clearTimeout(diagramTimer);
-            diagramTimer=setTimeout(()=>{if(!ciDiagram.matches(':hover'))setPanelMinimized('icDiagramContainer',true)},480);
+            diagramTimer=setTimeout(()=>{if(!ciDiagram.matches(':hover'))setPanelMinimized('icDiagramContainer',true)},Math.max(480,diagramHoldUntil-Date.now()));
         });
         ciDiagram.addEventListener('pointerenter',()=>clearTimeout(diagramTimer));
         ciDiagram.addEventListener('focusin',()=>clearTimeout(diagramTimer));
