@@ -276,6 +276,24 @@
         #meronicIntro.visible { pointer-events:auto; }
         #meronicIntro.auto-hidden { box-sizing:border-box; }
         @media (max-width:800px) { #functionInfo.auto-hidden, #meronicIntro.auto-hidden { width:42px!important; min-width:0; } }
+        #controlsEdgeZone{display:flex!important;align-items:center;justify-content:center;gap:7px;position:fixed;z-index:101;top:12px;left:12px;bottom:auto;width:118px;height:42px;padding:0 10px;border:1px solid #416078;border-radius:12px;background:rgba(9,25,36,.96);color:#d8eff7;box-shadow:0 8px 26px #0008;font:700 12px "Instrument Sans",system-ui,sans-serif;cursor:pointer;transition:opacity .18s ease,transform .18s ease}
+        #controlsEdgeZone::after{display:none!important}
+        #controlsEdgeZone:hover,#controlsEdgeZone:focus-visible{background:#153448;border-color:#69d7f3;outline-color:#69d7f3}
+        body:not(.controls-edge-hidden) #controlsEdgeZone{opacity:0;visibility:hidden;pointer-events:none;transform:translateY(-5px)}
+        body.controls-edge-hidden #controlsEdgeZone{opacity:1;visibility:visible;pointer-events:auto;transform:none}
+        #controls.edge-hidden{opacity:0;pointer-events:none}
+        #controls.minimized{display:none!important}
+        #controls .sim-title,#controls .sim-subtitle{margin-right:84px}
+        #ciPanelPin,#ciDiagramPin{position:absolute;top:10px;right:49px;z-index:141;min-width:42px;height:30px;padding:0 6px;border:1px solid #466479;border-radius:8px;background:#132034;color:#c8ddec;font:700 11px "Instrument Sans",system-ui,sans-serif;cursor:pointer}
+        #ciPanelPin[aria-pressed="true"],#ciDiagramPin[aria-pressed="true"]{border-color:#69d7f3;background:#1a4055;color:#fff}
+        #icDiagramContainer.minimized{width:120px!important;min-width:120px!important;height:44px!important;min-height:44px!important}
+        #icDiagramContainer.minimized .toggle-btn{display:flex;align-items:center;justify-content:center;gap:5px;width:112px;height:36px;padding:0;font:700 12px "Instrument Sans",system-ui,sans-serif;color:#bdeaff}
+        #icDiagramContainer.minimized .toggle-btn::after{content:"Diagram"}
+        #functionInfo.auto-hidden{width:88px!important;height:40px;min-height:40px;max-height:40px}
+        #meronicIntro.auto-hidden{width:114px!important;height:40px;min-height:40px;max-height:40px}
+        #functionInfo.auto-hidden #functionInfoToggle,#meronicIntro.auto-hidden #meronicIntroToggle{width:100%;height:30px;font:700 12px "Instrument Sans",system-ui,sans-serif}
+        @media(max-width:800px){#controlsEdgeZone{top:8px;left:8px}#functionInfo.auto-hidden{width:88px!important}#meronicIntro.auto-hidden{width:114px!important}}
+        @media(prefers-reduced-motion:reduce){#controls,#controlsEdgeZone,#icDiagramContainer,#functionInfo,#meronicIntro{transition:none!important}}
     </style>
 </head>
 <body>
@@ -400,7 +418,7 @@
             </section>
         </div>
     </div>
-    <div id="controlsEdgeZone" aria-hidden="true"></div>
+    <button id="controlsEdgeZone" type="button" aria-controls="controls" aria-expanded="true" aria-label="Open controls" title="Open controls">☷ <span>Controls</span></button>
 
     <div id="icDiagramContainer">
         <div id="icResizeHandleEdge" title="Arraste para expandir para a esquerda"></div>
@@ -420,7 +438,7 @@
     <!-- CAIXA DE EXPLICAÇÕES:
          os textos de cada função ficam no objeto FUNCTION_HELP, no início do JavaScript. -->
     <div id="meronicIntro" aria-hidden="true">
-      <button id="meronicIntroToggle" type="button" title="Show intermediate view explanation" aria-label="Show intermediate view explanation" aria-expanded="false">i</button>
+      <button id="meronicIntroToggle" type="button" title="Show intermediate view explanation" aria-label="Show intermediate view explanation" aria-expanded="false">ⓘ Metalpha</button>
       <div class="meronic-intro-content">
         <strong>INTERMEDIATE MERONIC VIEW</strong>
         <div id="meronicCountSummary">12 Metalpha Merons · 144 Compalphas · CI Ø 1.47</div>
@@ -428,7 +446,7 @@
         <span>No particles are emitted — the geometric meshes themselves oscillate.</span>
       </div>
     </div>
-    <div id="functionInfo" aria-live="polite"><button id="functionInfoToggle" type="button" title="Show function explanation" aria-label="Show function explanation" aria-expanded="false">i</button><div id="functionInfoText"></div></div>
+    <div id="functionInfo" aria-live="polite"><button id="functionInfoToggle" type="button" title="Show function explanation" aria-label="Show function explanation" aria-expanded="false">ⓘ Info</button><div id="functionInfoText"></div></div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/examples/js/controls/OrbitControls.js"></script>
@@ -536,16 +554,23 @@
             button.setAttribute('aria-label', button.title);
             button.setAttribute('aria-expanded', String(!minimized));
             if (panelId === 'controls') {
-                revealCIControls();
+                if(minimized){
+                    ciPanel.classList.remove('ui-pinned','edge-hidden');
+                    ciPanel.inert=true;
+                    ciPanelPin.textContent='Pin';ciPanelPin.setAttribute('aria-pressed','false');
+                    document.body.classList.add('controls-edge-hidden');
+                    ciEdgeZone.setAttribute('aria-expanded','false');
+                }else revealCIControls();
             } else {
                 const openButton = document.getElementById('btnOpenICDiagram');
                 openButton.textContent = minimized ? 'Open Cyclical Interaction Diagram' : 'Close Cyclical Interaction Diagram';
                 openButton.setAttribute('aria-expanded', String(!minimized));
                 openButton.classList.toggle('active', !minimized);
+                if(minimized){panel.classList.remove('ui-pinned');ciDiagramPin.textContent='Pin';ciDiagramPin.setAttribute('aria-pressed','false')}
                 if(!minimized){
                     clearTimeout(diagramTimer);
                     diagramHoldUntil=Date.now()+6500;
-                    diagramTimer=setTimeout(()=>{if(!panel.matches(':hover'))setPanelMinimized(panelId,true)},6500);
+                    diagramTimer=setTimeout(()=>{if(!panel.matches(':hover')&&!panel.classList.contains('ui-pinned'))setPanelMinimized(panelId,true)},6500);
                 }
             }
         }
@@ -556,6 +581,20 @@
 
         const ciEdgeZone = document.getElementById('controlsEdgeZone');
         const ciFinePointer = window.matchMedia('(hover:hover) and (pointer:fine)');
+        function addPin(panel,id){
+            const pin=document.createElement('button');pin.id=id;pin.type='button';pin.textContent='Pin';
+            pin.title='Keep panel open';pin.setAttribute('aria-label','Keep panel open');pin.setAttribute('aria-pressed','false');
+            panel.appendChild(pin);
+            pin.addEventListener('click',()=>{
+                const pinned=panel.classList.toggle('ui-pinned');
+                pin.textContent=pinned?'Unpin':'Pin';pin.setAttribute('aria-pressed',String(pinned));
+                pin.setAttribute('aria-label',pinned?'Allow panel to auto-hide':'Keep panel open');
+                if(pinned){clearTimeout(ciHideTimer);clearTimeout(diagramTimer)}
+            });
+            return pin;
+        }
+        const ciPanelPin=addPin(ciPanel,'ciPanelPin');
+        const ciDiagramPin=addPin(document.getElementById('icDiagramContainer'),'ciDiagramPin');
         function autoCollapseBox(box, toggle, delay=4200) {
             let timer=0,holdUntil=0;
             const setHidden=hidden=>{
@@ -591,35 +630,41 @@
         function revealCIControls() {
             clearTimeout(ciHideTimer);
             ciPanel.classList.remove('edge-hidden');
+            ciPanel.inert=false;
             document.body.classList.remove('controls-edge-hidden');
+            ciEdgeZone.setAttribute('aria-expanded','true');
         }
         function hideCIControls() {
-            if (!ciFinePointer.matches || ciPanel.classList.contains('minimized') || ciPanel.matches(':hover')) return;
-            ciPanel.classList.add('edge-hidden');
+            if(ciPanel.classList.contains('ui-pinned')||ciPanel.matches(':hover')||ciPanel.contains(document.activeElement))return;
+            if(ciFinePointer.matches&&!ciPanel.classList.contains('minimized')){ciPanel.classList.add('edge-hidden');ciPanel.inert=true}
+            else if(!ciPanel.classList.contains('minimized'))setPanelMinimized('controls',true);
             document.body.classList.add('controls-edge-hidden');
+            ciEdgeZone.setAttribute('aria-expanded','false');
         }
-        function scheduleCIControlsHide(delay=450) {
+        function scheduleCIControlsHide(delay=950) {
             clearTimeout(ciHideTimer);
             ciHideTimer = setTimeout(hideCIControls, delay);
         }
-        ciPanel.addEventListener('pointerenter', revealCIControls);
+        ciPanel.addEventListener('pointerenter',()=>clearTimeout(ciHideTimer));
         ciPanel.addEventListener('pointerleave', () => scheduleCIControlsHide());
-        ciPanel.addEventListener('focusin', revealCIControls);
-        ciPanel.addEventListener('focusout', () => scheduleCIControlsHide());
-        ciEdgeZone.addEventListener('pointerenter', revealCIControls);
-        ciFinePointer.addEventListener('change', revealCIControls);
-        scheduleCIControlsHide(2400);
+        ciPanel.addEventListener('focusin',()=>clearTimeout(ciHideTimer));
+        ciPanel.addEventListener('focusout', () => scheduleCIControlsHide(1300));
+        ciEdgeZone.addEventListener('click',()=>{
+            if(ciPanel.classList.contains('minimized'))setPanelMinimized('controls',false);
+            revealCIControls();scheduleCIControlsHide(6500);
+        });
+        scheduleCIControlsHide(3400);
         document.addEventListener('pointerdown',event=>{
             if(ciFinePointer.matches)return;
             const diagram=document.getElementById('icDiagramContainer');
-            if(!ciPanel.contains(event.target))setPanelMinimized('controls',true);
+            if(!ciPanel.contains(event.target)&&!ciEdgeZone.contains(event.target)&&!ciPanel.classList.contains('ui-pinned'))setPanelMinimized('controls',true);
             if(!diagram.contains(event.target)&&event.target.id!=='btnOpenICDiagram')setPanelMinimized('icDiagramContainer',true);
         },true);
         const ciDiagram=document.getElementById('icDiagramContainer');
         let diagramTimer=0,diagramHoldUntil=0;
         ciDiagram.addEventListener('pointerleave',()=>{
             clearTimeout(diagramTimer);
-            diagramTimer=setTimeout(()=>{if(!ciDiagram.matches(':hover'))setPanelMinimized('icDiagramContainer',true)},Math.max(480,diagramHoldUntil-Date.now()));
+            diagramTimer=setTimeout(()=>{if(!ciDiagram.matches(':hover')&&!ciDiagram.classList.contains('ui-pinned'))setPanelMinimized('icDiagramContainer',true)},Math.max(950,diagramHoldUntil-Date.now()));
         });
         ciDiagram.addEventListener('pointerenter',()=>clearTimeout(diagramTimer));
         ciDiagram.addEventListener('focusin',()=>clearTimeout(diagramTimer));
