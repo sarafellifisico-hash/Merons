@@ -105,9 +105,9 @@
         panelToggle.setAttribute('aria-label',panelToggle.title);
         panelToggle.setAttribute('aria-expanded',String(!hidden));
       }
-      panelToggle.addEventListener('click',()=>setPanelHidden(!panel.classList.contains('minimized')));
-      let panelTimer=0,readingTimer=0;
-      const schedulePanel=delay=>{clearTimeout(panelTimer);panelTimer=setTimeout(()=>{if(!panel.matches(':hover'))setPanelHidden(true)},delay)};
+      panelToggle.addEventListener('click',()=>{const wasHidden=panel.classList.contains('minimized');setPanelHidden(!wasHidden);if(wasHidden){panelHoldUntil=Date.now()+3000;schedulePanel(3000)}});
+      let panelTimer=0,readingTimer=0,panelHoldUntil=0,readingHoldUntil=0;
+      const schedulePanel=delay=>{clearTimeout(panelTimer);delay=Math.max(delay,panelHoldUntil-Date.now());panelTimer=setTimeout(()=>{if(!panel.matches(':hover'))setPanelHidden(true)},delay)};
       panel.addEventListener('pointerenter',()=>clearTimeout(panelTimer));
       panel.addEventListener('pointerleave',()=>schedulePanel(480));
       panel.addEventListener('focusin',()=>clearTimeout(panelTimer));
@@ -118,9 +118,9 @@
         if(presentation.open)return;
         presentation.showModal();
         presentation.querySelector('.explanation-body').scrollTop=0;
-        if(fine.matches)scheduleReading(9000);
+        if(fine.matches){readingHoldUntil=Date.now()+9000;scheduleReading(9000)}
       }
-      function scheduleReading(delay){clearTimeout(readingTimer);readingTimer=setTimeout(()=>{if(presentation.open&&!presentation.matches(':hover'))presentation.close()},delay)}
+      function scheduleReading(delay){clearTimeout(readingTimer);delay=Math.max(delay,readingHoldUntil-Date.now());readingTimer=setTimeout(()=>{if(presentation.open&&!presentation.matches(':hover'))presentation.close()},delay)}
       openButton.addEventListener('click',openReading);
       indicator.addEventListener('click',openReading);
       closeButton.addEventListener('click',()=>presentation.close());
@@ -131,7 +131,7 @@
         (panel.classList.contains('minimized')?indicator:openButton).focus({preventScroll:true});
       });
       const note=document.querySelector('#cameraNote'),noteToggle=document.querySelector('#cameraNoteToggle');
-      let noteTimer=0;
+      let noteTimer=0,noteHoldUntil=0;
       function setNoteHidden(hidden){
         note.classList.toggle('auto-hidden',hidden);
         noteToggle.textContent=hidden?'i':'−';
@@ -140,13 +140,14 @@
       }
       function scheduleNote(delay=480){
         clearTimeout(noteTimer);
+        delay=Math.max(delay,noteHoldUntil-Date.now());
         noteTimer=setTimeout(()=>{if(!note.matches(':hover')&&!note.contains(document.activeElement))setNoteHidden(true)},delay);
       }
       noteToggle.addEventListener('click',()=>{
         const hidden=note.classList.contains('auto-hidden');
         setNoteHidden(!hidden);
         noteToggle.blur();
-        if(hidden)scheduleNote(6000);
+        if(hidden){noteHoldUntil=Date.now()+6000;scheduleNote(6000)}
       });
       note.addEventListener('pointerenter',()=>clearTimeout(noteTimer));
       note.addEventListener('pointerleave',()=>scheduleNote());
