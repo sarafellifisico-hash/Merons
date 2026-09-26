@@ -3271,52 +3271,7 @@
       setTheoryPanelCollapsed(collapsed);
       if (!collapsed && isCompactLayout()) setControlPanelCollapsed(true);
     });
-
-    function autoCollapseOnIdle(element, collapse, delay) {
-      var timer = 0;
-      var finePointer = window.matchMedia("(hover:hover) and (pointer:fine)");
-      function cancel() { window.clearTimeout(timer); }
-      function schedule(wait) {
-        cancel();
-        timer = window.setTimeout(function () {
-          if (!element.matches(":hover")) collapse();
-        }, wait);
-      }
-      element.addEventListener("pointerenter", cancel);
-      element.addEventListener("pointerleave", function () { schedule(480); });
-      element.addEventListener("focusin", cancel);
-      element.addEventListener("focusout", function () { schedule(750); });
-      document.addEventListener("pointerdown", function (event) {
-        if (!finePointer.matches && !element.contains(event.target)) collapse();
-      }, true);
-      schedule(delay);
-      return schedule;
-    }
-
-    var hud = document.querySelector(".distance-hud");
-    var hudToggle = hud.querySelector(".distance-hud-toggle");
-    function setHudHidden(hidden) {
-      hud.classList.toggle("auto-hidden", hidden);
-      hudToggle.textContent = hidden ? "+" : "−";
-      hudToggle.setAttribute("aria-expanded", String(!hidden));
-      hudToggle.setAttribute("aria-label", hidden ? "Show distance readout" : "Hide distance readout");
-    }
-    hudToggle.addEventListener("click", function () { setHudHidden(!hud.classList.contains("auto-hidden")); });
-
-    var cameraTip = document.querySelector(".camera-tip");
-    var cameraTipToggle = cameraTip.querySelector(".camera-tip-toggle");
-    function setCameraTipHidden(hidden) {
-      cameraTip.classList.toggle("auto-hidden", hidden);
-      cameraTipToggle.textContent = hidden ? "i" : "−";
-      cameraTipToggle.setAttribute("aria-expanded", String(!hidden));
-      cameraTipToggle.setAttribute("aria-label", hidden ? "Show camera hint" : "Hide camera hint");
-    }
-    cameraTipToggle.addEventListener("click", function () { setCameraTipHidden(!cameraTip.classList.contains("auto-hidden")); });
-
-    autoCollapseOnIdle(document.getElementById("control-panel"), function () { setControlPanelCollapsed(true); }, 3200);
-    autoCollapseOnIdle(document.getElementById("theory-panel"), function () { setTheoryPanelCollapsed(true); }, 3600);
-    autoCollapseOnIdle(hud, function () { setHudHidden(true); }, 4400);
-    autoCollapseOnIdle(cameraTip, function () { setCameraTipHidden(true); }, 5000);
+    window.__ri3dControlsReady = true;
 
     function resetCamera() {
       state.camera.yaw = -0.54;
@@ -3384,6 +3339,63 @@
     updateMotionControls();
     requestAnimationFrame(animate);
   }());
+  </script>
+  <script>
+  // The reading controls remain usable even when a device cannot create a 3D context.
+  (()=>{
+    const fine=matchMedia('(hover:hover) and (pointer:fine)');
+    function autoCollapse(element,collapse,delay){
+      let timer=0;
+      const cancel=()=>clearTimeout(timer);
+      const schedule=wait=>{cancel();timer=setTimeout(()=>{if(!element.matches(':hover')&&!element.contains(document.activeElement))collapse()},wait)};
+      element.addEventListener('pointerenter',cancel);
+      element.addEventListener('pointerleave',()=>schedule(480));
+      element.addEventListener('focusin',cancel);
+      element.addEventListener('focusout',()=>schedule(750));
+      document.addEventListener('pointerdown',event=>{if(!fine.matches&&!element.contains(event.target))collapse()},true);
+      schedule(delay);
+    }
+    function setPanel(id,buttonId,hidden){
+      const panel=document.getElementById(id),button=document.getElementById(buttonId);
+      panel.classList.toggle('collapsed',hidden);
+      button.setAttribute('aria-expanded',String(!hidden));
+      button.setAttribute('aria-label',hidden?(id==='control-panel'?'Expand control panel':'Expand explanation'):(id==='control-panel'?'Collapse control panel':'Minimize explanation'));
+      if(id==='theory-panel')document.getElementById('theory-panel-body').setAttribute('aria-hidden',String(hidden));
+    }
+    const controls=document.getElementById('control-panel'),theory=document.getElementById('theory-panel');
+    autoCollapse(controls,()=>setPanel('control-panel','collapse-panel',true),3200);
+    autoCollapse(theory,()=>setPanel('theory-panel','theory-collapse-button',true),3600);
+    if(!window.__ri3dControlsReady){
+      document.getElementById('collapse-panel').addEventListener('click',()=>{
+        const hidden=!controls.classList.contains('collapsed');
+        setPanel('control-panel','collapse-panel',hidden);
+        if(!hidden&&innerWidth<=760)setPanel('theory-panel','theory-collapse-button',true);
+      });
+      document.getElementById('theory-collapse-button').addEventListener('click',()=>{
+        const hidden=!theory.classList.contains('collapsed');
+        setPanel('theory-panel','theory-collapse-button',hidden);
+        if(!hidden&&innerWidth<=760)setPanel('control-panel','collapse-panel',true);
+      });
+    }
+    const hud=document.querySelector('.distance-hud'),hudToggle=hud.querySelector('.distance-hud-toggle');
+    function setHud(hidden){
+      hud.classList.toggle('auto-hidden',hidden);
+      hudToggle.textContent=hidden?'+':'−';
+      hudToggle.setAttribute('aria-expanded',String(!hidden));
+      hudToggle.setAttribute('aria-label',hidden?'Show distance readout':'Hide distance readout');
+    }
+    hudToggle.addEventListener('click',()=>setHud(!hud.classList.contains('auto-hidden')));
+    autoCollapse(hud,()=>setHud(true),4400);
+    const tip=document.querySelector('.camera-tip'),tipToggle=tip.querySelector('.camera-tip-toggle');
+    function setTip(hidden){
+      tip.classList.toggle('auto-hidden',hidden);
+      tipToggle.textContent=hidden?'i':'−';
+      tipToggle.setAttribute('aria-expanded',String(!hidden));
+      tipToggle.setAttribute('aria-label',hidden?'Show camera hint':'Hide camera hint');
+    }
+    tipToggle.addEventListener('click',()=>setTip(!tip.classList.contains('auto-hidden')));
+    autoCollapse(tip,()=>setTip(true),5000);
+  })();
   </script>
 </body>
 </html>
