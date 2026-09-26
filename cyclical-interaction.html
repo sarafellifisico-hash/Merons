@@ -294,15 +294,38 @@
         #functionInfo.auto-hidden #functionInfoToggle,#meronicIntro.auto-hidden #meronicIntroToggle{width:100%;height:30px;font:700 12px "Instrument Sans",system-ui,sans-serif}
         @media(max-width:800px){#controlsEdgeZone{top:8px;left:8px}#functionInfo.auto-hidden{width:88px!important}#meronicIntro.auto-hidden{width:114px!important}}
         @media(prefers-reduced-motion:reduce){#controls,#controlsEdgeZone,#icDiagramContainer,#functionInfo,#meronicIntro{transition:none!important}}
+        /* The Builder's cards, type and compact, content-sized panel. */
+        #controls:not(.minimized){height:fit-content;max-height:calc(100dvh - 24px);padding:0;width:312px}
+        #controls .controls-header{margin:0;padding:14px 97px 11px 15px;border-bottom:1px solid rgba(135,205,229,.2)}
+        #controlsEdgeZone .edge-plus{font:700 16px/1 "Fragment Mono",ui-monospace,monospace}
+        #controls .sim-title,#controls .sim-subtitle{margin-right:0}
+        #controls .sim-title{margin-bottom:4px;color:#f0f4ff!important;font:700 20px/1.15 "Instrument Sans",system-ui,sans-serif}
+        #controls .sim-subtitle{margin-bottom:0;color:#8d9bb7;font:400 14px/1.45 "Instrument Sans",system-ui,sans-serif}
+        #controls .controls-tabs{padding:9px 10px;margin:0;border-bottom:1px solid rgba(135,205,229,.2);gap:5px}
+        #controls .controls-tab{padding:8px 3px;font:700 11px/1.15 "Instrument Sans",system-ui,sans-serif;border-radius:9px}
+        #controls .controls-inner{flex:0 1 auto;padding:12px;scrollbar-gutter:stable}
+        #controls .controls-pane{display:grid;gap:10px}
+        #controls .control-card,#controls #energyPanel,#controls #plasmaPanel{min-width:0;margin:0!important;padding:12px!important;border:1px solid rgba(255,255,255,.065)!important;border-radius:13px!important;background:rgba(19,27,42,.66)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.025)}
+        #controls .pane-heading{margin:0 0 9px;color:#8292b3;font:700 11px/1.35 "Instrument Sans",system-ui,sans-serif;letter-spacing:.11em}
+        #controls .slider-container{margin-bottom:11px}
+        #controls .slider-container:last-child{margin-bottom:0}
+        #controls .controls-inner button{font:600 11px/1.3 "Instrument Sans",system-ui,sans-serif;border-radius:9px}
+        #controls .controls-inner label{color:#a6b2ca;font:400 12px/1.45 "Instrument Sans",system-ui,sans-serif}
+        #controls input[type=range]{height:22px}
+        #controls input[type=range]::-moz-range-track{height:4px;background:#253247;border-radius:99px}
+        #controls input[type=range]::-moz-range-thumb{width:16px;height:16px;border:0;border-radius:50%;background:#e9f0ff;box-shadow:0 0 0 4px rgba(124,167,255,.14)}
+        #controls .mono-small{font-family:"Fragment Mono",ui-monospace,monospace}
+        #icDiagramContainer{border-color:rgba(132,204,229,.22);border-radius:16px;background:rgba(5,12,19,.91);font-family:"Instrument Sans",system-ui,sans-serif}
+        #icDiagramContainer:not(.minimized)>h3{text-align:left;margin:0 92px 11px 0;color:#f0f4ff;font:700 20px/1.15 "Instrument Sans",system-ui,sans-serif;letter-spacing:-.02em;text-transform:none}
+        @media(max-width:800px){#controls:not(.minimized){left:8px;top:auto;bottom:8px;width:calc(100vw - 16px);max-height:min(68dvh,650px)}}
     </style>
 </head>
 <body>
     <div id="controls">
         <button class="toggle-btn" onclick="togglePanel('controls', this)" title="Minimize control panel" aria-label="Minimize control panel" aria-expanded="true">−</button>
         <header class="controls-header">
-            <div class="sim-eyebrow">Meronic Model · CI</div>
-            <h2 class="sim-title">Cyclic Interaction</h2>
-            <p class="sim-subtitle">Compalphas in a Vacuum Tube</p>
+            <h2 class="sim-title">Interação Cíclica</h2>
+            <p class="sim-subtitle">Entre Compalphas e Mérons Metalpha</p>
         </header>
         <nav class="controls-tabs" role="tablist" aria-label="Cyclical Interaction controls">
             <button type="button" class="controls-tab active" id="ciTabMotion" role="tab" aria-controls="ciPaneMotion" aria-selected="true" tabindex="0" data-ci-tab="motion">Oscillation</button>
@@ -314,6 +337,7 @@
         </nav>
         <div class="controls-inner">
             <section class="controls-pane" id="ciPaneMotion" role="tabpanel" aria-labelledby="ciTabMotion" data-ci-pane="motion">
+                <div class="control-card">
                 <div class="pane-heading">Oscillation</div>
                 <div class="slider-container">
                     <label for="amplitudeSlider">Oscillatory Amplitude: <span id="amplitudeValue">20°</span> | <span id="amplitudeRadValue">0.349 rad</span></label>
@@ -328,8 +352,10 @@
                     <input type="range" id="gammaSlider" min="0" max="1" value="0" step="0.01">
                 </div>
                 <button id="btnReenergize" style="border-color:#00ff88; color:#00ff88;">↻ Re-energize System</button>
+                </div>
             </section>
             <section class="controls-pane" id="ciPaneStructures" role="tabpanel" aria-labelledby="ciTabStructures" data-ci-pane="structures" hidden>
+                <div class="control-card">
                 <div class="pane-heading">Microscopic row</div>
                 <div class="button-group">
                     <button id="btnDynamicRow" class="active">Dynamic Row — 9 Compalphas (R=1.00)</button>
@@ -338,7 +364,7 @@
                     <label for="compalphaCountSlider" class="count-label"><span>Compalphas: <b id="compalphaCountValue">9</b></span><span>CI Ø <b id="ciSizeValue">2.00</b></span></label>
                     <input type="range" id="compalphaCountSlider" min="2" max="12" value="9" step="1">
                 </div>
-                <div class="pane-separator"></div>
+                </div><div class="control-card">
                 <div class="pane-heading">Visual scale</div>
                 <div class="button-group">
                     <button id="btnViewMicroscopic">Microscopic — Compalphas</button>
@@ -349,8 +375,10 @@
                     <label for="metalphaCountSlider" class="count-label"><span>Metalpha: <b id="metalphaCountValue">12</b></span><span>CI Ø <b id="metalphaCIDiameterValue">1.47</b></span></label>
                     <input type="range" id="metalphaCountSlider" min="1" max="12" value="12" step="1">
                 </div>
+                </div>
             </section>
             <section class="controls-pane" id="ciPaneVisibility" role="tabpanel" aria-labelledby="ciTabVisibility" data-ci-pane="visibility" hidden>
+                <div class="control-card">
                 <div class="pane-heading">Visibility</div>
                 <div class="button-group">
                     <button id="btnToggleComphalphas" style="border-color:#ff4444; color:#ffaaaa;">👁 Hide Compalphas</button>
@@ -358,8 +386,10 @@
                     <button id="btnTogglePlasma" style="border-color:#00ffff; color:#88ffff;">👁 Show Plasma</button>
                     <button id="btnToggleVacuum" style="border-color:#8888ff; color:#aaaaff;">👁 Hide Vacuum Tube</button>
                 </div>
+                </div>
             </section>
             <section class="controls-pane" id="ciPaneFilters" role="tabpanel" aria-labelledby="ciTabFilters" data-ci-pane="filters" hidden>
+                <div class="control-card">
                 <div class="pane-heading">Polarization — Middle → B</div>
                 <div class="button-group">
                     <button id="btnMode4">Polarization — 3 positions × 3 planes</button>
@@ -368,13 +398,16 @@
                     <button id="btnPH" style="border-color:#0080ff; color:#aaccff;">◧ PH — Horizontal (90°) Meio→B</button>
                     <button id="btnResetPol" style="border-color:#ff8800; color:#ffcc88;">↺ Reset Filtros</button>
                 </div>
-                <div class="pane-separator"></div>
+                </div><div class="control-card">
                 <button id="togglePlanoAlpha">Hide Alpha Planes</button>
+                </div>
             </section>
             <section class="controls-pane" id="ciPaneDiagram" role="tabpanel" aria-labelledby="ciTabDiagram" data-ci-pane="diagram" hidden>
+                <div class="control-card">
                 <div class="pane-heading">Diagrama da Interação Cíclica</div>
                 <button type="button" id="btnOpenICDiagram" aria-controls="icDiagramContainer" aria-expanded="false">Open Cyclical Interaction Diagram</button>
                 <p class="pane-note">Explore the Alpha Axes, Alpha Planes, and Cyclical Interaction Circle of two neighboring Compalphas.</p>
+                </div>
             </section>
             <section class="controls-pane" id="ciPaneReadouts" role="tabpanel" aria-labelledby="ciTabReadouts" data-ci-pane="readouts" hidden>
                 <div class="pane-heading">Energy and plasma</div>
@@ -418,13 +451,13 @@
             </section>
         </div>
     </div>
-    <button id="controlsEdgeZone" type="button" aria-controls="controls" aria-expanded="true" aria-label="Open controls" title="Open controls">☷ <span>Controls</span></button>
+    <button id="controlsEdgeZone" type="button" aria-controls="controls" aria-expanded="true" aria-label="Open controls" title="Open controls"><span class="edge-plus" aria-hidden="true">+</span><span>Controls</span></button>
 
     <div id="icDiagramContainer">
         <div id="icResizeHandleEdge" title="Arraste para expandir para a esquerda"></div>
         <div id="icResizeHandle" title="Arraste para a esquerda para aumentar — cresce para a esquerda"></div>
         <button class="toggle-btn" onclick="togglePanel('icDiagramContainer', this)" title="Minimize diagram" aria-label="Minimize diagram" aria-expanded="true">−</button>
-        <h3>CYCLICAL INTERACTION DIAGRAM (CID) — NEIGHBOR PAIR</h3>
+        <h3>Diagrama da Interação Cíclica</h3>
         <div class="ic-content">
         <canvas id="icCanvas" width="800" height="800"></canvas>
         <div class="ic-legend">
