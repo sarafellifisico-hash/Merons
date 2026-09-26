@@ -49,6 +49,20 @@
     .note.auto-hidden{width:38px;height:38px;padding:4px;justify-content:center}
     .note.auto-hidden .note-text{display:none}
     @media(max-width:720px){.note{display:flex;left:70px;bottom:8px}}
+    /* Labeled, stationary tabs match the other simulation workspaces. */
+    .panel.minimized{width:128px!important;height:50px!important}
+    .panel.minimized #panelToggle{width:100%;height:100%;min-height:48px;display:flex;align-items:center;justify-content:center;gap:8px;font:600 12px "Fragment Mono",monospace}
+    .panel.minimized #panelToggle::after{content:"Controls"}
+    #uiPanelPin{position:absolute;top:10px;right:50px;z-index:5;min-width:46px;height:30px;min-height:30px;padding:0 5px}
+    .panel.minimized #uiPanelPin{display:none}
+    .top{margin-right:92px}
+    .panel:not(.minimized) ~ .note{left:336px}
+    .panel.minimized ~ .explanation{left:12px}
+    #explanationIndicator{width:94px;height:42px;min-height:42px;font:600 12px "Fragment Mono",monospace}
+    .note.auto-hidden{width:100px;height:40px;padding:4px}
+    .note.auto-hidden button{width:100%;height:100%;min-height:30px;font-size:12px}
+    @media(max-width:720px){.panel:not(.minimized) ~ .note{left:8px}.panel.minimized ~ .note{left:8px;bottom:66px}.panel.minimized ~ .explanation{left:8px}.top{margin-right:92px}}
+    @media(prefers-reduced-motion:reduce){.panel{transition:none!important}}
   </style>
 </head>
 <body>
@@ -91,54 +105,63 @@
       <p>This presentation makes it possible to visualize the mechanism proposed by TUIDG and compare it with the conventional description of electromagnetic induction. The animation expresses this geometric proposal, whose physical validation still requires quantitative relationships and comparison with experiments.</p>
     </article></div>
   </dialog>
-  <button id="explanationIndicator" type="button" title="Open presentation explanation" aria-label="Open presentation explanation">i</button>
+  <button id="explanationIndicator" type="button" title="Open presentation explanation" aria-label="Open presentation explanation">ⓘ Guide</button>
   <script>
     // The reading panel works independently of the 3D module and its remote imports.
     (()=>{
       const presentation=document.querySelector('#explanation'),openButton=document.querySelector('#explainOpen'),closeButton=document.querySelector('#explainClose');
       const indicator=document.querySelector('#explanationIndicator'),panel=document.querySelector('.panel'),panelToggle=document.querySelector('#panelToggle');
       const fine=matchMedia('(hover:hover) and (pointer:fine)');
+      let panelTimer=0,panelHoldUntil=0;
+      const pin=document.createElement('button');
+      pin.id='uiPanelPin';pin.type='button';pin.textContent='Pin';pin.title='Keep controls open';pin.setAttribute('aria-pressed','false');
+      panelToggle.after(pin);
+      pin.addEventListener('click',()=>{
+        const pinned=panel.classList.toggle('ui-pinned');
+        pin.textContent=pinned?'Unpin':'Pin';pin.title=pinned?'Resume automatic hiding':'Keep controls open';pin.setAttribute('aria-pressed',String(pinned));
+        clearTimeout(panelTimer);
+        if(!pinned)schedulePanel(950);
+      });
       function setPanelHidden(hidden){
         panel.classList.toggle('minimized',hidden);
+        if(hidden){panel.classList.remove('ui-pinned');pin.textContent='Pin';pin.title='Keep controls open';pin.setAttribute('aria-pressed','false')}
         panelToggle.textContent=hidden?'+':'−';
         panelToggle.title=hidden?'Expand panel':'Minimize control panel';
         panelToggle.setAttribute('aria-label',panelToggle.title);
         panelToggle.setAttribute('aria-expanded',String(!hidden));
       }
-      panelToggle.addEventListener('click',()=>{const wasHidden=panel.classList.contains('minimized');setPanelHidden(!wasHidden);if(wasHidden){panelHoldUntil=Date.now()+3000;schedulePanel(3000)}});
-      let panelTimer=0,readingTimer=0,panelHoldUntil=0,readingHoldUntil=0;
-      const schedulePanel=delay=>{clearTimeout(panelTimer);delay=Math.max(delay,panelHoldUntil-Date.now());panelTimer=setTimeout(()=>{if(!panel.matches(':hover'))setPanelHidden(true)},delay)};
+      panelToggle.addEventListener('click',()=>{const wasHidden=panel.classList.contains('minimized');setPanelHidden(!wasHidden);if(wasHidden){panelHoldUntil=Date.now()+5000;schedulePanel(5000)}});
+      const schedulePanel=delay=>{clearTimeout(panelTimer);delay=Math.max(delay,panelHoldUntil-Date.now());panelTimer=setTimeout(()=>{if(!panel.classList.contains('ui-pinned')&&!panel.matches(':hover')&&!panel.contains(document.activeElement))setPanelHidden(true)},delay)};
       panel.addEventListener('pointerenter',()=>clearTimeout(panelTimer));
-      panel.addEventListener('pointerleave',()=>schedulePanel(480));
+      panel.addEventListener('pointerleave',()=>schedulePanel(950));
       panel.addEventListener('focusin',()=>clearTimeout(panelTimer));
-      panel.addEventListener('focusout',()=>schedulePanel(750));
-      document.addEventListener('pointerdown',event=>{if(!fine.matches&&!panel.contains(event.target))setPanelHidden(true)},true);
+      panel.addEventListener('focusout',()=>schedulePanel(1300));
+      document.addEventListener('pointerdown',event=>{if(!fine.matches&&!panel.contains(event.target)&&!panel.classList.contains('ui-pinned'))setPanelHidden(true)},true);
       schedulePanel(3400);
       function openReading(){
         if(presentation.open)return;
         presentation.showModal();
         presentation.querySelector('.explanation-body').scrollTop=0;
-        if(fine.matches){readingHoldUntil=Date.now()+9000;scheduleReading(9000)}
       }
-      function scheduleReading(delay){clearTimeout(readingTimer);delay=Math.max(delay,readingHoldUntil-Date.now());readingTimer=setTimeout(()=>{if(presentation.open&&!presentation.matches(':hover'))presentation.close()},delay)}
       openButton.addEventListener('click',openReading);
       indicator.addEventListener('click',openReading);
       closeButton.addEventListener('click',()=>presentation.close());
-      presentation.addEventListener('pointerenter',()=>clearTimeout(readingTimer));
-      presentation.addEventListener('pointerleave',()=>scheduleReading(550));
+      presentation.addEventListener('click',event=>{
+        const rect=presentation.getBoundingClientRect();
+        if(event.target===presentation&&(event.clientX<rect.left||event.clientX>rect.right||event.clientY<rect.top||event.clientY>rect.bottom))presentation.close();
+      });
       presentation.addEventListener('close',()=>{
-        clearTimeout(readingTimer);
         (panel.classList.contains('minimized')?indicator:openButton).focus({preventScroll:true});
       });
       const note=document.querySelector('#cameraNote'),noteToggle=document.querySelector('#cameraNoteToggle');
       let noteTimer=0,noteHoldUntil=0;
       function setNoteHidden(hidden){
         note.classList.toggle('auto-hidden',hidden);
-        noteToggle.textContent=hidden?'i':'−';
+        noteToggle.textContent=hidden?'ⓘ Camera':'−';
         noteToggle.setAttribute('aria-expanded',String(!hidden));
         noteToggle.setAttribute('aria-label',hidden?'Show camera instructions':'Hide camera instructions');
       }
-      function scheduleNote(delay=480){
+      function scheduleNote(delay=950){
         clearTimeout(noteTimer);
         delay=Math.max(delay,noteHoldUntil-Date.now());
         noteTimer=setTimeout(()=>{if(!note.matches(':hover')&&!note.contains(document.activeElement))setNoteHidden(true)},delay);
