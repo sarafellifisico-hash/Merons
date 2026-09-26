@@ -229,7 +229,7 @@
         #controls .controls-tabs { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:6px; flex:none; margin:0 0 10px; }
         #controls .controls-tab { text-align:center; padding:8px 4px; font:600 13px/1.15 "Instrument Sans",system-ui,sans-serif; }
         #controls .controls-tab[aria-selected="true"] { background:#1a3650; border-color:#6cbaec; color:#e5f6ff; }
-        #controls .controls-inner { flex:0 1 auto; min-height:0; overflow-y:auto; overflow-x:hidden; overscroll-behavior:contain; padding-right:3px; }
+        #controls .controls-inner { flex:0 1 auto; min-height:0; overflow-y:auto; overflow-x:hidden; overscroll-behavior:contain; scrollbar-gutter:stable; padding:0 3px 12px 0; }
         #controls .mono-small { overflow-wrap:anywhere; }
         #controls .controls-inner::-webkit-scrollbar { width:6px; }
         #controls .controls-inner::-webkit-scrollbar-thumb { background:var(--stroke); border-radius:8px; }
@@ -263,6 +263,19 @@
             #controls.minimized { left:8px; bottom:8px; }
             #icDiagramContainer:not(.minimized) { top:8px; bottom:auto; height:min(70vh,620px); }
         }
+        #icDiagramContainer { overflow:hidden; }
+        #icDiagramContainer .ic-content { min-height:0; overflow-y:auto; overflow-x:hidden; overscroll-behavior:contain; scrollbar-gutter:stable; padding:0 6px 12px 0; }
+        #functionInfo { display:flex; flex-direction:column; overflow:hidden; white-space:normal; }
+        #functionInfoText { min-height:0; overflow-y:auto; overflow-x:hidden; overscroll-behavior:contain; scrollbar-gutter:stable; white-space:pre-wrap; overflow-wrap:anywhere; }
+        #functionInfoText::-webkit-scrollbar, #icDiagramContainer .ic-content::-webkit-scrollbar { width:7px; }
+        #functionInfoText::-webkit-scrollbar-thumb { background:#33405f; border-radius:8px; }
+        #functionInfoToggle, #meronicIntroToggle { display:none; width:30px; height:30px; flex:none; padding:0; border:1px solid rgba(114,184,255,.48); border-radius:9px; background:#14263c; color:#a9eaff; font:700 16px/1 "Fragment Mono",monospace; cursor:pointer; }
+        #functionInfo.auto-hidden, #meronicIntro.auto-hidden { width:42px!important; min-width:0; min-height:42px; height:42px; max-height:42px; padding:5px!important; overflow:hidden; display:grid; place-items:center; }
+        #functionInfo.auto-hidden #functionInfoText, #meronicIntro.auto-hidden .meronic-intro-content { display:none; }
+        #functionInfo.auto-hidden #functionInfoToggle, #meronicIntro.auto-hidden #meronicIntroToggle { display:block; }
+        #meronicIntro.visible { pointer-events:auto; }
+        #meronicIntro.auto-hidden { box-sizing:border-box; }
+        @media (max-width:800px) { #functionInfo.auto-hidden, #meronicIntro.auto-hidden { width:42px!important; min-width:0; } }
     </style>
 </head>
 <body>
@@ -407,12 +420,15 @@
     <!-- CAIXA DE EXPLICAÇÕES:
          os textos de cada função ficam no objeto FUNCTION_HELP, no início do JavaScript. -->
     <div id="meronicIntro" aria-hidden="true">
+      <button id="meronicIntroToggle" type="button" title="Show intermediate view explanation" aria-label="Show intermediate view explanation" aria-expanded="false">i</button>
+      <div class="meronic-intro-content">
         <strong>INTERMEDIATE MERONIC VIEW</strong>
         <div id="meronicCountSummary">12 Metalpha Merons · 144 Compalphas · CI Ø 1.47</div>
         <span id="meronicGeometryLabel">Equal axial distribution from electrode tip to electrode tip.</span>
         <span>No particles are emitted — the geometric meshes themselves oscillate.</span>
+      </div>
     </div>
-    <div id="functionInfo" aria-live="polite"></div>
+    <div id="functionInfo" aria-live="polite"><button id="functionInfoToggle" type="button" title="Show function explanation" aria-label="Show function explanation" aria-expanded="false">i</button><div id="functionInfoText"></div></div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/examples/js/controls/OrbitControls.js"></script>
@@ -470,7 +486,8 @@
             const text = typeof entry === 'function' ? entry() : entry;
             if (!text) return;
             selectedHelpControlId = controlId;
-            functionInfo.textContent = text;
+            document.getElementById('functionInfoText').textContent = text;
+            revealFunctionInfo();
         }
 
         document.querySelectorAll('#controls button:not(.toggle-btn), #controls input').forEach(control => {
@@ -480,8 +497,6 @@
             control.addEventListener('click', showHelp);
             control.addEventListener('input', showHelp);
         });
-        selectFunctionHelp('amplitudeSlider');
-
         const ciPanel = document.getElementById('controls');
         const ciPanelBody = ciPanel.querySelector('.controls-inner');
         const ciTabs = [...ciPanel.querySelectorAll('[data-ci-tab]')];
@@ -527,6 +542,10 @@
                 openButton.textContent = minimized ? 'Open Cyclical Interaction Diagram' : 'Close Cyclical Interaction Diagram';
                 openButton.setAttribute('aria-expanded', String(!minimized));
                 openButton.classList.toggle('active', !minimized);
+                if(!minimized){
+                    clearTimeout(diagramTimer);
+                    diagramTimer=setTimeout(()=>{if(!panel.matches(':hover'))setPanelMinimized(panelId,true)},6500);
+                }
             }
         }
         function togglePanel(panelId) {
@@ -536,6 +555,35 @@
 
         const ciEdgeZone = document.getElementById('controlsEdgeZone');
         const ciFinePointer = window.matchMedia('(hover:hover) and (pointer:fine)');
+        function autoCollapseBox(box, toggle, delay=4200) {
+            let timer=0;
+            const setHidden=hidden=>{
+                box.classList.toggle('auto-hidden',hidden);
+                toggle.setAttribute('aria-expanded',String(!hidden));
+            };
+            const schedule=(wait=480)=>{
+                clearTimeout(timer);
+                timer=setTimeout(()=>{if(!box.matches(':hover')&&!box.contains(document.activeElement))setHidden(true)},wait);
+            };
+            box.addEventListener('pointerenter',()=>clearTimeout(timer));
+            box.addEventListener('pointerleave',()=>schedule());
+            box.addEventListener('focusin',()=>clearTimeout(timer));
+            box.addEventListener('focusout',()=>schedule(750));
+            toggle.addEventListener('click',()=>{
+                setHidden(false);
+                toggle.blur();
+                schedule(8000);
+            });
+            document.addEventListener('pointerdown',event=>{
+                if(!ciFinePointer.matches&&!box.contains(event.target))setHidden(true);
+            },true);
+            schedule(delay);
+            return {show:()=>{setHidden(false);schedule(delay)},hide:()=>{clearTimeout(timer);setHidden(true)}};
+        }
+        const functionInfoBox=autoCollapseBox(functionInfo,document.getElementById('functionInfoToggle'),4500);
+        const meronicIntroBox=autoCollapseBox(document.getElementById('meronicIntro'),document.getElementById('meronicIntroToggle'),5000);
+        function revealFunctionInfo(){ functionInfoBox.show(); }
+        selectFunctionHelp('amplitudeSlider');
         let ciHideTimer = 0;
         function revealCIControls() {
             clearTimeout(ciHideTimer);
@@ -558,6 +606,20 @@
         ciEdgeZone.addEventListener('pointerenter', revealCIControls);
         ciFinePointer.addEventListener('change', revealCIControls);
         scheduleCIControlsHide(2400);
+        document.addEventListener('pointerdown',event=>{
+            if(ciFinePointer.matches)return;
+            const diagram=document.getElementById('icDiagramContainer');
+            if(!ciPanel.contains(event.target))setPanelMinimized('controls',true);
+            if(!diagram.contains(event.target)&&event.target.id!=='btnOpenICDiagram')setPanelMinimized('icDiagramContainer',true);
+        },true);
+        const ciDiagram=document.getElementById('icDiagramContainer');
+        let diagramTimer=0;
+        ciDiagram.addEventListener('pointerleave',()=>{
+            clearTimeout(diagramTimer);
+            diagramTimer=setTimeout(()=>{if(!ciDiagram.matches(':hover'))setPanelMinimized('icDiagramContainer',true)},480);
+        });
+        ciDiagram.addEventListener('pointerenter',()=>clearTimeout(diagramTimer));
+        ciDiagram.addEventListener('focusin',()=>clearTimeout(diagramTimer));
 
         document.getElementById('btnOpenICDiagram').addEventListener('click', () => {
             const diagram = document.getElementById('icDiagramContainer');
@@ -1106,8 +1168,11 @@
                 document.getElementById(id).classList.toggle('active',activeViewPreset===mode);
             });
             const intro=document.getElementById('meronicIntro');
+            const wasVisible=intro.classList.contains('visible');
             intro.classList.toggle('visible',meronicMediumVisible);
             intro.setAttribute('aria-hidden',String(!meronicMediumVisible));
+            if(meronicMediumVisible&&!wasVisible)meronicIntroBox.show();
+            if(!meronicMediumVisible)meronicIntroBox.hide();
         }
 
         function markViewCustom(){
