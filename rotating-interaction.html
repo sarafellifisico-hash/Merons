@@ -8293,12 +8293,13 @@ startOpeningCameraSequence();
   const notes=document.getElementById('pairNotes');
   const panel=document.getElementById('panel');
   const fine=matchMedia('(hover:hover) and (pointer:fine)');
-  let noteTimer=0;
+  let noteTimer=0,noteHoldUntil=0;
   function hideNotes(){
     if(!notes.hidden&&!notes.classList.contains('collapsed'))notes.querySelector('#pairNotesToggle')?.click();
   }
   function scheduleNotes(delay=480){
     clearTimeout(noteTimer);
+    delay=Math.max(delay,noteHoldUntil-Date.now());
     noteTimer=setTimeout(()=>{if(!notes.matches(':hover')&&!notes.contains(document.activeElement))hideNotes()},delay);
   }
   notes.addEventListener('pointerenter',()=>clearTimeout(noteTimer));
@@ -8306,7 +8307,7 @@ startOpeningCameraSequence();
   notes.addEventListener('focusin',()=>clearTimeout(noteTimer));
   notes.addEventListener('focusout',()=>scheduleNotes(750));
   notes.addEventListener('click',event=>{
-    if(event.target.closest('#pairNotesToggle')&&!notes.classList.contains('collapsed'))scheduleNotes(7000);
+    if(event.target.closest('#pairNotesToggle')&&!notes.classList.contains('collapsed')){noteHoldUntil=Date.now()+7000;scheduleNotes(7000)}
   });
   new MutationObserver(()=>{
     if(!notes.hidden&&!notes.classList.contains('collapsed'))scheduleNotes(4200);
