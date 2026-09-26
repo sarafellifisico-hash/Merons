@@ -901,6 +901,20 @@ body.pair-mode #panel-build>.control-card:first-child{display:none}
   body.panel-edge-hidden #panelEdgeZone::after,#panelEdgeZone:hover::after{width:5px;opacity:.9}
   body.panel-edge-hidden #pairNotes:not(.collapsed){left:24px}
 }
+/* One visible, labeled control for the dock on desktop and touch screens. */
+#panelEdgeZone{display:flex!important;align-items:center;justify-content:center;gap:7px;position:fixed;z-index:31;left:12px;top:12px;bottom:auto;width:118px;height:42px;padding:0 10px;border:1px solid #416078;border-radius:12px;background:rgba(9,25,36,.96);color:#d8eff7;box-shadow:0 8px 26px #0008;font:700 12px "Instrument Sans",system-ui,sans-serif;cursor:pointer;transition:opacity .18s ease,transform .18s ease}
+#panelEdgeZone::after{display:none!important}
+#panelEdgeZone:hover,#panelEdgeZone:focus-visible{background:#153448;border-color:#69d7f3;outline-color:#69d7f3}
+body:not(.panel-edge-hidden) #panelEdgeZone{opacity:0;visibility:hidden;pointer-events:none;transform:translateY(-5px)}
+body.panel-edge-hidden #panelEdgeZone{opacity:1;visibility:visible;pointer-events:auto;transform:none}
+#panel.edge-hidden{opacity:0!important;pointer-events:none!important}
+#panel.minimized{display:none!important}
+#uiPanelPin{position:absolute;right:50px;top:10px;z-index:41;min-width:40px;height:30px;padding:0 6px;border:1px solid #466479;border-radius:8px;background:#132034;color:#c8ddec;font:700 11px "Instrument Sans",system-ui,sans-serif;cursor:pointer}
+#uiPanelPin[aria-pressed="true"]{border-color:#69d7f3;background:#1a4055;color:#fff}
+#panel .panel-header{padding-right:97px}
+#pairNotes.collapsed #pairNotesToggle{min-width:84px;min-height:36px;color:#a9eaff}
+@media(max-width:760px){#panelEdgeZone{left:8px;top:8px}#panel.edge-hidden{transform:none!important}#uiPanelPin{top:10px}}
+@media(prefers-reduced-motion:reduce){#panel,#panelEdgeZone{transition:none!important}}
 </style>
 </head>
 <body>
@@ -983,7 +997,7 @@ body.pair-mode #panel-build>.control-card:first-child{display:none}
 </div>
 
 <section id="pairNotes" hidden aria-live="polite"></section>
-<div id="panelEdgeZone" aria-hidden="true" title="Move the pointer here to reveal the control panel"></div>
+<button id="panelEdgeZone" type="button" aria-controls="panel" aria-expanded="true" aria-label="Open controls" title="Open controls">☷ <span>Controls</span></button>
 <aside id="panel" aria-label="Meronic Builder controls">
   <button id="toggleBtn" title="Minimize control panel" aria-label="Minimize control panel" aria-expanded="true">−</button>
 
@@ -3077,47 +3091,7 @@ document.getElementById('toggleBtn').addEventListener('click', () => {
   btn.title = minimized ? 'Open control panel' : 'Minimize control panel';
 });
 
-function setupPanelEdgeReveal() {
-  const edgeZone = document.getElementById('panelEdgeZone');
-  if (!edgeZone) return;
-  const finePointer = window.matchMedia('(hover:hover) and (pointer:fine)');
-  let hideTimer = 0;
-
-  const cancelHide = () => {
-    if (hideTimer) window.clearTimeout(hideTimer);
-    hideTimer = 0;
-  };
-  const reveal = () => {
-    cancelHide();
-    panel.classList.remove('edge-hidden');
-    document.body.classList.remove('panel-edge-hidden');
-  };
-  const hide = (ignoreFocus = false) => {
-    if (!finePointer.matches || panel.matches(':hover') || edgeZone.matches(':hover') || (!ignoreFocus && panel.contains(document.activeElement))) return;
-    panel.classList.add('edge-hidden');
-    document.body.classList.add('panel-edge-hidden');
-  };
-  const scheduleHide = (delay = 380, ignoreFocus = false) => {
-    cancelHide();
-    if (!finePointer.matches) return;
-    hideTimer = window.setTimeout(() => hide(ignoreFocus), delay);
-  };
-
-  window.revealControlPanel = reveal;
-  edgeZone.addEventListener('pointerenter', reveal);
-  edgeZone.addEventListener('pointerleave', () => scheduleHide(650, true));
-  panel.addEventListener('pointerenter', reveal);
-  panel.addEventListener('pointerleave', () => scheduleHide(380, true));
-  panel.addEventListener('focusin', reveal);
-  panel.addEventListener('focusout', () => scheduleHide(500));
-  finePointer.addEventListener?.('change', event => {
-    if (event.matches) scheduleHide(900);
-    else reveal();
-  });
-  scheduleHide(1800);
-}
-
-setupPanelEdgeReveal();
+window.__meronicMainPanelReady = true;
 
 let faceOpacityValue = 0.5;
 function updateFaceOpacity(val){
@@ -7718,7 +7692,7 @@ function syncPairNotesToggle(){
   note.classList.toggle('collapsed',pairNotesMinimized);
   const button=document.getElementById('pairNotesToggle');
   if(!button)return;
-  button.textContent=pairNotesMinimized?'+ Read explanation':'− Hide explanation';
+  button.textContent=pairNotesMinimized?'ⓘ Guide':'− Hide guide';
   button.setAttribute('aria-expanded',String(!pairNotesMinimized));
   document.getElementById('pairNotesContent').hidden=pairNotesMinimized;
 }
@@ -8293,21 +8267,25 @@ startOpeningCameraSequence();
   const notes=document.getElementById('pairNotes');
   const panel=document.getElementById('panel');
   const fine=matchMedia('(hover:hover) and (pointer:fine)');
-  if(!window.revealControlPanel){
-    const zone=document.getElementById('panelEdgeZone'),toggle=document.getElementById('toggleBtn');
-    let edgeTimer=0;
-    const reveal=()=>{clearTimeout(edgeTimer);panel.classList.remove('edge-hidden');document.body.classList.remove('panel-edge-hidden')};
-    const schedule=(delay=450)=>{clearTimeout(edgeTimer);edgeTimer=setTimeout(()=>{
-      if(fine.matches&&!panel.matches(':hover')&&!zone.matches(':hover')){
-        panel.classList.add('edge-hidden');document.body.classList.add('panel-edge-hidden');
-      }
-    },delay)};
-    zone.addEventListener('pointerenter',reveal);
-    zone.addEventListener('pointerleave',()=>schedule(650));
-    panel.addEventListener('pointerenter',reveal);
-    panel.addEventListener('pointerleave',()=>schedule());
-    panel.addEventListener('focusin',reveal);
-    panel.addEventListener('focusout',()=>schedule(750));
+  const zone=document.getElementById('panelEdgeZone'),toggle=document.getElementById('toggleBtn');
+  let edgeTimer=0;
+  function reveal(){
+    clearTimeout(edgeTimer);
+    panel.classList.remove('edge-hidden');
+    panel.inert=false;
+    document.body.classList.remove('panel-edge-hidden');
+    zone.setAttribute('aria-expanded','true');
+  }
+  function hidePanel(ignoreHover=false){
+    if(panel.classList.contains('ui-pinned')||(!ignoreHover&&(panel.matches(':hover')||panel.contains(document.activeElement))))return;
+    if(fine.matches){panel.classList.add('edge-hidden');panel.inert=true}
+    else if(!panel.classList.contains('minimized'))toggle.click();
+    document.body.classList.add('panel-edge-hidden');
+    zone.setAttribute('aria-expanded','false');
+  }
+  function schedulePanel(delay=900){clearTimeout(edgeTimer);edgeTimer=setTimeout(()=>hidePanel(),delay)}
+  window.revealControlPanel=reveal;
+  if(!window.__meronicMainPanelReady){
     toggle.addEventListener('click',()=>{
       reveal();const hidden=panel.classList.toggle('minimized');
       document.body.classList.toggle('pair-panel-minimized',hidden);
@@ -8315,11 +8293,41 @@ startOpeningCameraSequence();
       toggle.setAttribute('aria-expanded',String(!hidden));
       toggle.setAttribute('aria-label',hidden?'Open control panel':'Minimize control panel');
     });
-    schedule(2200);
   }
+  toggle.addEventListener('click',()=>{
+    if(panel.classList.contains('minimized')){
+      panel.classList.remove('ui-pinned');document.body.classList.add('panel-edge-hidden');
+      zone.setAttribute('aria-expanded','false');
+    }
+  });
+  zone.addEventListener('click',()=>{
+    if(panel.classList.contains('minimized'))toggle.click();
+    reveal();schedulePanel(6500);
+  });
+  panel.addEventListener('pointerenter',()=>clearTimeout(edgeTimer));
+  panel.addEventListener('pointerleave',()=>schedulePanel());
+  panel.addEventListener('focusin',()=>clearTimeout(edgeTimer));
+  panel.addEventListener('focusout',()=>schedulePanel(1300));
+  const pin=document.createElement('button');
+  pin.id='uiPanelPin';pin.type='button';pin.textContent='Pin';pin.title='Keep controls open';
+  pin.setAttribute('aria-label','Keep controls open');pin.setAttribute('aria-pressed','false');
+  toggle.after(pin);
+  pin.addEventListener('click',()=>{
+    const pinned=panel.classList.toggle('ui-pinned');
+    pin.textContent=pinned?'Unpin':'Pin';pin.setAttribute('aria-pressed',String(pinned));
+    pin.setAttribute('aria-label',pinned?'Allow controls to auto-hide':'Keep controls open');
+    if(pinned)clearTimeout(edgeTimer);else schedulePanel(1800);
+  });
+  document.addEventListener('keydown',event=>{
+    if(event.key==='Escape'&&!panel.classList.contains('edge-hidden')&&!panel.classList.contains('minimized')){
+      panel.classList.remove('ui-pinned');pin.setAttribute('aria-pressed','false');pin.textContent='Pin';
+      hidePanel(true);zone.focus({preventScroll:true});
+    }
+  });
+  schedulePanel(3400);
   let noteTimer=0,noteHoldUntil=0;
   function hideNotes(){
-    if(!notes.hidden&&!notes.classList.contains('collapsed'))notes.querySelector('#pairNotesToggle')?.click();
+    if(!notes.hidden&&!notes.classList.contains('collapsed')&&!notes.classList.contains('ui-pinned'))notes.querySelector('#pairNotesToggle')?.click();
   }
   function scheduleNotes(delay=480){
     clearTimeout(noteTimer);
@@ -8331,7 +8339,9 @@ startOpeningCameraSequence();
   notes.addEventListener('focusin',()=>clearTimeout(noteTimer));
   notes.addEventListener('focusout',()=>scheduleNotes(750));
   notes.addEventListener('click',event=>{
-    if(event.target.closest('#pairNotesToggle')&&!notes.classList.contains('collapsed')){noteHoldUntil=Date.now()+7000;scheduleNotes(7000)}
+    if(!event.target.closest('#pairNotesToggle'))return;
+    notes.classList.toggle('ui-pinned',!notes.classList.contains('collapsed'));
+    if(notes.classList.contains('ui-pinned'))clearTimeout(noteTimer);
   });
   new MutationObserver(()=>{
     if(!notes.hidden&&!notes.classList.contains('collapsed'))scheduleNotes(4200);
@@ -8340,11 +8350,8 @@ startOpeningCameraSequence();
   document.addEventListener('pointerdown',event=>{
     if(fine.matches)return;
     if(!notes.contains(event.target))hideNotes();
-    if(!panel.contains(event.target)&&!panel.classList.contains('minimized'))document.getElementById('toggleBtn').click();
+    if(!panel.contains(event.target)&&!zone.contains(event.target))hidePanel(true);
   },true);
-  setTimeout(()=>{
-    if(!fine.matches&&!panel.matches(':hover')&&!panel.contains(document.activeElement)&&!panel.classList.contains('minimized'))document.getElementById('toggleBtn').click();
-  },3400);
 })();
 </script>
 </body>
