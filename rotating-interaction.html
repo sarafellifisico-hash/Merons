@@ -874,6 +874,14 @@ body.pair-mode #panel-build>.control-card:first-child{display:none}
 #pairNotes.collapsed,body.pair-panel-minimized #pairNotes.collapsed{left:auto;right:16px;bottom:16px;width:max-content;max-width:calc(100vw - 32px);height:auto;max-height:none;margin:0;padding:7px;border-radius:12px;overflow:visible}
 #pairNotes.collapsed #pairNotesToggle{position:static;float:none;margin:0}
 
+/* Scrollbars stay within each panel, including the expandable explanation. */
+#panel .panel-inner{overflow-x:hidden;overscroll-behavior:contain;padding-bottom:20px}
+#pairNotes:not(.collapsed){overflow:hidden}
+#pairNotesContent:not([hidden]){max-height:calc(min(24vh,190px) - 40px);min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;scrollbar-gutter:stable;padding-right:6px}
+#pairNotesContent::-webkit-scrollbar{width:7px}
+#pairNotesContent::-webkit-scrollbar-thumb{background:#324a60;border-radius:8px}
+@media(max-width:760px){#pairNotesContent:not([hidden]){max-height:calc(min(26vh,170px) - 40px)}}
+
 /* Desktop edge reveal: the panel stays available without occupying the scene. */
 #panelEdgeZone{display:none}
 @media (hover:hover) and (pointer:fine){
@@ -8278,6 +8286,41 @@ function refreshPresentationFrame(){
 window.addEventListener('resize',refreshPresentationFrame);
 syncPairUI();
 startOpeningCameraSequence();
+</script>
+<script>
+// Auto-collapse the pair explanation and keep the mobile control-panel handle available.
+(()=>{
+  const notes=document.getElementById('pairNotes');
+  const panel=document.getElementById('panel');
+  const fine=matchMedia('(hover:hover) and (pointer:fine)');
+  let noteTimer=0;
+  function hideNotes(){
+    if(!notes.hidden&&!notes.classList.contains('collapsed'))notes.querySelector('#pairNotesToggle')?.click();
+  }
+  function scheduleNotes(delay=480){
+    clearTimeout(noteTimer);
+    noteTimer=setTimeout(()=>{if(!notes.matches(':hover')&&!notes.contains(document.activeElement))hideNotes()},delay);
+  }
+  notes.addEventListener('pointerenter',()=>clearTimeout(noteTimer));
+  notes.addEventListener('pointerleave',()=>scheduleNotes());
+  notes.addEventListener('focusin',()=>clearTimeout(noteTimer));
+  notes.addEventListener('focusout',()=>scheduleNotes(750));
+  notes.addEventListener('click',event=>{
+    if(event.target.closest('#pairNotesToggle')&&!notes.classList.contains('collapsed'))scheduleNotes(7000);
+  });
+  new MutationObserver(()=>{
+    if(!notes.hidden&&!notes.classList.contains('collapsed'))scheduleNotes(4200);
+  }).observe(notes,{attributes:true,attributeFilter:['hidden','data-mode']});
+  if(!notes.hidden)scheduleNotes(4200);
+  document.addEventListener('pointerdown',event=>{
+    if(fine.matches)return;
+    if(!notes.contains(event.target))hideNotes();
+    if(!panel.contains(event.target)&&!panel.classList.contains('minimized'))document.getElementById('toggleBtn').click();
+  },true);
+  setTimeout(()=>{
+    if(!fine.matches&&!panel.matches(':hover')&&!panel.contains(document.activeElement)&&!panel.classList.contains('minimized'))document.getElementById('toggleBtn').click();
+  },3400);
+})();
 </script>
 </body>
 </html>
