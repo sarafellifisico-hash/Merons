@@ -1029,24 +1029,25 @@ svg {
   playButton.addEventListener('click',()=>{playing=!playing;playButton.textContent=playing?'Pause':'Play';if(!playing&&mode==='triad')time=Math.PI/2});
   resetButton.addEventListener('click',()=>{settings[mode]=mode==='triad'?{amp:45,freq:.6}:{amp:20,freq:.6};amp.value=settings[mode].amp;freq.value=settings[mode].freq;time=mode==='triad'?Math.PI/2:0;playing=true;playButton.textContent='Pause';sync()});
   function setPanelCollapsed(collapsed){root.classList.toggle('panel-collapsed',collapsed);panelToggle.textContent=collapsed?'+':'−';panelToggle.setAttribute('aria-label',collapsed?'Expand control panel':'Minimize control panel');panelToggle.setAttribute('aria-expanded',String(!collapsed))}
-  panelToggle.addEventListener('click',()=>setPanelCollapsed(!root.classList.contains('panel-collapsed')));
+  panelToggle.addEventListener('click',()=>{const wasHidden=root.classList.contains('panel-collapsed');setPanelCollapsed(!wasHidden);if(wasHidden)holdPanel(3000)});
   function autoHide(element,hide,initialDelay){
-    let timer=0;const fine=matchMedia('(hover:hover) and (pointer:fine)');
+    let timer=0,holdUntil=0;const fine=matchMedia('(hover:hover) and (pointer:fine)');
     const cancel=()=>clearTimeout(timer);
-    const schedule=delay=>{cancel();timer=setTimeout(()=>{if(!element.matches(':hover'))hide()},delay)};
+    const schedule=delay=>{cancel();delay=Math.max(delay,holdUntil-Date.now());timer=setTimeout(()=>{if(!element.matches(':hover'))hide()},delay)};
     element.addEventListener('pointerenter',cancel);
     element.addEventListener('pointerleave',()=>schedule(480));
     element.addEventListener('focusin',cancel);
     element.addEventListener('focusout',()=>schedule(750));
     document.addEventListener('pointerdown',event=>{if(!fine.matches&&!element.contains(event.target))hide()},true);
     schedule(initialDelay);
+    return delay=>{holdUntil=Date.now()+delay;schedule(delay)};
   }
   const panel=root.querySelector('.ic2d-panel');
-  autoHide(panel,()=>setPanelCollapsed(true),3400);
+  const holdPanel=autoHide(panel,()=>setPanelCollapsed(true),3400);
   const captionToggle=caption.querySelector('.ic2d-caption-toggle');
   function setCaptionHidden(hidden){caption.classList.toggle('auto-hidden',hidden);captionToggle.setAttribute('aria-expanded',String(!hidden))}
-  captionToggle.addEventListener('click',()=>setCaptionHidden(false));
-  autoHide(caption,()=>setCaptionHidden(true),4500);
+  captionToggle.addEventListener('click',()=>{setCaptionHidden(false);holdCaption(6500)});
+  const holdCaption=autoHide(caption,()=>setCaptionHidden(true),4500);
   let infoTimer=0;
   function setCanvasInfoVisible(visible){canvasInfoVisible=visible;infoToggle.hidden=visible;draw()}
   function scheduleInfoHide(delay){clearTimeout(infoTimer);infoTimer=setTimeout(()=>setCanvasInfoVisible(false),delay)}
