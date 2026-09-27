@@ -973,6 +973,7 @@ svg {
 #ic2d-lab .ic2d-panel-toggle{top:10px;right:10px}
 #ic2d-lab #uiPanelPin{right:50px}
 #ic2d-lab.panel-collapsed .ic2d-heading{display:none}
+#ic2d-lab canvas{width:min(100%,calc(100dvh - 28px),1040px);height:auto;max-height:100%;object-fit:contain}
 #ic2d-lab [hidden]{display:none!important}
 #ic2d-lab #ic2d-strobe-toggle{width:100%;margin-top:10px;text-align:left;white-space:normal;line-height:1.4;padding:10px 11px}
 #ic2d-lab #ic2d-strobe-controls{margin-top:10px}
@@ -1052,10 +1053,10 @@ svg {
     for(let i=0;i<STROBE_FRAMES;i++){
       if(i===strobeFrame)continue;
       const theta=frameAngle(i),tan=Math.tan(theta);
-      ctx.save();ctx.globalAlpha=.16;
+      ctx.save();ctx.globalAlpha=.12;
       for(const [x,planeAngle,axisAngle] of [[Ax,-theta,Math.atan2(-1,-tan)],[Bx,theta,Math.atan2(1,-tan)]]){
         const ux=Math.cos(planeAngle),uy=Math.sin(planeAngle);
-        for(const radius of [44,108,172])for(const direction of [-1,1]){
+        for(const radius of [83,172])for(const direction of [-1,1]){
           ctx.beginPath();ctx.strokeStyle='#d3e1e6';ctx.lineWidth=1;
           ctx.arc(x+direction*ux*radius,cy+direction*uy*radius,radius,0,Math.PI*2);ctx.stroke();
         }
