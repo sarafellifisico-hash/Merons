@@ -268,8 +268,7 @@ Check your Browserslist config to be sure that your targets are set up correctly
     box-shadow:inset 0 1px rgba(255,255,255,.09);
   }
   .builder-mode-button:focus-visible { outline:2px solid #69d7f3;outline-offset:2px; }
-  .force-triad-grid,.force-action-grid,.force-scale-grid { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px; }
-  .force-scale-grid { grid-template-columns:repeat(3,minmax(0,1fr)); }
+  .force-triad-grid,.force-action-grid { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px; }
   .force-action-grid { margin-top:8px; }
   .force-action.wide { grid-column:1/-1; }
   .force-action {
@@ -281,6 +280,7 @@ Check your Browserslist config to be sure that your targets are set up correctly
   }
   .force-action:hover { border-color:#69d7f3;background:#183c50; }
   .force-action.active { border-color:#69d7f3;background:#183c50;color:#fff; }
+  .force-action.running { border-color:#62a9ff;background:#15325a;color:#d8ecff; }
   .force-action.off { color:#8292a8; }
   .force-action:disabled { opacity:.48;cursor:not-allowed; }
   .force-action:focus-visible { outline:2px solid #69d7f3;outline-offset:2px; }
@@ -313,92 +313,6 @@ Check your Browserslist config to be sure that your targets are set up correctly
   .chip { border: 1px solid #26334a; background: #121a28; color:#b9c7e2; border-radius: 999px; padding: 5px 11px; font-size: 12px; cursor: pointer; }
   .chip.active { background:#1a2842; border-color:#3a5d9e; color:#dbe8ff;}
   #meronCountContainer { position: relative; }
-  .metalpha-chip {
-    position: relative;
-    min-width: 44px !important;
-    min-height: 44px;
-    display: grid;
-    place-items: center;
-    border-radius: 10px;
-    border: 1px solid #d7b85b;
-    background: linear-gradient(145deg, #4f3c12, #211b10);
-    color: #fff2b0;
-    font-size: 15px;
-    font-weight: 800;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,.14), 0 0 0 2px rgba(215,184,91,.08);
-    z-index: 3;
-  }
-  .metalpha-chip:hover,
-  .metalpha-chip:focus-within {
-    border-color: #ffe06b;
-    background: linear-gradient(145deg, #66501a, #2c2311);
-    color: #fff8d2;
-  }
-  .metalpha-chip.active {
-    border-color: #fff0a3;
-    background: linear-gradient(145deg, #80651e, #392c10);
-    color: #fff;
-    box-shadow: 0 0 0 3px rgba(255,224,107,.14), 0 8px 22px rgba(0,0,0,.35);
-  }
-  .metalpha-chip::after {
-    content: "Mα";
-    position: absolute;
-    right: 3px;
-    bottom: 2px;
-    color: #ffe06b;
-    font: 700 7px/1 "Fragment Mono", monospace;
-    opacity: .8;
-  }
-  #metalphaMenu {
-    position: fixed;
-    z-index: 80;
-    width: 272px;
-    padding: 12px;
-    border: 1px solid rgba(255,224,107,.34);
-    border-radius: 15px;
-    background: rgba(13,17,26,.97);
-    box-shadow: 0 20px 55px rgba(0,0,0,.62), inset 0 1px 0 rgba(255,255,255,.06);
-    backdrop-filter: blur(18px);
-    opacity: 0;
-    visibility: hidden;
-    transform: translateY(-5px);
-    transition: opacity .14s ease, transform .14s ease, visibility .14s;
-  }
-  #metalphaMenu.open {
-    opacity: 1;
-    visibility: visible;
-    transform: translateY(0);
-  }
-  .metalpha-menu-title {
-    margin: 1px 2px 10px;
-    color: #ffe899;
-    font: 700 10px/1.2 "Fragment Mono", monospace;
-    letter-spacing: .1em;
-    text-transform: uppercase;
-  }
-  .triad-menu-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:6px; }
-  .metalpha-action {
-    border: 1px solid #2e3b55;
-    border-radius: 9px;
-    background: #151e2d;
-    color: #cbd7ec;
-    padding: 8px 7px;
-    font-size: 11.5px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: .14s ease;
-  }
-  .metalpha-action:hover,
-  .metalpha-action:focus-visible { border-color:#6386c3; background:#1c2940; color:#fff; outline:none; }
-  .metalpha-action.off { color:#7d8aa2; background:#101722; text-decoration:line-through; }
-  .metalpha-action.wide { width:100%; margin-top:7px; }
-  .metalpha-action.running {
-    border-color:#62a9ff;
-    background:#15325a;
-    color:#d8ecff;
-    box-shadow:0 0 18px rgba(68,109,255,.18);
-  }
-  .metalpha-menu-hint { margin:9px 2px 1px; color:#71809b; font-size:10.5px; line-height:1.35; }
   #presentationContextMenu {
     position:fixed; z-index:120; width:333px; height:280px;
     opacity:0; visibility:hidden; transform:scale(.94); transform-origin:center;
@@ -579,17 +493,17 @@ Check your Browserslist config to be sure that your targets are set up correctly
 .meron-picker summary::after { content:"⌄"; color:#7aa8ff; font-size:15px; transition:transform .15s ease; }
 .meron-picker[open] summary::after { transform:rotate(180deg); }
 .meron-picker[open] summary { border-bottom:1px solid #26344b; background:#141f31; }
-.meron-summary-value { margin-left:auto; color:#ffe06b; font:700 11px "Fragment Mono", monospace; }
+.meron-summary-value { margin-left:auto; color:#a9ceff; font:700 11px "Fragment Mono", monospace; }
 #meronCountContainer {
   grid-template-columns:repeat(7,minmax(0,1fr));
+  grid-auto-rows:31px;
   gap:5px;
-  max-height:115px;
+  max-height:373px;
   overflow-y:auto;
+  overscroll-behavior:contain;
   padding:9px;
 }
 #meronCountContainer .chip { min-width:0 !important; width:100%; padding:6px 2px; border-radius:8px; font-size:11px; }
-#meronCountContainer .metalpha-chip { min-width:0 !important; min-height:31px; font-size:12px; border-radius:8px; }
-#meronCountContainer .metalpha-chip::after { font-size:6px; }
 .meron-info { margin-top:9px; text-align:center; color:#b8c6e5; font-size:11.5px; font-weight:600; line-height:1.35; }
 .panel-note { margin-top:7px; color:#6f7f9e; font-size:10.8px; line-height:1.4; }
 
@@ -985,22 +899,6 @@ body.panel-edge-hidden #panelEdgeZone{opacity:1;visibility:visible;pointer-event
   </a>
 </nav>
 
-<div id="metalphaMenu" role="menu" aria-label="Metalpha Meron controls">
-  <div class="metalpha-menu-title">Metalpha Meron · Alpha Triads</div>
-  <div class="triad-menu-grid">
-    <button class="metalpha-action triad-toggle" data-triad="0" role="menuitem" aria-pressed="true">Hide αT 1</button>
-    <button class="metalpha-action triad-toggle" data-triad="1" role="menuitem" aria-pressed="true">Hide αT 2</button>
-    <button class="metalpha-action triad-toggle" data-triad="2" role="menuitem" aria-pressed="true">Hide αT 3</button>
-    <button class="metalpha-action triad-toggle" data-triad="3" role="menuitem" aria-pressed="true">Hide αT 4</button>
-  </div>
-  <button id="separateTriadsBtn" class="metalpha-action wide" role="menuitem">Separate Tα to Exd</button>
-  <button id="runRIBtn" class="metalpha-action wide" role="menuitem">Rotating Interaction</button>
-  <button id="fiveMeronRIBtn" class="metalpha-action wide" role="menuitem">5-Metalpha RI Distances</button>
-  <button id="toggleFiveMetalphasBtn" class="metalpha-action wide" role="menuitem">Hide Metalpha Structures</button>
-  <button id="returnToMeronModeBtn" class="metalpha-action wide" role="menuitem">Return to Meron Mode</button>
-  <p class="metalpha-menu-hint">Hover Mα to keep this menu open. The controls act on the central Metalpha.</p>
-</div>
-
 <section id="pairNotes" hidden aria-live="polite"></section>
 <button id="panelEdgeZone" type="button" aria-controls="panel" aria-expanded="true" aria-label="Open controls" title="Open controls"><span class="edge-plus" aria-hidden="true">+</span><span>Controls</span></button>
 <aside id="panel" aria-label="Meronic Builder controls">
@@ -1012,8 +910,8 @@ body.panel-edge-hidden #panelEdgeZone{opacity:1;visibility:visible;pointer-event
   </header>
 
   <div class="builder-mode-switch" role="group" aria-label="Meronic Builder mode">
-    <button type="button" class="builder-mode-button active" data-builder-mode="build" aria-pressed="true">Construção Merônica</button>
-    <button type="button" class="builder-mode-button" data-builder-mode="forces" aria-pressed="false">Forças Merônicas</button>
+    <button type="button" class="builder-mode-button active" data-builder-mode="build" aria-pressed="true">Meronic Construction</button>
+    <button type="button" class="builder-mode-button" data-builder-mode="forces" aria-pressed="false">Meronic Forces</button>
   </div>
   <nav class="panel-tabs" role="tablist" aria-label="Control categories">
     <button class="panel-tab active" type="button" role="tab" aria-selected="true" aria-controls="panel-build" data-panel-tab="build">Build</button>
@@ -1028,11 +926,23 @@ body.panel-edge-hidden #panelEdgeZone{opacity:1;visibility:visible;pointer-event
     <section id="panel-build" class="panel-pane active" role="tabpanel" data-panel-pane="build">
       <div class="control-card">
         <div class="sec-title">Metalpha Merons · Mass Number</div>
-        <details id="meronPicker" class="meron-picker">
+        <details id="meronPicker" class="meron-picker" open>
           <summary><span>Select 1–303</span><span class="meron-summary-value" id="meronCountVal">1 Meron</span></summary>
           <div id="meronCountContainer" class="grid"></div>
         </details>
         <div class="meron-info" id="meronInfo">Metalpha Meron (12 Ca) – Mass 1</div>
+      </div>
+
+      <div class="control-card">
+        <div class="sec-title" id="circleTypesTitle">Circle Types and Diameters</div>
+        <div class="compact-checks">
+          <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" class="check layer-toggle" data-layer="0" checked><span><span class="legend-dot" style="background:#ffffff"></span>IMC · D 0.464</span></label>
+          <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" class="check layer-toggle" data-layer="1" checked><span><span class="legend-dot" style="background:#446dff"></span>MC · D 1</span></label>
+          <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" class="check layer-toggle" data-layer="2" checked><span><span class="legend-dot" style="background:#00e676"></span>IMoC · D 12</span></label>
+          <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" class="check layer-toggle" data-layer="3" checked><span><span class="legend-dot" style="background:#ffe04a"></span>MoC · D 24</span></label>
+          <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" class="check layer-toggle" data-layer="4" checked><span><span class="legend-dot" style="background:#ff9a2e"></span>IExC · D 48</span></label>
+          <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" class="check layer-toggle" data-layer="5" checked><span><span class="legend-dot" style="background:#ff0000"></span>ExC · D 96</span></label>
+        </div>
       </div>
 
       <div class="control-card">
@@ -1062,36 +972,24 @@ body.panel-edge-hidden #panelEdgeZone{opacity:1;visibility:visible;pointer-event
       <div class="control-card">
         <div class="sec-title">Alpha Triads · Rotating Interaction</div>
         <div class="force-triad-grid">
-          <button type="button" class="force-action" data-force-triad="0">Hide Tα 1</button>
-          <button type="button" class="force-action" data-force-triad="1">Hide Tα 2</button>
-          <button type="button" class="force-action" data-force-triad="2">Hide Tα 3</button>
-          <button type="button" class="force-action" data-force-triad="3">Hide Tα 4</button>
+          <button type="button" class="force-action triad-toggle" data-triad="0" aria-pressed="true">Hide Tα 1</button>
+          <button type="button" class="force-action triad-toggle" data-triad="1" aria-pressed="true">Hide Tα 2</button>
+          <button type="button" class="force-action triad-toggle" data-triad="2" aria-pressed="true">Hide Tα 3</button>
+          <button type="button" class="force-action triad-toggle" data-triad="3" aria-pressed="true">Hide Tα 4</button>
         </div>
         <div class="force-action-grid">
-          <button type="button" class="force-action" data-force-command="separateTriadsBtn">Separate Tα to Exd</button>
-          <button type="button" class="force-action" data-force-command="runRIBtn">Run Rotating Interaction</button>
-          <button type="button" class="force-action" data-force-command="toggleFiveMetalphasBtn">Hide Metalpha Structures</button>
-          <button type="button" class="force-action" data-force-command="returnToMeronModeBtn">Return to Meron Mode</button>
+          <button type="button" id="separateTriadsBtn" class="force-action">Separate Tα to Exd</button>
+          <button type="button" id="runRIBtn" class="force-action">Run Rotating Interaction</button>
+          <button type="button" id="toggleFiveMetalphasBtn" class="force-action">Hide Metalpha Structures</button>
+          <button type="button" id="returnToMeronModeBtn" class="force-action">Return to Meron Mode</button>
         </div>
       </div>
       <div class="control-card">
-        <div class="sec-title">Three Rotating Interaction distances</div>
-        <div class="force-scale-grid">
-          <button type="button" class="force-action" data-force-distance="md">Md · 1</button>
-          <button type="button" class="force-action" data-force-distance="mod">Mod · 24</button>
-          <button type="button" class="force-action" data-force-distance="exd">Exd · 96</button>
-        </div>
-        <p class="panel-note">The scale buttons form the central Metalpha and four external Metalpha Merons.</p>
-      </div>
-      <div class="control-card">
-        <div class="sec-title" id="circleTypesTitle">Circle Types and Diameters</div>
-        <div class="compact-checks">
-          <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" class="check layer-toggle" data-layer="0" checked><span><span class="legend-dot" style="background:#ffffff"></span>IMC · D 0.464</span></label>
-          <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" class="check layer-toggle" data-layer="1" checked><span><span class="legend-dot" style="background:#446dff"></span>MC · D 1</span></label>
-          <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" class="check layer-toggle" data-layer="2" checked><span><span class="legend-dot" style="background:#00e676"></span>IMoC · D 12</span></label>
-          <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" class="check layer-toggle" data-layer="3" checked><span><span class="legend-dot" style="background:#ffe04a"></span>MoC · D 24</span></label>
-          <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" class="check layer-toggle" data-layer="4" checked><span><span class="legend-dot" style="background:#ff9a2e"></span>IExC · D 48</span></label>
-          <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" class="check layer-toggle" data-layer="5" checked><span><span class="legend-dot" style="background:#ff0000"></span>ExC · D 96</span></label>
+        <div class="sec-title">Rotating Interaction Distances</div>
+        <div class="pair-presets" aria-label="Four-Alpha-Triad interaction scales">
+          <button type="button" class="pair-preset" data-pair-mode="meronic" aria-pressed="false">Meronic distance<small>Meronic · Intrameronic — Strong force</small></button>
+          <button type="button" class="pair-preset" data-pair-mode="molecular" aria-pressed="false">Molecular distance<small>Molecular · Intramolecular — Electrostatic / electromagnetic forces</small></button>
+          <button type="button" class="pair-preset" data-pair-mode="exomolecular" aria-pressed="false">Exomolecular distance<small>Exomolecular · Intraexomolecular — Gravitational force</small></button>
         </div>
       </div>
       <div class="control-card">
@@ -1110,11 +1008,6 @@ body.panel-edge-hidden #panelEdgeZone{opacity:1;visibility:visible;pointer-event
           </div>
           <input type="range" id="interMeronDist" min="0" max="2000" step="1" value="0">
           <div class="panel-note" id="interMeronHint">At 0.0, Cuboctahedrons touch vertex to vertex.</div>
-          <div class="pair-presets" aria-label="Four-Alpha-Triad interaction scales">
-            <button type="button" class="pair-preset" data-pair-mode="meronic" aria-pressed="false">Meronic distance<small>Meronic · Intrameronic — Strong force</small></button>
-            <button type="button" class="pair-preset" data-pair-mode="molecular" aria-pressed="false">Molecular distance<small>Molecular · Intramolecular — Electrostatic / electromagnetic forces</small></button>
-            <button type="button" class="pair-preset" data-pair-mode="exomolecular" aria-pressed="false">Exomolecular distance<small>Exomolecular · Intraexomolecular — Gravitational force</small></button>
-          </div>
           <div id="pairActions" hidden><button id="pairFit" type="button" class="cam-btn">All six IC</button><button id="pairFocus" type="button" class="cam-btn">Selected scale</button><button id="pairExit" type="button" class="cam-btn">Return to Builder</button></div>
           <div id="pairRotationSlot" hidden></div>
         </div>
@@ -2984,15 +2877,15 @@ function syncForceControls(force = false) {
   if (!force && key === lastForceControlsKey) return;
   lastForceControlsKey = key;
 
-  document.querySelectorAll('[data-force-triad]').forEach(button => {
-    const index = Number(button.dataset.forceTriad);
+  document.querySelectorAll('.triad-toggle').forEach(button => {
+    const index = Number(button.dataset.triad);
     const visible = metalphaTriadVisible[index] !== false;
     button.textContent = (visible ? 'Hide' : 'Show') + ' Tα ' + (index + 1);
     button.classList.toggle('off', !visible);
     button.setAttribute('aria-pressed', String(visible));
   });
-  document.querySelectorAll('[data-force-command]').forEach(button => {
-    const command = button.dataset.forceCommand;
+  ['separateTriadsBtn', 'runRIBtn', 'toggleFiveMetalphasBtn', 'returnToMeronModeBtn'].forEach(command => {
+    const button = document.getElementById(command);
     const labels = {
       separateTriadsBtn: triadsSeparated ? 'Join Tα · Exd' : 'Separate Tα to Exd',
       runRIBtn: riRunning ? 'Stop Rotating Interaction' : 'Run Rotating Interaction',
@@ -3007,11 +2900,6 @@ function syncForceControls(force = false) {
     button.classList.toggle('active', pressed);
     button.classList.toggle('off', command === 'toggleFiveMetalphasBtn' && !fiveMeronMetalphasVisible);
     button.setAttribute('aria-pressed', String(pressed));
-  });
-  document.querySelectorAll('[data-force-distance]').forEach(button => {
-    const selected = fiveMeronRIDistanceMode && fiveMeronRIDistanceStage === button.dataset.forceDistance;
-    button.classList.toggle('active', selected);
-    button.setAttribute('aria-pressed', String(selected));
   });
 }
 
@@ -3043,25 +2931,6 @@ function activatePanelTab(tabName, remember = true) {
 document.querySelectorAll('[data-builder-mode]').forEach(button => {
   button.addEventListener('click', () => activatePanelTab(button.dataset.builderMode));
 });
-document.querySelectorAll('[data-force-triad]').forEach(button => {
-  button.addEventListener('click', () => {
-    document.querySelector('.triad-toggle[data-triad="' + button.dataset.forceTriad + '"]')?.click();
-    syncForceControls(true);
-  });
-});
-document.querySelectorAll('[data-force-command]').forEach(button => {
-  button.addEventListener('click', () => {
-    document.getElementById(button.dataset.forceCommand)?.click();
-    syncForceControls(true);
-  });
-});
-document.querySelectorAll('[data-force-distance]').forEach(button => {
-  button.addEventListener('click', () => {
-    document.querySelector('[data-distance-stage="' + button.dataset.forceDistance + '"]')?.click();
-    syncForceControls(true);
-  });
-});
-
 panelTabs.forEach((tab, index) => {
   tab.addEventListener('click', () => activatePanelTab(tab.dataset.panelTab));
   tab.addEventListener('keydown', event => {
@@ -5616,35 +5485,8 @@ function selectMetalpha() {
   if (comparisonMode) rebuildComparisonWorkspace();
 }
 
-function positionMetalphaMenu(chip) {
-  const menu = document.getElementById('metalphaMenu');
-  const rect = chip.getBoundingClientRect();
-  const left = Math.min(rect.right + 10, window.innerWidth - menu.offsetWidth - 12);
-  const top = Math.min(Math.max(12, rect.top - 4), window.innerHeight - menu.offsetHeight - 12);
-  menu.style.left = `${Math.max(12, left)}px`;
-  menu.style.top = `${top}px`;
-}
-
-function setupMetalphaMenu(chip) {
-  const menu = document.getElementById('metalphaMenu');
-  let closeTimer = null;
-  const open = () => {
-    clearTimeout(closeTimer);
-    menu.classList.add('open');
-    positionMetalphaMenu(chip);
-  };
-  const close = () => {
-    clearTimeout(closeTimer);
-    closeTimer = setTimeout(() => menu.classList.remove('open'), 180);
-  };
-  chip.addEventListener('mouseenter', open);
-  chip.addEventListener('mouseleave', close);
-  chip.addEventListener('focusin', open);
-  chip.addEventListener('focusout', close);
-  menu.addEventListener('mouseenter', open);
-  menu.addEventListener('mouseleave', close);
-
-  menu.querySelectorAll('.triad-toggle').forEach(button => {
+function setupMetalphaControls() {
+  document.querySelectorAll('.triad-toggle').forEach(button => {
     const triadIndex = Number(button.dataset.triad);
     button.addEventListener('click', event => {
       event.stopPropagation();
@@ -5669,11 +5511,6 @@ function setupMetalphaMenu(chip) {
     if (!fiveMeronRIDistanceMode) selectMetalpha();
     riRunning = !riRunning;
     applyRIState();
-  });
-
-  document.getElementById('fiveMeronRIBtn').addEventListener('click', event => {
-    event.stopPropagation();
-    activateFiveMeronRIDistance('exd', true);
   });
 
   document.getElementById('toggleFiveMetalphasBtn').addEventListener('click', event => {
@@ -5742,7 +5579,7 @@ function setupPresentationContextMenu() {
         <div class="context-control"><label><span>Metalpha Merons · Mass Number</span><span><input class="context-number" type="number" min="1" max="303" step="1" value="${currentMeronCount}" data-context-meron-count></span></label></div>
         <div class="context-actions">${quickMasses.map(count=>button(`${count} ${count===1?'Meron':'Merons'}`,`data-context-meron="${count}"`,currentMeronCount===count?'active':'')).join('')}</div>
         <p class="context-status">${document.getElementById('meronInfo').textContent}</p>
-        <div class="context-actions">${button('Open Construção Merônica','data-context-panel-tab="build"','wide')}</div>`;
+        <div class="context-actions">${button('Open Meronic Construction','data-context-panel-tab="build"','wide')}</div>`;
     }
     if (category === 'layers') {
       const layers = [['IMC','0.464'],['MC','1'],['IMoC','12'],['MoC','24'],['IExC','48'],['ExC','96']];
@@ -5787,7 +5624,7 @@ function setupPresentationContextMenu() {
         ${button('Mod · 24','data-context-ri-distance="mod"',fiveMeronRIDistanceMode&&activeDistance==='mod'?'active':'')}
         ${button('Exd · 96','data-context-ri-distance="exd"',fiveMeronRIDistanceMode&&activeDistance==='exd'?'active':'')}
       </div></div>
-      <div class="context-actions">${button('Open Forças Merônicas','data-context-panel-tab="forces"','wide')}</div>`;
+      <div class="context-actions">${button('Open Meronic Forces','data-context-panel-tab="forces"','wide')}</div>`;
     }
     if (category === 'cyclic') {
       const amp = document.getElementById('danceAmp');
@@ -6054,7 +5891,7 @@ function createMeronCountUI() {
   container.innerHTML = '';
   for(let i=1; i<=MAX_MERON_COUNT; i++){
     const label = document.createElement('label');
-    label.className = `chip text-center ${i===1? 'metalpha-chip active' : ''}`;
+    label.className = `chip text-center ${i===1 ? 'active' : ''}`;
     label.style.minWidth = '32px';
     label.innerHTML = `<input type="radio" name="meronCount" value="${i}" class="sr-only">${i}`;
     label.addEventListener('click', () => {
@@ -6065,8 +5902,6 @@ function createMeronCountUI() {
       document.querySelectorAll('#meronCountContainer .chip').forEach(c => c.classList.remove('active'));
       label.classList.add('active');
       updateMeronInfo(i);
-      const picker = document.getElementById('meronPicker');
-      if (picker) picker.open = false;
       // === AUTO-DESLIGA DANÇA SE NÃO FOR METALPHA (massa 1) ===
       if(i !== 1 && typeof danceEnabled !== 'undefined'){
         danceEnabled = false;
@@ -6083,7 +5918,6 @@ function createMeronCountUI() {
       if (comparisonMode) rebuildComparisonWorkspace();
     });
     container.appendChild(label);
-    if (i === 1) setupMetalphaMenu(label);
   }
 }
 
@@ -7970,6 +7804,7 @@ document.getElementById('pairFocus').addEventListener('click',()=>fitPairCamera(
 
 // Initialization
 createMeronCountUI();
+setupMetalphaControls();
 setupPresentationContextMenu();
 syncMeronCountUI();
 buildUniverse();
@@ -8128,10 +7963,6 @@ window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
-  const chip = document.querySelector('.metalpha-chip');
-  if (chip && document.getElementById('metalphaMenu').classList.contains('open')) {
-    positionMetalphaMenu(chip);
-  }
 });
 
 let zoomedOut = false;
