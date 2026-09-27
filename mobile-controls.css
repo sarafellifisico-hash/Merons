@@ -1,0 +1,356 @@
+/* Shared touch controls for the six TUIDG simulators.
+   The left dock opens Controls; the right dock opens the local guide or diagram.
+   Expanded panels rise from the same bottom edge and scroll within the viewport. */
+@media (max-width: 900px) {
+  body[data-tuidg-simulator] {
+    --mobile-edge: max(8px, env(safe-area-inset-bottom));
+    --mobile-dock-bg: rgba(9, 25, 36, .94);
+    --mobile-dock-border: rgba(105, 215, 243, .48);
+    --mobile-panel-bg: rgba(5, 12, 19, .94);
+  }
+
+  /* Common bottom sheets. Keep the heading visible and scroll only the body. */
+  body[data-tuidg-simulator="builder"] #panel:not(.minimized),
+  body[data-tuidg-simulator="rotating"] :is(#control-panel, #theory-panel):not(.collapsed),
+  body[data-tuidg-simulator="cyclical"] :is(#controls, #icDiagramContainer):not(.minimized),
+  body[data-tuidg-simulator="diagrams"] #ic2d-lab:not(.panel-collapsed) .ic2d-panel,
+  body[data-tuidg-simulator="double-slit"] .panel:not(.minimized),
+  body[data-tuidg-simulator="current"] .panel:not(.minimized) {
+    top: auto !important;
+    bottom: var(--mobile-edge) !important;
+    left: 8px !important;
+    right: 8px !important;
+    width: auto !important;
+    max-width: none !important;
+    height: fit-content !important;
+    min-height: 0 !important;
+    max-height: min(68dvh, 650px) !important;
+    border: 1px solid rgba(132, 204, 229, .24) !important;
+    border-radius: 16px !important;
+    background: var(--mobile-panel-bg) !important;
+    box-shadow: 0 18px 54px rgba(0, 0, 0, .55) !important;
+    backdrop-filter: blur(13px);
+  }
+  body[data-tuidg-simulator="diagrams"] #ic2d-lab.panel-collapsed .ic2d-panel {
+    top: auto !important;
+    bottom: var(--mobile-edge) !important;
+    left: 8px !important;
+    right: auto !important;
+    width: 128px !important;
+    height: 48px !important;
+    min-height: 0 !important;
+    max-height: 48px !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: none !important;
+    box-shadow: none !important;
+  }
+  body[data-tuidg-simulator="cyclical"] #icDiagramContainer:not(.minimized) {
+    height: min(68dvh, 650px) !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+  }
+  body[data-tuidg-simulator="builder"].pair-mode #panel:not(.minimized) {
+    top: auto !important;
+    bottom: var(--mobile-edge) !important;
+    max-height: min(68dvh, 650px) !important;
+  }
+
+  /* All collapsed panel shells have the same 128 × 48 px tap target. */
+  body[data-tuidg-simulator="rotating"] :is(#control-panel, #theory-panel).collapsed,
+  body[data-tuidg-simulator="cyclical"] #icDiagramContainer.minimized,
+  body[data-tuidg-simulator="double-slit"] .panel.minimized,
+  body[data-tuidg-simulator="current"] .panel.minimized {
+    top: auto !important;
+    bottom: var(--mobile-edge) !important;
+    width: 128px !important;
+    min-width: 0 !important;
+    height: 48px !important;
+    min-height: 0 !important;
+    max-height: 48px !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 12px !important;
+    background: none !important;
+    box-shadow: none !important;
+  }
+  body[data-tuidg-simulator="rotating"] #control-panel.collapsed,
+  body[data-tuidg-simulator="double-slit"] .panel.minimized,
+  body[data-tuidg-simulator="current"] .panel.minimized { left: 8px !important; right: auto !important; }
+  body[data-tuidg-simulator="rotating"] #theory-panel.collapsed,
+  body[data-tuidg-simulator="cyclical"] #icDiagramContainer.minimized { left: auto !important; right: 8px !important; }
+  body[data-tuidg-simulator="rotating"] :is(.control-panel.collapsed .panel-header, .theory-panel.collapsed .theory-panel-header),
+  body[data-tuidg-simulator="double-slit"] .panel.minimized .panel-head {
+    width: 100% !important;
+    height: 48px !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+  }
+
+  /* Shared pill color, typography, shape and touch area. */
+  body[data-tuidg-simulator="builder"] #panelEdgeZone,
+  body[data-tuidg-simulator="rotating"] :is(.control-panel.collapsed .collapse-button, .theory-panel.collapsed .theory-collapse-button),
+  body[data-tuidg-simulator="cyclical"] :is(#controlsEdgeZone, #icDiagramContainer.minimized .toggle-btn),
+  body[data-tuidg-simulator="diagrams"] #ic2d-lab.panel-collapsed .ic2d-panel-toggle,
+  body[data-tuidg-simulator="double-slit"] :is(.panel.minimized .panel-toggle, #explanationIndicator),
+  body[data-tuidg-simulator="current"] :is(.panel.minimized #panelToggle, #explanationIndicator) {
+    box-sizing: border-box !important;
+    width: 128px !important;
+    min-width: 128px !important;
+    height: 48px !important;
+    min-height: 48px !important;
+    margin: 0 !important;
+    padding: 0 9px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    border: 1px solid var(--mobile-dock-border) !important;
+    border-radius: 12px !important;
+    background: var(--mobile-dock-bg) !important;
+    color: #d8eff7 !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .46) !important;
+    font: 700 12px/1.2 "Instrument Sans", system-ui, sans-serif !important;
+    text-align: center !important;
+    text-decoration: none;
+    touch-action: manipulation;
+  }
+  body[data-tuidg-simulator="builder"] #panelEdgeZone,
+  body[data-tuidg-simulator="cyclical"] #controlsEdgeZone {
+    top: auto !important;
+    bottom: var(--mobile-edge) !important;
+    left: 8px !important;
+    right: auto !important;
+    z-index: 150 !important;
+  }
+  body[data-tuidg-simulator="double-slit"] #explanationIndicator,
+  body[data-tuidg-simulator="current"] #explanationIndicator {
+    top: auto !important;
+    bottom: var(--mobile-edge) !important;
+    left: auto !important;
+    right: 8px !important;
+  }
+  body[data-tuidg-simulator="double-slit"] .explanation.open + #explanationIndicator,
+  body[data-tuidg-simulator="current"] .explanation[open] ~ #explanationIndicator {
+    display: none !important;
+  }
+  body[data-tuidg-simulator="diagrams"] #ic2d-lab.panel-collapsed .ic2d-panel-toggle {
+    position: static !important;
+  }
+  body[data-tuidg-simulator="cyclical"] #icDiagramContainer.minimized .toggle-btn {
+    position: static !important;
+  }
+
+  /* Secondary explanation buttons use the same finish and 48 px touch height. */
+  body[data-tuidg-simulator="builder"] #pairNotes.collapsed #pairNotesToggle,
+  body[data-tuidg-simulator="cyclical"] :is(#functionInfo.auto-hidden #functionInfoToggle, #meronicIntro.auto-hidden #meronicIntroToggle),
+  body[data-tuidg-simulator="diagrams"] #ic2d-lab .ic2d-mode-caption.auto-hidden .ic2d-caption-toggle,
+  body[data-tuidg-simulator="double-slit"] :is(.tip.auto-hidden .auto-indicator, .legend.auto-hidden .auto-indicator, .exp-box.auto-hidden .auto-indicator),
+  body[data-tuidg-simulator="current"] .note.auto-hidden button,
+  body[data-tuidg-simulator="rotating"] :is(.distance-hud.auto-hidden .distance-hud-toggle, .camera-tip.auto-hidden .camera-tip-toggle) {
+    box-sizing: border-box !important;
+    height: 48px !important;
+    min-height: 48px !important;
+    padding: 0 8px !important;
+    border: 1px solid var(--mobile-dock-border) !important;
+    border-radius: 12px !important;
+    background: var(--mobile-dock-bg) !important;
+    color: #d8eff7 !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .46) !important;
+    font: 700 12px/1.2 "Instrument Sans", system-ui, sans-serif !important;
+    text-align: center !important;
+    touch-action: manipulation;
+  }
+  body[data-tuidg-simulator] button:focus-visible {
+    outline: 2px solid #69d7f3;
+    outline-offset: 2px;
+  }
+
+  /* Builder's contextual guide opens at the same edge as its controls. */
+  body[data-tuidg-simulator="builder"] #pairNotes.collapsed {
+    left: auto !important;
+    right: 8px !important;
+    bottom: var(--mobile-edge) !important;
+    width: 128px !important;
+    height: 48px !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: none !important;
+    box-shadow: none !important;
+  }
+  body[data-tuidg-simulator="builder"] #pairNotes.collapsed #pairNotesToggle { width: 128px !important; }
+  body[data-tuidg-simulator="builder"] #pairNotes:not(.collapsed) {
+    top: auto !important;
+    bottom: var(--mobile-edge) !important;
+    left: 8px !important;
+    right: 8px !important;
+    width: auto !important;
+    max-height: min(68dvh, 650px) !important;
+  }
+  body[data-tuidg-simulator="builder"] #pairNotesContent:not([hidden]) {
+    max-height: calc(min(68dvh, 650px) - 52px) !important;
+  }
+
+  /* Rotating Interaction: distance and camera hints stay clear of the dock. */
+  body[data-tuidg-simulator="rotating"] .distance-hud {
+    top: 8px !important;
+    bottom: auto !important;
+    left: 50% !important;
+    right: auto !important;
+    width: min(320px, calc(100% - 16px)) !important;
+    min-width: 0 !important;
+    transform: translateX(-50%) !important;
+  }
+  body[data-tuidg-simulator="rotating"] .distance-hud.auto-hidden {
+    width: 128px !important;
+    height: 48px !important;
+    min-width: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: none !important;
+  }
+  body[data-tuidg-simulator="rotating"] .distance-hud.auto-hidden .distance-hud-toggle { width: 128px !important; }
+  body[data-tuidg-simulator="rotating"] .camera-tip {
+    top: 64px !important;
+    bottom: auto !important;
+    right: 8px !important;
+  }
+  body[data-tuidg-simulator="rotating"] .camera-tip.auto-hidden {
+    width: 112px !important;
+    height: 48px !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: none !important;
+  }
+  body[data-tuidg-simulator="rotating"] .camera-tip.auto-hidden .camera-tip-toggle { width: 112px !important; }
+
+  /* Cyclical Interaction has three contextual right-side indicators. */
+  body[data-tuidg-simulator="cyclical"] #functionInfo.auto-hidden,
+  body[data-tuidg-simulator="cyclical"] #meronicIntro.auto-hidden {
+    top: auto !important;
+    left: auto !important;
+    right: 8px !important;
+    width: 112px !important;
+    min-width: 0 !important;
+    height: 48px !important;
+    min-height: 0 !important;
+    max-height: 48px !important;
+    padding: 0 !important;
+    transform: none !important;
+    border: 0 !important;
+    background: none !important;
+    box-shadow: none !important;
+  }
+  body[data-tuidg-simulator="cyclical"] #functionInfo.auto-hidden { bottom: calc(var(--mobile-edge) + 56px) !important; }
+  body[data-tuidg-simulator="cyclical"] #meronicIntro.auto-hidden { bottom: calc(var(--mobile-edge) + 112px) !important; }
+  body[data-tuidg-simulator="cyclical"] :is(#functionInfo.auto-hidden #functionInfoToggle, #meronicIntro.auto-hidden #meronicIntroToggle) {
+    width: 112px !important;
+  }
+  body[data-tuidg-simulator="cyclical"] #functionInfo:not(.auto-hidden) {
+    bottom: calc(var(--mobile-edge) + 56px) !important;
+    left: 8px !important;
+    right: 8px !important;
+    width: auto !important;
+    max-height: min(36dvh, 300px) !important;
+    transform: none !important;
+  }
+  body[data-tuidg-simulator="cyclical"] #meronicIntro.visible:not(.auto-hidden) {
+    top: auto !important;
+    bottom: calc(var(--mobile-edge) + 112px) !important;
+    left: 8px !important;
+    right: 8px !important;
+    width: auto !important;
+    min-width: 0 !important;
+    transform: none !important;
+  }
+
+  /* CI Diagrams' View chip occupies the right side of the same dock. */
+  body[data-tuidg-simulator="diagrams"] #ic2d-lab .ic2d-mode-caption {
+    left: auto !important;
+    right: 8px !important;
+    bottom: var(--mobile-edge) !important;
+  }
+  body[data-tuidg-simulator="diagrams"] #ic2d-lab .ic2d-mode-caption.auto-hidden {
+    width: 112px !important;
+    height: 48px !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: none !important;
+  }
+  body[data-tuidg-simulator="diagrams"] #ic2d-lab .ic2d-mode-caption.auto-hidden .ic2d-caption-toggle { width: 112px !important; }
+
+  /* Double Slit's stage should fit the iframe, even on short phones. */
+  body[data-tuidg-simulator="double-slit"],
+  body[data-tuidg-simulator="double-slit"] .app {
+    height: 100dvh !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+  }
+  body[data-tuidg-simulator="double-slit"] #viewport {
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+  }
+  body[data-tuidg-simulator="double-slit"] .explanation.open,
+  body[data-tuidg-simulator="current"] .explanation[open] {
+    top: auto !important;
+    bottom: var(--mobile-edge) !important;
+    left: 8px !important;
+    right: 8px !important;
+    width: auto !important;
+    height: fit-content !important;
+    min-height: 0 !important;
+    max-height: min(68dvh, 650px) !important;
+    margin: 0 !important;
+    border-radius: 16px !important;
+    background: rgba(5, 12, 19, .97) !important;
+  }
+  body[data-tuidg-simulator="double-slit"] :is(.tip.auto-hidden, .legend.auto-hidden) {
+    width: 112px !important;
+    height: 48px !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: none !important;
+  }
+  body[data-tuidg-simulator="double-slit"] :is(.tip.auto-hidden, .legend.auto-hidden) .auto-indicator { width: 112px !important; }
+  body[data-tuidg-simulator="double-slit"] .exp-box.auto-hidden {
+    width: 48px !important;
+    height: 48px !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: none !important;
+  }
+  body[data-tuidg-simulator="double-slit"] .exp-box.auto-hidden .auto-indicator { width: 48px !important; padding: 0 !important; }
+  body[data-tuidg-simulator="double-slit"] .legend.auto-hidden { bottom: calc(var(--mobile-edge) + 56px) !important; left: 8px !important; }
+  body[data-tuidg-simulator="double-slit"] .tip.auto-hidden { left: 8px !important; }
+  body[data-tuidg-simulator="double-slit"] :is(.explanation-close, #explainClose),
+  body[data-tuidg-simulator="current"] #explainClose {
+    min-height: 44px;
+    border-radius: 9px;
+    background: #132034;
+    color: #dbeaf6;
+  }
+
+  /* Cyclic Current's camera hint lives at the top, clear of both dock buttons. */
+  body[data-tuidg-simulator="current"] .note {
+    top: 8px !important;
+    bottom: auto !important;
+    left: auto !important;
+    right: 8px !important;
+  }
+  body[data-tuidg-simulator="current"] .note.auto-hidden {
+    width: 112px !important;
+    height: 48px !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: none !important;
+  }
+  body[data-tuidg-simulator="current"] .note.auto-hidden button { width: 112px !important; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body[data-tuidg-simulator] :is(#panelEdgeZone, #controlsEdgeZone, #explanationIndicator) {
+    transition: none !important;
+  }
+}
