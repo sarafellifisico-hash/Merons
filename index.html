@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="description" content="Six interactive TUIDG mechanisms: Meronic Builder, Rotating Interaction, Cyclical Interaction, IC 2D Laboratory, Double Slit and Cyclic Current.">
+  <meta name="description" content="Six interactive TUIDG mechanisms: Meronic Builder, Rotating Interaction, Cyclical Interaction, CI Diagrams, Double Slit and Cyclic Current.">
   <title>TUIDG — Interactive Mechanisms</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Fragment+Mono&family=Instrument+Sans:wght@400;500;600;700&display=swap');
@@ -50,7 +50,7 @@
       <button class="tab" id="tab-rotating" role="tab" aria-selected="true" aria-controls="panel-rotating" data-target="rotating">Meronic Builder</button>
       <button class="tab" id="tab-compalpha-ri" role="tab" aria-selected="false" aria-controls="panel-compalpha-ri" data-target="compalpha-ri" tabindex="-1">Rotating Interaction</button>
       <button class="tab" id="tab-cyclical" role="tab" aria-selected="false" aria-controls="panel-cyclical" data-target="cyclical" tabindex="-1">Cyclical Interaction</button>
-      <button class="tab" id="tab-laboratory" role="tab" aria-selected="false" aria-controls="panel-laboratory" data-target="laboratory" tabindex="-1">IC 2D Laboratory</button>
+      <button class="tab" id="tab-laboratory" role="tab" aria-selected="false" aria-controls="panel-laboratory" data-target="laboratory" tabindex="-1">CI Diagrams</button>
       <button class="tab" id="tab-double-slit" role="tab" aria-selected="false" aria-controls="panel-double-slit" data-target="double-slit" tabindex="-1">Double Slit</button>
       <button class="tab" id="tab-current" role="tab" aria-selected="false" aria-controls="panel-current" data-target="current" tabindex="-1">Cyclic Current</button>
     </nav>
@@ -61,7 +61,7 @@
     <iframe class="sim active" id="panel-rotating" role="tabpanel" aria-labelledby="tab-rotating" title="Meronic Builder — From the Metalpha Meron to Meron 303" src="rotating-interaction.html?v=builder-controls-20260927" data-key="rotating"></iframe>
     <iframe class="sim" id="panel-compalpha-ri" role="tabpanel" aria-labelledby="tab-compalpha-ri" title="Rotating Interaction Between Two Compalphas" data-src="compalpha-rotating-interaction.html?v=panels-en-bench-20260926" data-key="compalpha-ri"></iframe>
     <iframe class="sim" id="panel-cyclical" role="tabpanel" aria-labelledby="tab-cyclical" title="Cyclical Interaction Between Compalphas and Metalpha Merons" data-src="cyclical-interaction.html?v=panels-en-bench-20260926" data-key="cyclical"></iframe>
-    <iframe class="sim" id="panel-laboratory" role="tabpanel" aria-labelledby="tab-laboratory" title="Cyclical Interaction Diagrams Between Two or Three Compalphas" data-src="ic-2d-laboratory.html?v=panels-en-bench-20260926" data-key="laboratory"></iframe>
+    <iframe class="sim" id="panel-laboratory" role="tabpanel" aria-labelledby="tab-laboratory" title="CI Diagrams — Between Two or Three Compalphas" data-src="ic-2d-laboratory.html?v=apparent-motion-20260927" data-key="laboratory"></iframe>
     <iframe class="sim" id="panel-double-slit" role="tabpanel" aria-labelledby="tab-double-slit" title="Cyclical Interaction and Its Oscillatory Interference" data-src="double-slit-compalpha.html?v=panels-en-bench-20260926" data-key="double-slit"></iframe>
     <iframe class="sim" id="panel-current" role="tabpanel" aria-labelledby="tab-current" title="Cyclical Interaction With Electric Current Amplitude" data-src="cyclic-current.html?v=panels-en-bench-20260926" data-key="current"></iframe>
   </main>
@@ -74,7 +74,7 @@
         rotating:'rotating-interaction.html?v=builder-controls-20260927',
         'compalpha-ri':'compalpha-rotating-interaction.html?v=panels-en-bench-20260926',
         cyclical:'cyclical-interaction.html?v=panels-en-bench-20260926',
-        laboratory:'ic-2d-laboratory.html?v=panels-en-bench-20260926',
+        laboratory:'ic-2d-laboratory.html?v=apparent-motion-20260927',
         'double-slit':'double-slit-compalpha.html?v=panels-en-bench-20260926',
         current:'cyclic-current.html?v=panels-en-bench-20260926'
       };
