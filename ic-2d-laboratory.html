@@ -885,7 +885,6 @@ svg {
   <section class="ic2d-stage" aria-label="Animated Cyclical Interaction diagram">
     <canvas id="ic2d-canvas" width="1040" height="1040" role="img" aria-label="Cyclical Interaction between Compalphas A and B"></canvas>
     <div class="ic2d-mode-caption" id="ic2d-mode-caption"><button class="ic2d-caption-toggle" type="button" aria-label="Show diagram caption" aria-expanded="false">ⓘ View</button><span class="ic2d-caption-text">Compalphas A–B · Common Interaction Circle</span></div>
-    <button class="ic2d-info-toggle" type="button" aria-label="Show diagram measurements" title="Show diagram measurements" hidden>ⓘ Readout</button>
   </section>
 </div>
 
@@ -940,7 +939,6 @@ svg {
 #ic2d-lab .ic2d-mode-caption.auto-hidden{width:38px;height:38px;padding:3px;display:grid;place-items:center}
 #ic2d-lab .ic2d-mode-caption.auto-hidden .ic2d-caption-text{display:none}
 #ic2d-lab .ic2d-mode-caption.auto-hidden .ic2d-caption-toggle{display:grid;place-items:center;width:30px;height:30px;padding:0;font-size:16px;color:#a8cfff}
-#ic2d-lab .ic2d-info-toggle{position:absolute;left:16px;top:16px;z-index:3;width:38px;height:38px;padding:0;font-size:18px;color:#a8cfff}
 #ic2d-lab button[hidden]{display:none!important}
 @media(max-width:900px){#ic2d-lab{grid-template-columns:1fr;height:100vh;min-height:0;padding:8px;overflow:hidden}#ic2d-lab .ic2d-panel{position:absolute;z-index:5;left:8px;right:8px;bottom:8px;width:auto;height:330px;max-height:calc(100vh - 16px)}#ic2d-lab .ic2d-stage{height:100%;border-radius:16px}#ic2d-lab.panel-collapsed{grid-template-columns:1fr}#ic2d-lab.panel-collapsed .ic2d-panel{left:8px;right:auto;bottom:8px;width:52px;height:52px}}
 #ic2d-lab.panel-collapsed{grid-template-columns:128px minmax(0,1fr)}
@@ -953,7 +951,6 @@ svg {
 #ic2d-lab .ic2d-heading{padding-right:83px}
 #ic2d-lab .ic2d-mode-caption.auto-hidden{width:86px;height:40px}
 #ic2d-lab .ic2d-mode-caption.auto-hidden .ic2d-caption-toggle{width:78px;height:32px;font:700 11px "Instrument Sans",system-ui,sans-serif}
-#ic2d-lab .ic2d-info-toggle{width:110px;height:40px;font:700 11px "Instrument Sans",system-ui,sans-serif}
 @media(max-width:900px){#ic2d-lab.panel-collapsed{grid-template-columns:1fr}#ic2d-lab.panel-collapsed .ic2d-panel{width:128px;height:50px}}
 @media(prefers-reduced-motion:reduce){#ic2d-lab .ic2d-panel,#ic2d-lab .ic2d-mode-caption,#ic2d-lab button{transition:none!important}}
 /* Match the Meronic Builder's fixed heading, cards and control styling. */
@@ -1002,7 +999,6 @@ svg {
   const stateValue=document.getElementById('ic2d-state-value');
   const stateCopy=document.getElementById('ic2d-state-copy');
   const caption=document.getElementById('ic2d-mode-caption');
-  const infoToggle=root.querySelector('.ic2d-info-toggle');
   const panelToggle=root.querySelector('.ic2d-panel-toggle');
   const modes=[...root.querySelectorAll('.ic2d-mode')];
   const strobeSection=document.getElementById('ic2d-strobe-section');
@@ -1012,7 +1008,7 @@ svg {
   const frameCounter=document.getElementById('ic2d-frame-counter');
   const framePrev=document.getElementById('ic2d-frame-prev');
   const frameNext=document.getElementById('ic2d-frame-next');
-  let mode='compalphas',playing=true,tabActive=true,time=0,last=performance.now(),canvasInfoVisible=true;
+  let mode='compalphas',playing=true,tabActive=true,time=0,last=performance.now();
   const STROBE_FRAMES=9, STROBE_HOLD_SECONDS=.8;
   let strobeActive=false,strobePlaying=false,strobeWasPlaying=true,strobeFrame=0,strobeDirection=1,strobeElapsed=0;
   const settings={compalphas:{amp:20,freq:.6},magnets:{amp:20,freq:.6},triad:{amp:45,freq:.6}};
@@ -1045,25 +1041,37 @@ svg {
     ctx.restore();
   }
   function grid(){ctx.save();ctx.strokeStyle='rgba(255,255,255,.045)';ctx.lineWidth=1;for(let p=0;p<=1040;p+=80){line(p,0,p,1040,'rgba(255,255,255,.045)',1);line(0,p,1040,p,'rgba(255,255,255,.045)',1)}ctx.restore()}
-  function info(lines,warning=false){if(!canvasInfoVisible)return;ctx.save();ctx.fillStyle='rgba(5,8,14,.82)';ctx.fillRect(16,16,700,92);ctx.strokeStyle='rgba(122,168,255,.18)';ctx.strokeRect(16,16,700,92);ctx.font='600 16px Fragment Mono, monospace';lines.forEach((text,i)=>{ctx.fillStyle=i===0?(warning?'#ffe06b':'#7aa8ff'):i===1?'#dde6f6':'#8d9bb7';ctx.fillText(text,28,43+i*25)});ctx.restore()}
+  function info(lines,warning=false){ctx.save();ctx.fillStyle='rgba(5,8,14,.82)';ctx.fillRect(16,16,700,92);ctx.strokeStyle='rgba(122,168,255,.18)';ctx.strokeRect(16,16,700,92);ctx.font='600 16px Fragment Mono, monospace';lines.forEach((text,i)=>{ctx.fillStyle=i===0?(warning?'#ffe06b':'#7aa8ff'):i===1?'#dde6f6':'#8d9bb7';ctx.fillText(text,28,43+i*25)});ctx.restore()}
   function drawMagnet(x,y,angle){const length=126,width=30;ctx.save();ctx.translate(x,y);ctx.rotate(angle);ctx.fillStyle='#ef4343';ctx.fillRect(0,-width/2,length/2,width);ctx.fillStyle='#2387df';ctx.fillRect(-length/2,-width/2,length/2,width);ctx.strokeStyle='#e9f0ff';ctx.lineWidth=3;ctx.strokeRect(-length/2,-width/2,length,width);line(0,-width/2,0,width/2,'#e9f0ff',2);ctx.fillStyle='#fff';ctx.font='700 14px Fragment Mono, monospace';ctx.textAlign='center';ctx.fillText('N',length/4,5);ctx.fillText('S',-length/4,5);ctx.restore()}
 
   function frameAngle(index){return (+amp.value)*Math.PI/180*(2*index/(STROBE_FRAMES-1)-1)}
   function drawStrobeGhosts(Ax,Bx,cy){
+    const cx=(Ax+Bx)/2,halfDistance=(Bx-Ax)/2;
     for(let i=0;i<STROBE_FRAMES;i++){
       if(i===strobeFrame)continue;
-      const theta=frameAngle(i),tan=Math.tan(theta);
-      ctx.save();ctx.globalAlpha=.12;
-      for(const [x,planeAngle,axisAngle] of [[Ax,-theta,Math.atan2(-1,-tan)],[Bx,theta,Math.atan2(1,-tan)]]){
+      const theta=frameAngle(i),tan=Math.tan(theta),circleY=cy-halfDistance*tan;
+      const circleRadius=Math.hypot(halfDistance,circleY-cy);
+      const strength=1-Math.abs(i-strobeFrame)/(STROBE_FRAMES-1);
+      ctx.save();ctx.globalAlpha=.09;
+      for(const [x,planeAngle] of [[Ax,-theta],[Bx,theta]]){
         const ux=Math.cos(planeAngle),uy=Math.sin(planeAngle);
         for(const radius of [83,172])for(const direction of [-1,1]){
           ctx.beginPath();ctx.strokeStyle='#d3e1e6';ctx.lineWidth=1;
           ctx.arc(x+direction*ux*radius,cy+direction*uy*radius,radius,0,Math.PI*2);ctx.stroke();
         }
-        line(x-ux*210,cy-uy*210,x+ux*210,cy+uy*210,'#00df82',2,[5,9]);
-        const vx=Math.cos(axisAngle)*145,vy=Math.sin(axisAngle)*145;
-        line(x-vx,cy-vy,x+vx,cy+vy,'#ff5050',2,[5,9]);
       }
+      ctx.restore();
+      ctx.save();ctx.globalAlpha=.19+.09*strength;
+      ctx.strokeStyle='#71b5ff';ctx.lineWidth=1.5;
+      ctx.beginPath();ctx.arc(cx,circleY,circleRadius,0,Math.PI*2);ctx.stroke();
+      ctx.restore();
+      ctx.save();ctx.globalAlpha=.105+.055*strength;
+      infiniteLine(Ax,cy,-theta,'#00df82',1.4);
+      infiniteLine(Bx,cy,theta,'#00df82',1.4);
+      ctx.restore();
+      ctx.save();ctx.globalAlpha=.19+.08*strength;
+      arrowAxis(Ax,cy,Math.atan2(-1,-tan),390,'');
+      arrowAxis(Bx,cy,Math.atan2(1,-tan),390,'');
       ctx.restore();
     }
   }
@@ -1091,8 +1099,8 @@ svg {
   function drawPair(isMagnet){
     const cx=520,cy=545,D0=430,theta=strobeActive&&!isMagnet?frameAngle(strobeFrame):(+amp.value)*Math.PI/180*Math.sin(time),tan=Math.tan(theta);
     const Ax=cx-D0/2,Bx=cx+D0/2,Py=cy-D0/2*tan,r=Math.hypot(D0/2,Py-cy);
-    if(strobeActive&&!isMagnet)drawStrobeGhosts(Ax,Bx,cy);
     interactionCircles(Ax,cy,-theta);interactionCircles(Bx,cy,theta);
+    if(strobeActive&&!isMagnet)drawStrobeGhosts(Ax,Bx,cy);
     line(0,cy,1040,cy,'#2a6a8a',2.5,[12,10]);circle(cx,Py,r);
     infiniteLine(Ax,cy,-theta,'#00df82',2.5);infiniteLine(Bx,cy,theta,'#00df82',2.5);
     const angleA=Math.atan2(-1,-tan),angleB=Math.atan2(1,-tan);
@@ -1216,14 +1224,6 @@ svg {
   function setCaptionHidden(hidden){caption.classList.toggle('auto-hidden',hidden);captionToggle.setAttribute('aria-expanded',String(!hidden))}
   captionToggle.addEventListener('click',()=>{setCaptionHidden(false);holdCaption(6500)});
   const holdCaption=autoHide(caption,()=>setCaptionHidden(true),4500);
-  let infoTimer=0;
-  function setCanvasInfoVisible(visible){canvasInfoVisible=visible;infoToggle.hidden=visible;draw()}
-  function scheduleInfoHide(delay){clearTimeout(infoTimer);infoTimer=setTimeout(()=>setCanvasInfoVisible(false),delay)}
-  infoToggle.addEventListener('click',()=>{setCanvasInfoVisible(true);if(matchMedia('(hover:hover) and (pointer:fine)').matches)scheduleInfoHide(12000)});
-  document.addEventListener('pointerdown',event=>{
-    if(!matchMedia('(hover:hover) and (pointer:fine)').matches&&canvasInfoVisible&&!infoToggle.contains(event.target))setCanvasInfoVisible(false);
-  },true);
-  scheduleInfoHide(5200);
   addEventListener('message',event=>{if(event.data?.type==='TUIDG_TAB_ACTIVE'){tabActive=!!event.data.active;if(tabActive&&strobeActive)draw()}});
   sync();requestAnimationFrame(animate);
 })();
