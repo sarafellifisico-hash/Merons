@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="referrer" content="no-referrer">
-<title>IC 2D Laboratory — TUIDG</title>
+<title>CI Diagrams — TUIDG</title>
 <style>:root {
   color-scheme: light dark;
   background-color: transparent !important;
@@ -821,11 +821,11 @@ svg {
 <style>html,body{width:100%;height:100%;overflow:hidden}html>body,:root:not([data-app-block-surface])>body{padding:0!important;background:#020208!important}</style>
 </head>
 <body>
-<div id="ic2d-lab" aria-label="Integrated Cyclical Interaction 2D laboratory">
+<div id="ic2d-lab" aria-label="CI Diagrams">
   <aside class="ic2d-panel">
     <button class="ic2d-panel-toggle" type="button" aria-label="Minimize control panel" aria-expanded="true">−</button>
     <header class="ic2d-heading">
-      <h2>Cyclical Interaction Diagrams</h2>
+      <h2>CI Diagrams</h2>
       <p class="ic2d-subtitle">Between Two or Three Compalphas</p>
     </header>
     <div class="ic2d-panel-inner">
@@ -849,6 +849,21 @@ svg {
         <div class="ic2d-actions">
           <button type="button" id="ic2d-play">Pause</button>
           <button type="button" id="ic2d-reset">Reset</button>
+        </div>
+      </section>
+
+      <section class="ic2d-section ic2d-strobe-section" id="ic2d-strobe-section" aria-labelledby="ic2d-strobe-label">
+        <div class="ic2d-section-title" id="ic2d-strobe-label">Apparent Motion · Static Frames</div>
+        <button type="button" id="ic2d-strobe-toggle" aria-controls="ic2d-strobe-controls" aria-expanded="false" aria-pressed="false">How Can Immaterial Geometry Oscillate If It Is Nothing?</button>
+        <div id="ic2d-strobe-controls" hidden>
+          <p>In the Meronic Model, no substance travels through empty space. These fixed geometric configurations, shown in sequence, make oscillation appear.</p>
+          <div class="ic2d-frame-nav">
+            <button type="button" id="ic2d-frame-prev" aria-label="Previous static frame">← Previous</button>
+            <output id="ic2d-frame-counter" aria-live="off">Frame 1 / 9</output>
+            <button type="button" id="ic2d-frame-next" aria-label="Next static frame">Next →</button>
+          </div>
+          <button type="button" id="ic2d-strobe-play">Pause sequence</button>
+          <p class="ic2d-strobe-hint">Each frame holds for 0.8 s. Adjust the amplitude to change the angular range.</p>
         </div>
       </section>
 
@@ -958,6 +973,16 @@ svg {
 #ic2d-lab .ic2d-panel-toggle{top:10px;right:10px}
 #ic2d-lab #uiPanelPin{right:50px}
 #ic2d-lab.panel-collapsed .ic2d-heading{display:none}
+#ic2d-lab [hidden]{display:none!important}
+#ic2d-lab #ic2d-strobe-toggle{width:100%;margin-top:10px;text-align:left;white-space:normal;line-height:1.4;padding:10px 11px}
+#ic2d-lab #ic2d-strobe-controls{margin-top:10px}
+#ic2d-lab #ic2d-strobe-controls p{margin:0 0 10px;color:#a6b2ca;font-size:11.5px;line-height:1.5}
+#ic2d-lab .ic2d-frame-nav{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:5px}
+#ic2d-lab .ic2d-frame-nav button{padding:8px 5px}
+#ic2d-lab #ic2d-frame-counter{font-size:10px;white-space:nowrap}
+#ic2d-lab #ic2d-strobe-play{width:100%;margin-top:8px}
+#ic2d-lab #ic2d-strobe-controls .ic2d-strobe-hint{margin:9px 0 0;color:#7f91ad;font-size:10.5px}
+#ic2d-lab .ic2d-panel-inner button:disabled,#ic2d-lab input:disabled{opacity:.48;cursor:not-allowed}
 @media(max-width:900px){#ic2d-lab .ic2d-panel{height:fit-content;max-height:min(68dvh,650px)}#ic2d-lab.panel-collapsed .ic2d-panel{height:50px}}
 </style>
 
@@ -979,7 +1004,16 @@ svg {
   const infoToggle=root.querySelector('.ic2d-info-toggle');
   const panelToggle=root.querySelector('.ic2d-panel-toggle');
   const modes=[...root.querySelectorAll('.ic2d-mode')];
+  const strobeSection=document.getElementById('ic2d-strobe-section');
+  const strobeToggle=document.getElementById('ic2d-strobe-toggle');
+  const strobeControls=document.getElementById('ic2d-strobe-controls');
+  const strobePlay=document.getElementById('ic2d-strobe-play');
+  const frameCounter=document.getElementById('ic2d-frame-counter');
+  const framePrev=document.getElementById('ic2d-frame-prev');
+  const frameNext=document.getElementById('ic2d-frame-next');
   let mode='compalphas',playing=true,tabActive=true,time=0,last=performance.now(),canvasInfoVisible=true;
+  const STROBE_FRAMES=9, STROBE_HOLD_SECONDS=.8;
+  let strobeActive=false,strobePlaying=false,strobeWasPlaying=true,strobeFrame=0,strobeDirection=1,strobeElapsed=0;
   const settings={compalphas:{amp:20,freq:.6},magnets:{amp:20,freq:.6},triad:{amp:45,freq:.6}};
   const modeMeta={
     compalphas:{title:'Compalphas A–B · Common Interaction Circle',aria:'Cyclical Interaction between Compalphas A and B'},
@@ -1013,9 +1047,50 @@ svg {
   function info(lines,warning=false){if(!canvasInfoVisible)return;ctx.save();ctx.fillStyle='rgba(5,8,14,.82)';ctx.fillRect(16,16,700,92);ctx.strokeStyle='rgba(122,168,255,.18)';ctx.strokeRect(16,16,700,92);ctx.font='600 16px Fragment Mono, monospace';lines.forEach((text,i)=>{ctx.fillStyle=i===0?(warning?'#ffe06b':'#7aa8ff'):i===1?'#dde6f6':'#8d9bb7';ctx.fillText(text,28,43+i*25)});ctx.restore()}
   function drawMagnet(x,y,angle){const length=126,width=30;ctx.save();ctx.translate(x,y);ctx.rotate(angle);ctx.fillStyle='#ef4343';ctx.fillRect(0,-width/2,length/2,width);ctx.fillStyle='#2387df';ctx.fillRect(-length/2,-width/2,length/2,width);ctx.strokeStyle='#e9f0ff';ctx.lineWidth=3;ctx.strokeRect(-length/2,-width/2,length,width);line(0,-width/2,0,width/2,'#e9f0ff',2);ctx.fillStyle='#fff';ctx.font='700 14px Fragment Mono, monospace';ctx.textAlign='center';ctx.fillText('N',length/4,5);ctx.fillText('S',-length/4,5);ctx.restore()}
 
+  function frameAngle(index){return (+amp.value)*Math.PI/180*(2*index/(STROBE_FRAMES-1)-1)}
+  function drawStrobeGhosts(Ax,Bx,cy){
+    for(let i=0;i<STROBE_FRAMES;i++){
+      if(i===strobeFrame)continue;
+      const theta=frameAngle(i),tan=Math.tan(theta);
+      ctx.save();ctx.globalAlpha=.16;
+      for(const [x,planeAngle,axisAngle] of [[Ax,-theta,Math.atan2(-1,-tan)],[Bx,theta,Math.atan2(1,-tan)]]){
+        const ux=Math.cos(planeAngle),uy=Math.sin(planeAngle);
+        for(const radius of [44,108,172])for(const direction of [-1,1]){
+          ctx.beginPath();ctx.strokeStyle='#d3e1e6';ctx.lineWidth=1;
+          ctx.arc(x+direction*ux*radius,cy+direction*uy*radius,radius,0,Math.PI*2);ctx.stroke();
+        }
+        line(x-ux*210,cy-uy*210,x+ux*210,cy+uy*210,'#00df82',2,[5,9]);
+        const vx=Math.cos(axisAngle)*145,vy=Math.sin(axisAngle)*145;
+        line(x-vx,cy-vy,x+vx,cy+vy,'#ff5050',2,[5,9]);
+      }
+      ctx.restore();
+    }
+  }
+  function drawStrobeTimeline(){
+    ctx.save();ctx.textAlign='left';ctx.fillStyle='#9baacc';ctx.font='600 15px Fragment Mono, monospace';
+    ctx.fillText('NINE STATIC CONFIGURATIONS  ·  ALPHA AXES A / B',51,845);
+    for(let i=0;i<STROBE_FRAMES;i++){
+      const x=51+i*105,y=865,w=97,h=98,selected=i===strobeFrame,theta=frameAngle(i),tan=Math.tan(theta);
+      ctx.fillStyle=selected?'rgba(37,73,111,.78)':'rgba(12,22,37,.82)';ctx.fillRect(x,y,w,h);
+      ctx.strokeStyle=selected?'#7aa8ff':'#32445e';ctx.lineWidth=selected?2:1;ctx.strokeRect(x,y,w,h);
+      ctx.fillStyle=selected?'#e5efff':'#7e8fae';ctx.font='700 14px Fragment Mono, monospace';
+      ctx.fillText(String(i+1).padStart(2,'0'),x+8,y+18);
+      for(const [px,axisAngle] of [[x+28,Math.atan2(-1,-tan)],[x+69,Math.atan2(1,-tan)]]){
+        const vx=Math.cos(axisAngle)*22,vy=Math.sin(axisAngle)*22;
+        line(px-vx,y+50-vy,px+vx,y+50+vy,selected?'#ff7373':'#ac5b63',2);
+        ctx.beginPath();ctx.fillStyle=selected?'#fff':'#91a4bd';ctx.arc(px,y+50,2.5,0,Math.PI*2);ctx.fill();
+      }
+      const degrees=theta*180/Math.PI;
+      ctx.fillStyle=selected?'#e5efff':'#8999b3';ctx.textAlign='center';ctx.font='600 13px Fragment Mono, monospace';
+      ctx.fillText(`${degrees>0?'+':''}${degrees.toFixed(0)}°`,x+w/2,y+87);ctx.textAlign='left';
+    }
+    ctx.restore();
+  }
+
   function drawPair(isMagnet){
-    const cx=520,cy=545,D0=430,theta=(+amp.value)*Math.PI/180*Math.sin(time),tan=Math.tan(theta);
+    const cx=520,cy=545,D0=430,theta=strobeActive&&!isMagnet?frameAngle(strobeFrame):(+amp.value)*Math.PI/180*Math.sin(time),tan=Math.tan(theta);
     const Ax=cx-D0/2,Bx=cx+D0/2,Py=cy-D0/2*tan,r=Math.hypot(D0/2,Py-cy);
+    if(strobeActive&&!isMagnet)drawStrobeGhosts(Ax,Bx,cy);
     interactionCircles(Ax,cy,-theta);interactionCircles(Bx,cy,theta);
     line(0,cy,1040,cy,'#2a6a8a',2.5,[12,10]);circle(cx,Py,r);
     infiniteLine(Ax,cy,-theta,'#00df82',2.5);infiniteLine(Bx,cy,theta,'#00df82',2.5);
@@ -1023,6 +1098,13 @@ svg {
     if(isMagnet){drawMagnet(Ax,cy,angleA);drawMagnet(Bx,cy,angleB)}else{arrowAxis(Ax,cy,angleA,390,'αA');arrowAxis(Bx,cy,angleB,390,'αB');point(Ax,cy,'Compalpha A','#fff',-1);point(Bx,cy,'Compalpha B')}
     ctx.save();ctx.fillStyle='#ffe06b';ctx.beginPath();ctx.arc(cx,Py,5,0,Math.PI*2);ctx.fill();ctx.restore();
     const deg=theta*180/Math.PI;
+    if(strobeActive&&!isMagnet){
+      drawStrobeTimeline();
+      info([`STATIC CONFIGURATION  ${strobeFrame+1} / ${STROBE_FRAMES}`,`AXES  A ${(-deg).toFixed(1)}°  ·  B ${deg.toFixed(1)}°`,`APPARENT OSCILLATION  ·  NO MATERIAL MOTION`]);
+      stateValue.textContent=`Static frame ${strobeFrame+1} of ${STROBE_FRAMES} · apparent motion`;
+      stateCopy.textContent='The Alpha Points remain fixed while the axes, planes and interaction circles are shown in distinct geometric configurations. Playing the frames creates an appearance of oscillation, not the travel of a substantial body.';
+      return;
+    }
     info([`AMPLITUDE  A ${(-deg).toFixed(1)}°  ·  B ${deg.toFixed(1)}°`,`CIC DIAMETER  ${(r*2).toFixed(0)} px  =  D₀ / cos θ`,isMagnet?'Fixed polarity · red North · blue South':'Equal oscillation · opposite directions · conserved CIC center']);
     stateValue.textContent=isMagnet?'Constant magnetic polarity':'Coupled oscillation';
     stateCopy.textContent=isMagnet?'The two magnetic axes oscillate without reversing their North–South polarity. Their toroidal field geometry follows the same Cyclical Interaction rule.':'Alpha Axes A and B oscillate by equal angles in opposite directions while conserving the center of the Common Interaction Circle.';
@@ -1051,13 +1133,61 @@ svg {
   }
 
   function draw(){ctx.clearRect(0,0,1040,1040);grid();if(mode==='triad')drawTriad();else drawPair(mode==='magnets')}
-  function animate(now){const dt=Math.min((now-last)/1000,.05);last=now;if(tabActive){if(playing)time+=dt*(+freq.value)*Math.PI*.9;draw()}requestAnimationFrame(animate)}
-  function sync(){const value=+amp.value;ampValue.textContent=mode==='triad'?`±${value.toFixed(1)}° · ${(2*value).toFixed(1)}° p-p`:`${value.toFixed(0)}°`;freqValue.textContent=`${(+freq.value).toFixed(2)} Hz`;settings[mode]={amp:value,freq:+freq.value}}
-  function selectMode(next){settings[mode]={amp:+amp.value,freq:+freq.value};mode=next;modes.forEach(button=>button.classList.toggle('active',button.dataset.mode===mode));amp.max=mode==='triad'?60:70;amp.step=mode==='triad'?.5:1;ampLabel.textContent=mode==='triad'?'Maximum individual excursion':'Oscillatory amplitude';amp.value=settings[mode].amp;freq.value=settings[mode].freq;caption.querySelector('.ic2d-caption-text').textContent=modeMeta[mode].title;canvas.setAttribute('aria-label',modeMeta[mode].aria);time=mode==='triad'?Math.PI/2:0;sync();draw()}
+  function syncStrobeControls(){
+    frameCounter.textContent=`Frame ${strobeFrame+1} / ${STROBE_FRAMES}`;
+    framePrev.disabled=strobeFrame===0;
+    frameNext.disabled=strobeFrame===STROBE_FRAMES-1;
+    strobePlay.textContent=strobePlaying?'Pause sequence':'Play sequence';
+    canvas.setAttribute('aria-label',`Static geometric configuration ${strobeFrame+1} of ${STROBE_FRAMES} for Compalphas A and B`);
+  }
+  function stopStrobe(){
+    if(!strobeActive)return;
+    strobeActive=false;strobePlaying=false;playing=strobeWasPlaying;
+    strobeControls.hidden=true;strobeToggle.textContent='How Can Immaterial Geometry Oscillate If It Is Nothing?';
+    strobeToggle.classList.remove('active');strobeToggle.setAttribute('aria-expanded','false');strobeToggle.setAttribute('aria-pressed','false');
+    playButton.disabled=false;playButton.textContent=playing?'Pause':'Play';freq.disabled=false;
+    caption.querySelector('.ic2d-caption-text').textContent=modeMeta[mode].title;
+    canvas.setAttribute('aria-label',modeMeta[mode].aria);draw();
+  }
+  function startStrobe(){
+    if(mode!=='compalphas')return;
+    strobeWasPlaying=playing;playing=false;strobeActive=true;strobePlaying=true;
+    strobeFrame=0;strobeDirection=1;strobeElapsed=0;
+    playButton.disabled=true;playButton.textContent='Play';freq.disabled=true;
+    strobeControls.hidden=false;strobeToggle.textContent='Return to Continuous View';
+    strobeToggle.classList.add('active');strobeToggle.setAttribute('aria-expanded','true');strobeToggle.setAttribute('aria-pressed','true');
+    caption.querySelector('.ic2d-caption-text').textContent='Compalphas A–B · static geometric frames';
+    syncStrobeControls();draw();
+  }
+  function animate(now){
+    const dt=Math.min((now-last)/1000,.05);last=now;
+    if(tabActive){
+      if(strobeActive){
+        if(strobePlaying){
+          strobeElapsed+=dt;
+          if(strobeElapsed>=STROBE_HOLD_SECONDS){
+            strobeElapsed=0;
+            if(strobeFrame===STROBE_FRAMES-1)strobeDirection=-1;
+            else if(strobeFrame===0)strobeDirection=1;
+            strobeFrame+=strobeDirection;syncStrobeControls();draw();
+          }
+        }
+      }else{if(playing)time+=dt*(+freq.value)*Math.PI*.9;draw()}
+    }
+    requestAnimationFrame(animate);
+  }
+  function sync(){const value=+amp.value;ampValue.textContent=mode==='triad'?`±${value.toFixed(1)}° · ${(2*value).toFixed(1)}° p-p`:`${value.toFixed(0)}°`;freqValue.textContent=`${(+freq.value).toFixed(2)} Hz`;settings[mode]={amp:value,freq:+freq.value};if(strobeActive){strobeElapsed=0;draw()}}
+  function selectMode(next){stopStrobe();settings[mode]={amp:+amp.value,freq:+freq.value};mode=next;strobeSection.hidden=mode!=='compalphas';modes.forEach(button=>button.classList.toggle('active',button.dataset.mode===mode));amp.max=mode==='triad'?60:70;amp.step=mode==='triad'?.5:1;ampLabel.textContent=mode==='triad'?'Maximum individual excursion':'Oscillatory amplitude';amp.value=settings[mode].amp;freq.value=settings[mode].freq;caption.querySelector('.ic2d-caption-text').textContent=modeMeta[mode].title;canvas.setAttribute('aria-label',modeMeta[mode].aria);time=mode==='triad'?Math.PI/2:0;sync();draw()}
   modes.forEach(button=>button.addEventListener('click',()=>selectMode(button.dataset.mode)));
   amp.addEventListener('input',sync);freq.addEventListener('input',sync);
+  strobeToggle.addEventListener('click',()=>strobeActive?stopStrobe():startStrobe());
+  strobePlay.addEventListener('click',()=>{strobePlaying=!strobePlaying;strobeElapsed=0;syncStrobeControls()});
+  for(const [button,delta] of [[framePrev,-1],[frameNext,1]])button.addEventListener('click',()=>{
+    strobePlaying=false;strobeElapsed=0;strobeFrame=Math.max(0,Math.min(STROBE_FRAMES-1,strobeFrame+delta));
+    syncStrobeControls();draw();
+  });
   playButton.addEventListener('click',()=>{playing=!playing;playButton.textContent=playing?'Pause':'Play';if(!playing&&mode==='triad')time=Math.PI/2});
-  resetButton.addEventListener('click',()=>{settings[mode]=mode==='triad'?{amp:45,freq:.6}:{amp:20,freq:.6};amp.value=settings[mode].amp;freq.value=settings[mode].freq;time=mode==='triad'?Math.PI/2:0;playing=true;playButton.textContent='Pause';sync()});
+  resetButton.addEventListener('click',()=>{stopStrobe();settings[mode]=mode==='triad'?{amp:45,freq:.6}:{amp:20,freq:.6};amp.value=settings[mode].amp;freq.value=settings[mode].freq;time=mode==='triad'?Math.PI/2:0;playing=true;playButton.textContent='Pause';sync()});
   function setPanelCollapsed(collapsed){
     root.classList.toggle('panel-collapsed',collapsed);
     if(collapsed){panel.classList.remove('ui-pinned');pin.textContent='Pin';pin.setAttribute('aria-pressed','false')}
@@ -1093,7 +1223,7 @@ svg {
     if(!matchMedia('(hover:hover) and (pointer:fine)').matches&&canvasInfoVisible&&!infoToggle.contains(event.target))setCanvasInfoVisible(false);
   },true);
   scheduleInfoHide(5200);
-  addEventListener('message',event=>{if(event.data?.type==='TUIDG_TAB_ACTIVE')tabActive=!!event.data.active});
+  addEventListener('message',event=>{if(event.data?.type==='TUIDG_TAB_ACTIVE'){tabActive=!!event.data.active;if(tabActive&&strobeActive)draw()}});
   sync();requestAnimationFrame(animate);
 })();
 </script>
