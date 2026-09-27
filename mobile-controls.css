@@ -50,6 +50,24 @@
     min-width: 0 !important;
     min-height: 0 !important;
   }
+  body[data-tuidg-simulator="builder"] #panel:not(.minimized),
+  body[data-tuidg-simulator="cyclical"] #controls:not(.minimized) {
+    z-index: 160 !important;
+  }
+  body[data-tuidg-simulator="builder"] #pairNotes:not(.collapsed),
+  body[data-tuidg-simulator="cyclical"] #icDiagramContainer:not(.minimized) {
+    z-index: 170 !important;
+  }
+  body[data-tuidg-simulator="rotating"] #theory-panel:not(.collapsed) {
+    z-index: 22 !important;
+  }
+  body[data-tuidg-simulator="double-slit"] .panel:not(.minimized),
+  body[data-tuidg-simulator="current"] .panel:not(.minimized) {
+    z-index: 9 !important;
+  }
+  body[data-tuidg-simulator="double-slit"] .explanation.open {
+    z-index: 12 !important;
+  }
   body[data-tuidg-simulator="builder"].pair-mode #panel:not(.minimized) {
     top: auto !important;
     bottom: var(--mobile-edge) !important;
