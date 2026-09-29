@@ -110,10 +110,10 @@
     <section class="control-card"><h2>Display</h2>
     <div class="actions"><button id="toggle">Start</button><button id="reset">Reset view</button></div>
     <div class="actions"><button id="field">Show flux</button><button id="micro">Microscopic view</button></div>
-    <div class="row"><label for="meterAuto">Voltmeter follows camera</label><input id="meterAuto" type="checkbox" checked></div>
-    <div class="row"><label for="meterAngle">Voltmeter orientation</label><span class="value" id="meterAngleValue">−35°</span></div>
-    <input id="meterAngle" type="range" min="-180" max="180" value="-35" step="1" aria-label="Voltmeter orientation">
-    <div class="row"><label for="housing">Transparent supports</label><input id="housing" type="checkbox" checked></div>
+    <div class="row"><label for="meterAuto">Instrument panel follows camera</label><input id="meterAuto" type="checkbox" checked></div>
+    <div class="row"><label for="meterAngle">Panel orientation</label><span class="value" id="meterAngleValue">−35°</span></div>
+    <input id="meterAngle" type="range" min="-180" max="180" value="-35" step="1" aria-label="Instrument panel orientation">
+    <div class="row"><label for="housing">Transparent housing</label><input id="housing" type="checkbox" checked></div>
     <div class="row"><label for="labels">Identify poles</label><input id="labels" type="checkbox" checked></div>
     <div class="legend"><span><i class="dot n"></i>North</span><span><i class="dot s"></i>South</span><span><i class="dot" style="background:#d8752f"></i>Copper</span><span><i class="dot" style="background:#ff4545"></i>Flux</span></div>
     </section>
@@ -129,7 +129,7 @@
       <p><strong>How can a rotating magnet generate electricity in a copper loop?</strong></p>
       <p>In conventional physics, which recognizes the existence of particles, this phenomenon is described by electromagnetic induction: a change in the magnetic flux through the loop produces a voltage that drives electrons through a closed circuit, establishing a current of these particles. The mechanical energy used to turn the rotor is thus converted into electrical energy.</p>
       <p>TUIDG proposes a geometric interpretation of this process. In this description, conductors and magnets are not made up of particles such as protons and electrons, but of toroidal fields called Compalphas, interconnected through their Interaction Circles. Here, magnetism corresponds to the collective orientation of the Alpha Axes of these Compalphas, and electric current corresponds to the transmission of the oscillations of these Alpha Axes through this geometric network.</p>
-      <p>Thus, when the magnets pass close to the loop, their interaction causes the Alpha Axes of the Compalphas represented in the copper to twist. As the magnets move away, these axes return to their initial orientations. The repetition of this movement represents the excitation of Cyclic Interaction, whose transmission through the circuit is interpreted, in TUIDG, as Cyclic Current.</p>
+      <p>In this generator, the magnets turn with the central shaft inside a wider, fixed copper loop. As they pass near its two long sides, their interaction causes the Alpha Axes of the Compalphas represented in the copper to twist. As the magnets move away, these axes return to their initial orientations. The repetition of this movement represents the excitation of Cyclic Interaction, whose transmission through the circuit is interpreted, in TUIDG, as Cyclic Current.</p>
       <p>In this simulation, the induction window makes visible the angular interval during which the Compalphas twist and return. The LED flashes and the voltmeter pulses follow this movement. The window is a demonstration parameter, and the voltage values are illustrative.</p>
       <p>This presentation makes it possible to visualize the mechanism proposed by TUIDG and compare it with the conventional description of electromagnetic induction. The animation expresses this geometric proposal, whose physical validation still requires quantitative relationships and comparison with experiments.</p>
     </article></div>
@@ -214,9 +214,8 @@
     import * as THREE from 'three';
     import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
     const host=document.querySelector('#scene'),scene=new THREE.Scene();scene.background=new THREE.Color(0x030609);scene.fog=new THREE.FogExp2(0x030609,.018);
-    // INITIAL OVERVIEW — edit only these two arrays to change all overview/reset views.
-    // Approximate framing of the approved reference image: front view from the output side.
-    const INITIAL_VIEW={position:[11.75,7,21.1],target:[1.65,-2.1,0]};
+    // Overview keeps the rotor, the fixed winding and the side instrument panel in frame.
+    const INITIAL_VIEW={position:[12.6,8.2,24.8],target:[1.35,-1.65,.75]};
     const camera=new THREE.PerspectiveCamera(40,innerWidth/innerHeight,.1,100);
     camera.position.fromArray(INITIAL_VIEW.position);
     const renderer=new THREE.WebGLRenderer({antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(innerWidth,innerHeight);renderer.outputColorSpace=THREE.SRGBColorSpace;host.append(renderer.domElement);
@@ -232,13 +231,14 @@
     const copper=new THREE.MeshStandardMaterial({color:0xd96d20,metalness:.82,roughness:.2,emissive:0x4b1502,emissiveIntensity:.38});
     function openTube(points,r=.075,segments=180){const curve=new THREE.CatmullRomCurve3(points,false,'centripetal');const mesh=new THREE.Mesh(new THREE.TubeGeometry(curve,segments,r,12,false),copper);mesh.castShadow=true;return mesh}
     function closedTube(points,r=.105){const curve=new THREE.CatmullRomCurve3(points,true,'catmullrom',.04);const mesh=new THREE.Mesh(new THREE.TubeGeometry(curve,260,r,14,true),copper);mesh.castShadow=true;return mesh}
-    // Espira única aberta à direita: as duas extremidades tornam-se os terminais da lâmpada.
+    // The fixed, wider copper winding surrounds the shaft-mounted magnets.
+    const coilHalfWidth=2.24;
     const loop=openTube([
-      new THREE.Vector3(5.7,0,1.55),new THREE.Vector3(5.35,0,1.55),new THREE.Vector3(-5.35,0,1.55),
-      new THREE.Vector3(-5.62,0,1.48),new THREE.Vector3(-5.75,0,1.2),new THREE.Vector3(-5.75,0,-1.2),
-      new THREE.Vector3(-5.62,0,-1.48),new THREE.Vector3(-5.35,0,-1.55),new THREE.Vector3(5.35,0,-1.55),new THREE.Vector3(5.7,0,-1.55)
-    ],.105,280);scene.add(loop);
-    // Duas filas de 12 Compalphas, coplanares ao plano XZ da espira.
+      new THREE.Vector3(5.8,0,coilHalfWidth),new THREE.Vector3(5.45,0,coilHalfWidth),new THREE.Vector3(-5.45,0,coilHalfWidth),
+      new THREE.Vector3(-5.78,0,2.13),new THREE.Vector3(-5.92,0,1.8),new THREE.Vector3(-5.92,0,-1.8),
+      new THREE.Vector3(-5.78,0,-2.13),new THREE.Vector3(-5.45,0,-coilHalfWidth),new THREE.Vector3(5.45,0,-coilHalfWidth),new THREE.Vector3(5.8,0,-coilHalfWidth)
+    ],.13,300);scene.add(loop);
+    // Twelve Compalphas on each of the two long, stationary copper runs.
     const compalphas=[];
     const whiteLine=new THREE.LineBasicMaterial({color:0xf4f7ff,transparent:true,opacity:.9});
     const blueLine=new THREE.LineBasicMaterial({color:0x247cff,transparent:true,opacity:.48,blending:THREE.AdditiveBlending,depthWrite:false});
@@ -269,16 +269,16 @@
       const axis=new THREE.Line(alphaAxisGeometry,axisMat);group.add(axis);
       const alpha=((index*137.508+row*43.7+17)%360)*Math.PI/180;group.rotation.y=alpha;scene.add(group);compalphas.push({group,initial:alpha,current:alpha,row});
     }
-    for(const row of [-1,1])for(let i=0;i<12;i++)createCompalpha(-4.95+i*(9.9/11),row*1.55,i,row);
-    // Duas barras longas e opostas, fixas à parede interna do copo do rotor.
+    for(const row of [-1,1])for(let i=0;i<12;i++)createCompalpha(-4.95+i*(9.9/11),row*coilHalfWidth,i,row);
+    // Two opposed magnet bars are mounted to the central shaft, not to the housing.
     const magnets=new THREE.Group();scene.add(magnets);const labels=[];
     const redMat=new THREE.MeshStandardMaterial({color:0xe5353f,metalness:.48,roughness:.24,emissive:0x390307,emissiveIntensity:.35});
     const blueMat=new THREE.MeshStandardMaterial({color:0x1676d2,metalness:.5,roughness:.24,emissive:0x021a38,emissiveIntensity:.4});
     function sprite(text,color){const c=document.createElement('canvas');c.width=128;c.height=128;const q=c.getContext('2d');q.fillStyle=color;q.font='bold 76px Arial';q.textAlign='center';q.textBaseline='middle';q.fillText(text,64,68);const s=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),transparent:true,depthTest:false}));s.scale.set(.72,.72,.72);labels.push(s);return s}
-    function addMagnet(side){const y=side*2.75,th=.44;const north=new THREE.Mesh(new THREE.BoxGeometry(10.7,th,.82),redMat);const south=new THREE.Mesh(new THREE.BoxGeometry(10.7,th,.82),blueMat);
+    function addMagnet(side){const y=side*1.1,th=.38;const north=new THREE.Mesh(new THREE.BoxGeometry(9.8,th,.76),redMat);const south=new THREE.Mesh(new THREE.BoxGeometry(9.8,th,.76),blueMat);
       // Mesma orientação polar global nas duas barras: entre elas, N fica diante de S.
       north.position.set(0,y+th/2,0);south.position.set(0,y-th/2,0);north.castShadow=south.castShadow=true;magnets.add(north,south);
-      const n=sprite('N','#ffe4e4'),s=sprite('S','#e1f2ff');n.position.set(0,y+.28,.43);s.position.set(0,y-.28,.43);magnets.add(n,s)}addMagnet(1);addMagnet(-1);
+      const n=sprite('N','#ffe4e4'),s=sprite('S','#e1f2ff');n.position.set(0,y+.24,.43);s.position.set(0,y-.24,.43);magnets.add(n,s)}addMagnet(1);addMagnet(-1);
     // Straight red flux arrows: soft edges, translucent core, and rotor-relative direction.
     const fieldLines=new THREE.Group();fieldLines.name='Soft red flux arrows';fieldLines.visible=false;magnets.add(fieldLines);
     const fluxCanvas=document.createElement('canvas');fluxCanvas.width=128;fluxCanvas.height=512;
@@ -292,7 +292,7 @@
     const fluxTexture=new THREE.CanvasTexture(fluxCanvas);fluxTexture.colorSpace=THREE.SRGBColorSpace;
     // Opacity controls the overall transparency of the red arrows.
     const fieldMat=new THREE.MeshBasicMaterial({map:fluxTexture,transparent:true,opacity:.66,depthWrite:false,side:THREE.DoubleSide});
-    const fluxGeometry=new THREE.PlaneGeometry(.56,4.5),fluxArrows=[];
+    const fluxGeometry=new THREE.PlaneGeometry(.42,1.55),fluxArrows=[];
     for(let i=0;i<12;i++){
       const arrow=new THREE.Mesh(fluxGeometry,fieldMat);arrow.position.x=-4.95+i*(9.9/11);fieldLines.add(arrow);fluxArrows.push(arrow);
     }
@@ -303,67 +303,68 @@
       // Turn only around the arrow's longitudinal axis so its physical direction stays fixed.
       for(const arrow of fluxArrows)arrow.rotation.y=Math.atan2(fluxCameraLocal.x-arrow.position.x,fluxCameraLocal.z);
     }
-    // Two coaxial cups open in opposite directions, matching the sectional sketch.
-    // Rotor: closed at -X, open at +X. Stator: open at -X, closed at +X.
-    const mechanics=new THREE.Group();mechanics.name='Fixed inner stator cup';scene.add(mechanics);
-    const rotorCup=new THREE.Group();rotorCup.name='Rotating outer magnet cup';magnets.add(rotorCup);
-    // Independent opacities for the two transparent supports.
-    const ghost=new THREE.MeshStandardMaterial({color:0x79b9d3,metalness:.22,roughness:.3,transparent:true,opacity:.09,depthWrite:false,side:THREE.DoubleSide});
-    const statorGlass=ghost.clone();statorGlass.color.setHex(0xb5d9c9);statorGlass.opacity=.07;
-    const frameMat=new THREE.MeshStandardMaterial({color:0x83bbd0,metalness:.45,roughness:.3,transparent:true,opacity:.32,depthWrite:false});
+    // A fixed transparent guard, framed like a small laboratory generator.
+    const mechanics=new THREE.Group();mechanics.name='Fixed transparent stator housing';scene.add(mechanics);
+    const rotorHardware=new THREE.Group();rotorHardware.name='Shaft and magnet carriers';magnets.add(rotorHardware);
+    const ghost=new THREE.MeshStandardMaterial({color:0x9bcbd9,metalness:.12,roughness:.24,transparent:true,opacity:.055,depthWrite:false,side:THREE.DoubleSide});
+    const frameMat=new THREE.MeshStandardMaterial({color:0x83bbd0,metalness:.58,roughness:.3,transparent:true,opacity:.52,depthWrite:false});
     const statorEdge=frameMat.clone();statorEdge.color.setHex(0xb5d9c9);
     const contactMat=new THREE.MeshStandardMaterial({color:0xc1d3df,metalness:.9,roughness:.22});
     const darkMat=new THREE.MeshStandardMaterial({color:0x13232e,metalness:.5,roughness:.36});
     function box(w,h,d,x,y,z,mat,parent=mechanics){const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat);m.position.set(x,y,z);parent.add(m);return m}
     function rod(a,b,r,mat,parent=mechanics){a=new THREE.Vector3(...a);b=new THREE.Vector3(...b);const m=new THREE.Mesh(new THREE.CylinderGeometry(r,r,a.distanceTo(b),24),mat);m.position.copy(a).add(b).multiplyScalar(.5);m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),b.sub(a).normalize());parent.add(m);return m}
     function ring(x,r,t,mat,parent=mechanics){const m=new THREE.Mesh(new THREE.TorusGeometry(r,t,12,80),mat);m.rotation.y=Math.PI/2;m.position.x=x;parent.add(m);return m}
-    function cup(radius,left,right,closedX,material,edge,parent){
-      const wall=new THREE.Mesh(new THREE.CylinderGeometry(radius,radius,right-left,96,1,true),material);
-      wall.rotation.z=Math.PI/2;wall.position.x=(left+right)/2;parent.add(wall);
-      const bottom=new THREE.Mesh(new THREE.CylinderGeometry(radius,radius,.12,96),material);
-      bottom.rotation.z=Math.PI/2;bottom.position.x=closedX;parent.add(bottom);
-      ring(left,radius,.035,edge,parent);ring(right,radius,.035,edge,parent);
+    const guard=new THREE.Mesh(new THREE.CylinderGeometry(2.76,2.76,12.45,96,1,true),ghost);
+    guard.rotation.z=Math.PI/2;mechanics.add(guard);
+    for(const x of [-6.22,-3.1,0,3.1,6.22])ring(x,2.76,x===0?.045:.065,statorEdge);
+    for(const x of [-6.22,6.22]){
+      const end=new THREE.Mesh(new THREE.RingGeometry(.52,2.76,96),ghost);
+      end.rotation.y=Math.PI/2;end.position.x=x;mechanics.add(end);
+      ring(x,.52,.075,frameMat);
     }
-    cup(3.28,-6.15,5.95,-6.15,ghost,frameMat,rotorCup);
-    cup(2.05,-5.95,6.3,6.3,statorGlass,statorEdge,mechanics);
-    // Drive shaft exists only at the left rear of the rotor, opposite the wires.
-    rod([-8.1,0,0],[-6.15,0,0],.24,frameMat,rotorCup);
-    rod([-6.4,0,0],[-6.08,0,0],.48,frameMat,rotorCup);
-    // Small mounting shoes attach the bars to the outer cup, without crossing the stator.
-    for(const side of [-1,1]){
-      box(10.7,.1,.68,0,side*3.23,0,frameMat,rotorCup);
-      // A subtle seam makes the transparent cylinder's rotation perceptible.
-      rod([-6.08,side*3.28,0],[5.9,side*3.28,0],.018,frameMat,rotorCup);
+    for(const angle of [Math.PI/4,3*Math.PI/4,5*Math.PI/4,7*Math.PI/4]){
+      const y=Math.cos(angle)*2.76,z=Math.sin(angle)*2.76;
+      rod([-6.22,y,z],[6.22,y,z],.04,frameMat);
     }
-    // Short saddles carry the fixed copper runs on the inside of the inner cup.
+    // The complete central axle and its three pairs of radial magnet carriers rotate together.
+    rod([-8.15,0,0],[7.28,0,0],.27,contactMat,rotorHardware);
+    rod([-5.1,0,0],[5.1,0,0],.44,darkMat,rotorHardware);
+    for(const x of [-4.25,0,4.25]){
+      ring(x,.45,.105,frameMat,rotorHardware);
+      for(const side of [-1,1]){
+        rod([x,0,0],[x,side*1.05,0],.12,frameMat,rotorHardware);
+        box(.38,.11,.58,x,side*.88,0,frameMat,rotorHardware);
+      }
+    }
+    for(const x of [-7.05,6.85])ring(x,.34,.13,frameMat,rotorHardware);
+    // Fixed insulating saddles keep both sides of the winding outside the rotor.
     for(const x of [-4.8,0,4.8])for(const side of [-1,1]){
-      box(.22,.24,.44,x,0,side*1.83,statorEdge,mechanics);
+      box(.25,.3,.38,x,0,side*2.41,statorEdge);
     }
-    document.querySelector('#housing').onchange=e=>{mechanics.visible=rotorCup.visible=e.target.checked};
+    document.querySelector('#housing').onchange=e=>{mechanics.visible=e.target.checked};
     // One fixed laboratory bench, using the IC bench's metal finish.
     const bench=new THREE.Group();bench.name='Fixed bench and bearing supports';scene.add(bench);
     const baseMaterial=new THREE.MeshStandardMaterial({color:0x343b46,metalness:.55,roughness:.36});
     const supportMaterial=new THREE.MeshStandardMaterial({color:0x24566c,metalness:.6,roughness:.32});
-    box(23,.8,8.6,2.4,-4.33,0,baseMaterial,bench);
-    box(23.2,.16,8.8,2.4,-3.85,0,darkMat,bench);
-    for(const x of [-7.8,12.6])for(const z of [-3.4,3.4])box(1,.22,1,x,-4.84,z,darkMat,bench);
-    // The widened stator plate has two real apertures aligned with the copper ends.
-    function upright(x,isRotor){
-      const w=isRotor?.95:2.05;
-      const sh=new THREE.Shape();sh.moveTo(-w,-3.77);sh.lineTo(w,-3.77);sh.lineTo(w,.35);
-      sh.quadraticCurveTo(w,.7,w-.35,.7);sh.lineTo(-w+.35,.7);sh.quadraticCurveTo(-w,.7,-w,.35);sh.closePath();
-      for(const z of isRotor?[0]:[-1.55,1.55]){const hole=new THREE.Path();hole.absarc(z,0,isRotor?.27:.245,0,Math.PI*2,true);sh.holes.push(hole)}
-      const m=new THREE.Mesh(new THREE.ExtrudeGeometry(sh,{depth:.34,bevelEnabled:false,curveSegments:24}),supportMaterial);
-      m.rotation.y=Math.PI/2;m.position.x=x-.17;bench.add(m);
-      box(1.1,.15,2*w+.6,x,-3.695,0,supportMaterial,bench);
-      if(!isRotor)for(const z of [-.55,.55])rod([6.29,-1,z],[x-.17,-1,z],.16,contactMat,bench);
+    box(23.6,.82,13,2,-5.49,0,baseMaterial,bench);
+    box(23.8,.16,13.2,2,-5.0,0,darkMat,bench);
+    for(const x of [-8.8,12.8])for(const z of [-5.45,5.45])box(1.1,.26,1.1,x,-6.02,z,darkMat,bench);
+    // Two bearings hold the shaft above the bench and leave the guarded rotor visible.
+    function upright(x){
+      const sh=new THREE.Shape();sh.moveTo(-1.18,-4.91);sh.lineTo(1.18,-4.91);sh.lineTo(.7,.37);
+      sh.quadraticCurveTo(.66,.78,.25,.78);sh.lineTo(-.25,.78);sh.quadraticCurveTo(-.66,.78,-.7,.37);sh.closePath();
+      const hole=new THREE.Path();hole.absarc(0,0,.36,0,Math.PI*2,true);sh.holes.push(hole);
+      const m=new THREE.Mesh(new THREE.ExtrudeGeometry(sh,{depth:.42,bevelEnabled:false,curveSegments:28}),supportMaterial);
+      m.rotation.y=Math.PI/2;m.position.x=x-.21;bench.add(m);
+      box(1.15,.18,3.1,x,-4.88,0,supportMaterial,bench);
+      ring(x,.38,.10,contactMat,bench);
     }
-    upright(-7.1,true);upright(6.65,false);
-    // Insulated output sockets and exposed metal pins.
-    for(const z of [-1.55,1.55]){
-      rod([5.7,0,z],[6.48,0,z],.105,copper,scene);
-      rod([6.38,0,z],[6.88,0,z],.23,darkMat,scene);
-      rod([6.88,0,z],[7.22,0,z],.10,contactMat,scene);
+    upright(-6.87);upright(6.87);
+    // Two output contacts pass through fixed insulating blocks near the right end ring.
+    for(const z of [-coilHalfWidth,coilHalfWidth]){
+      rod([5.8,0,z],[6.5,0,z],.11,copper,scene);
+      box(.42,.52,.54,6.48,0,z,darkMat,mechanics);
+      rod([6.52,0,z],[7.22,0,z],.11,contactMat,scene);
     }
     const redWire=new THREE.MeshStandardMaterial({color:0xf43e4e,roughness:.48});
     const blueWire=new THREE.MeshStandardMaterial({color:0x258cff,roughness:.48});
@@ -380,31 +381,28 @@
       path.add(new THREE.LineCurve3(start,pts[pts.length-1]));
       const mesh=new THREE.Mesh(new THREE.TubeGeometry(path,180,.065,12,false),mat);scene.add(mesh);
     }
-    // The two colors stay on separate parallel routes and share the LED's two output nodes.
-    // Wiring inside the fixed voltmeter pedestal reaches its rotating body through the pivot.
+    // Both colored leads run around the fixed housing to one side instrument cabinet.
     for(const sign of [-1,1]){
-      const mat=sign>0?redWire:blueWire,z=sign*1.55;
-      wire([[7.22,0,z],[7.8,0,z],[7.8,-3.2,z],[8.8,-3.2,z],[8.8,-3.2,sign*.38]],mat);
-      wire([[8.8,-3.2,sign*.38],[9.35,-3.2,sign*.38],[9.35,-3.45,sign*.38],[10.65,-3.45,sign*.38]],mat);
-      wire([[8.8,-3.2,sign*.38],[8.8,-2.88,sign*.38],[8.8,-2.88,sign*.18]],contactMat);
-      rod([10.65,-3.45,sign*.38],[11.1,-3.45,sign*.38],.08,contactMat,scene);
+      const mat=sign>0?redWire:blueWire,z=sign*coilHalfWidth;
+      const routeX=sign>0?7.78:8.2,routeZ=sign>0?4.47:5.17;
+      wire([[7.22,0,z],[routeX,0,z],[routeX,-4.7,z],[routeX,-4.7,routeZ],[4.25,-4.7,routeZ],[4.25,-4.7,4.82+sign*.2]],mat);
+      rod([4.25,-4.7,4.82+sign*.2],[4.25,-4.49,4.82+sign*.2],.08,contactMat,scene);
     }
-    box(1.25,.18,1.15,8.8,-3.68,0,darkMat,bench);
-    rod([8.8,-3.59,0],[8.8,-3.05,0],.22,contactMat,bench);
-    box(.8,.16,.8,8.8,-3.05,0,darkMat,bench);
+    box(5.2,.15,1.9,4.25,-4.78,4.82,supportMaterial,bench);
+    rod([4.25,-4.7,4.82],[4.25,-3.62,4.82],.25,contactMat,bench);
+    // LED and voltmeter share a single compact cabinet on the side of the generator.
+    const meterSwivel=new THREE.Group();meterSwivel.position.set(4.25,-3.62,4.82);scene.add(meterSwivel);
+    box(5.0,2.5,.58,0,1.33,0,darkMat,meterSwivel);
+    box(4.88,2.37,.055,0,1.33,.32,supportMaterial,meterSwivel);
+    box(3.19,1.86,.09,.69,1.35,.38,contactMat,meterSwivel);
+    const lampBezel=new THREE.Mesh(new THREE.CylinderGeometry(.49,.49,.12,40),contactMat);
+    lampBezel.rotation.x=Math.PI/2;lampBezel.position.set(-1.74,1.38,.39);meterSwivel.add(lampBezel);
     const glassMat=new THREE.MeshStandardMaterial({color:0x254b38,emissive:0x55ff9b,emissiveIntensity:0,transparent:true,opacity:.85,roughness:.22});
-    const bulb=new THREE.Mesh(new THREE.SphereGeometry(.32,32,24),glassMat);bulb.scale.set(1,1.35,1);bulb.position.set(8.8,-2.68,0);scene.add(bulb);
-    const glow=new THREE.PointLight(0x65ffad,0,4);glow.position.copy(bulb.position);scene.add(glow);
+    const bulb=new THREE.Mesh(new THREE.SphereGeometry(.35,32,24),glassMat);bulb.scale.set(1,1,.72);bulb.position.set(-1.74,1.38,.57);meterSwivel.add(bulb);
+    const glow=new THREE.PointLight(0x65ffad,0,4);glow.position.copy(bulb.position);meterSwivel.add(glow);
     const haloCanvas=document.createElement('canvas');haloCanvas.width=haloCanvas.height=128;
     const hc=haloCanvas.getContext('2d'),gradient=hc.createRadialGradient(64,64,0,64,64,64);gradient.addColorStop(0,'rgba(150,255,196,.9)');gradient.addColorStop(.25,'rgba(65,255,140,.4)');gradient.addColorStop(1,'rgba(65,255,140,0)');hc.fillStyle=gradient;hc.fillRect(0,0,128,128);
-    const halo=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(haloCanvas),transparent:true,opacity:0,depthWrite:false,blending:THREE.AdditiveBlending}));halo.position.copy(bulb.position);halo.scale.set(1.8,1.8,1);scene.add(halo);
-    // Fixed plinth and rotating upper turntable, both physically on the bench.
-    box(2.2,.18,2.1,11.1,-3.68,0,darkMat,bench);
-    rod([11.1,-3.59,0],[11.1,-3.38,0],.77,contactMat,bench);
-    const meterSwivel=new THREE.Group();meterSwivel.position.set(11.1,-3.38,0);scene.add(meterSwivel);
-    rod([0,0,0],[0,.16,0],.72,supportMaterial,meterSwivel);
-    rod([0,.16,0],[0,.62,0],.2,contactMat,meterSwivel);
-    box(3.6,2.1,.48,0,1.64,0,darkMat,meterSwivel);
+    const halo=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(haloCanvas),transparent:true,opacity:0,depthWrite:false,blending:THREE.AdditiveBlending}));halo.position.copy(bulb.position);halo.scale.set(1.6,1.6,1);meterSwivel.add(halo);
     const meterAngle=document.querySelector('#meterAngle'),meterAngleValue=document.querySelector('#meterAngleValue');
     function orientMeter(){meterSwivel.rotation.y=THREE.MathUtils.degToRad(+meterAngle.value);meterAngleValue.textContent=meterAngle.value+'°'}
     const meterAuto=document.querySelector('#meterAuto');
@@ -418,7 +416,7 @@
     meterAngle.oninput=orientMeter;orientMeter();meterAuto.onchange();
     const meterCanvas=document.createElement('canvas');meterCanvas.width=640;meterCanvas.height=360;
     const meterContext=meterCanvas.getContext('2d'),meterTexture=new THREE.CanvasTexture(meterCanvas);
-    const meter=new THREE.Mesh(new THREE.PlaneGeometry(3.4,1.91),new THREE.MeshBasicMaterial({map:meterTexture}));meter.position.set(0,1.64,.245);meterSwivel.add(meter);
+    const meter=new THREE.Mesh(new THREE.PlaneGeometry(3.04,1.71),new THREE.MeshBasicMaterial({map:meterTexture}));meter.position.set(.69,1.35,.431);meterSwivel.add(meter);
     let lastMeterText='',outputVoltage=0,outputPulse=0;
     function drawMeter(voltage){const text=(voltage<-.005?'−':voltage>.005?'+':'')+Math.abs(voltage).toFixed(2),key=text+mode.value;
       if(key===lastMeterText)return;lastMeterText=key;const q=meterContext;
@@ -434,7 +432,7 @@
     inductionWindow.oninput=()=>{inductionDegrees=+inductionWindow.value;windowValue.textContent=inductionDegrees+'° (±'+(inductionDegrees/2)+'°)'};
     toggle.onclick=()=>{running=!running;toggle.textContent=running?'Pause':'Start'};document.querySelector('#labels').onchange=e=>labels.forEach(v=>v.visible=e.target.checked);
     const fieldButton=document.querySelector('#field');fieldButton.onclick=()=>{fieldLines.visible=!fieldLines.visible;fieldButton.classList.toggle('active',fieldLines.visible);fieldButton.textContent=fieldLines.visible?'Hide flux':'Show flux'};
-    const microButton=document.querySelector('#micro');microButton.onclick=()=>{microView=!microView;microButton.classList.toggle('active',microView);microButton.textContent=microView?'Overview':'Microscopic view';if(microView){controls.target.set(.45,0,1.55);camera.position.set(2.35,1.35,3.35)}else{restoreOverview()}};
+    const microButton=document.querySelector('#micro');microButton.onclick=()=>{microView=!microView;microButton.classList.toggle('active',microView);microButton.textContent=microView?'Overview':'Microscopic view';if(microView){controls.target.set(.45,0,coilHalfWidth);camera.position.set(2.8,1.5,4.7)}else{restoreOverview()}};
     document.querySelector('#reset').onclick=()=>{microView=false;microButton.classList.remove('active');microButton.textContent='Microscopic view';restoreOverview()};
     function shortestTurn(from,to){return Math.atan2(Math.sin(to-from),Math.cos(to-from))}
     function inductionEnvelope(phase,totalDegrees){
