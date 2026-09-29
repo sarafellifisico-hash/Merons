@@ -3370,7 +3370,7 @@ function syncForceControls(force = false) {
   });
 }
 
-function activatePanelTab(tabName, remember = true) {
+function activatePanelTab(tabName) {
   panelTabs.forEach(tab => {
     const selected = tab.dataset.panelTab === tabName;
     tab.classList.toggle('active', selected);
@@ -3391,9 +3391,6 @@ function activatePanelTab(tabName, remember = true) {
   });
   if (tabName === 'forces') syncForceControls(true);
   queueMicrotask(() => setMagnetGravityMode(tabName === 'magnet-gravity'));
-  if (remember) {
-    try { localStorage.setItem('meronicBuilderActivePanelTab', tabName); } catch (_) {}
-  }
 }
 
 document.querySelectorAll('[data-builder-mode]').forEach(button => {
@@ -3419,12 +3416,7 @@ panelTabs.forEach((tab, index) => {
   });
 });
 
-let initialPanelTab = 'build';
-try {
-  const savedPanelTab = localStorage.getItem('meronicBuilderActivePanelTab');
-  if (panelTabs.some(tab => tab.dataset.panelTab === savedPanelTab)) initialPanelTab = savedPanelTab;
-} catch (_) {}
-activatePanelTab(initialPanelTab, false);
+activatePanelTab('build');
 
 document.getElementById('toggleBtn').addEventListener('click', () => {
   const btn = document.getElementById('toggleBtn');
