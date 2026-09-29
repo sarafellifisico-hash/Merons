@@ -220,7 +220,7 @@ Check your Browserslist config to be sure that your targets are set up correctly
   .panel-tabs {
     flex: 0 0 auto;
     display:grid;
-    grid-template-columns:repeat(6, minmax(0,1fr));
+    grid-template-columns:repeat(7, minmax(0,1fr));
     gap:5px;
     padding:8px;
     border-bottom:1px solid rgba(255,255,255,.055);
@@ -244,13 +244,14 @@ Check your Browserslist config to be sure that your targets are set up correctly
   .builder-mode-switch {
     flex:0 0 auto;
     display:grid;
-    grid-template-columns:repeat(2,minmax(0,1fr));
+    grid-template-columns:repeat(3,minmax(0,1fr));
     gap:6px;
     padding:9px 10px;
     border-bottom:1px solid rgba(255,255,255,.08);
     background:rgba(5,12,22,.58);
   }
   .builder-mode-button {
+    display:flex;align-items:center;justify-content:center;text-align:center;
     min-width:0;
     padding:9px 5px;
     border:1px solid rgba(105,215,243,.19);
@@ -260,6 +261,7 @@ Check your Browserslist config to be sure that your targets are set up correctly
     font:700 11px/1.2 "Instrument Sans",system-ui,sans-serif;
     cursor:pointer;
   }
+  .builder-mode-button span { min-width:0;max-width:100%;white-space:normal; }
   .builder-mode-button:hover { border-color:#69d7f3;color:#f0f9ff; }
   .builder-mode-button.active {
     border-color:#69d7f3;
@@ -268,6 +270,25 @@ Check your Browserslist config to be sure that your targets are set up correctly
     box-shadow:inset 0 1px rgba(255,255,255,.09);
   }
   .builder-mode-button:focus-visible { outline:2px solid #69d7f3;outline-offset:2px; }
+  .mg-action-grid,.mg-shape-grid { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px; }
+  .mg-frame-grid { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px; }
+  .mg-action,.mg-shape {
+    min-width:0;padding:9px 5px;border:1px solid #344964;border-radius:9px;
+    background:#132034;color:#dbeaf6;
+    font:600 11px/1.3 "Instrument Sans",system-ui,sans-serif;cursor:pointer;
+  }
+  .mg-action:hover,.mg-shape:hover { background:#20334e;border-color:#69d7f3; }
+  .mg-action.active,.mg-shape.active { background:rgba(38,93,116,.52);border-color:#69d7f3;color:#fff; }
+  .mg-camera-rotation { width:100%;margin-top:7px; }
+  .mg-status { margin-top:10px;color:#a9dbe9;font-size:11px;line-height:1.4;min-height:2.8em; }
+  .mg-field-note {
+    margin:10px 0;padding:10px 11px;border:1px solid rgba(105,215,243,.43);
+    border-radius:9px;background:rgba(12,32,48,.78);color:#dcecf6;
+    font:400 11px/1.45 "Instrument Sans",system-ui,sans-serif;
+  }
+  .mg-field-note strong { display:block;margin-bottom:4px;color:#9ee9f9;font-size:10px;letter-spacing:.06em;text-transform:uppercase; }
+  .mg-field-note p { margin:0; }
+  #mgSphereSizes[hidden] { display:none; }
   .force-triad-grid,.force-action-grid { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px; }
   .force-action-grid { margin-top:8px; }
   .force-action.wide { grid-column:1/-1; }
@@ -665,6 +686,7 @@ body.comparison-resizing * { cursor:move !important; user-select:none !important
   #panel { left:10px; top:10px; bottom:10px; width:min(356px, calc(100vw - 20px)); max-width:none; }
   .panel-header { padding-left:14px; }
   .panel-tab { font-size:10px; }
+  .builder-mode-button { font-size:10px; padding:8px 3px; }
 }
 
 /* Link between the two complementary interactive mechanisms */
@@ -834,6 +856,11 @@ body.panel-edge-hidden #panelEdgeZone{opacity:1;visibility:visible;pointer-event
 #panel .panel-inner{flex:0 1 auto}
 #panelEdgeZone .edge-plus{font:700 16px/1 "Fragment Mono",ui-monospace,monospace}
 @media(max-width:760px){#panel:not(.minimized){top:auto;bottom:8px;max-height:calc(100dvh - 16px)}}
+body.magnet-gravity-active #pairNotes,
+body.magnet-gravity-active #triadDistanceLabel,
+body.magnet-gravity-active #presentationContextMenu { display:none!important; }
+body.pair-mode.magnet-gravity-active #panel:not(.minimized) { top:16px!important;max-height:calc(100dvh - 32px); }
+@media(max-width:760px){body.pair-mode.magnet-gravity-active #panel:not(.minimized){top:auto!important;bottom:8px!important;max-height:calc(100dvh - 16px)}}
 </style>
 <link rel="stylesheet" href="mobile-controls.css?v=unified-mobile-20260927">
 </head>
@@ -911,8 +938,9 @@ body.panel-edge-hidden #panelEdgeZone{opacity:1;visibility:visible;pointer-event
   </header>
 
   <div class="builder-mode-switch" role="group" aria-label="Meronic Builder mode">
-    <button type="button" class="builder-mode-button active" data-builder-mode="build" aria-pressed="true">Meronic Construction</button>
-    <button type="button" class="builder-mode-button" data-builder-mode="forces" aria-pressed="false">Meronic Forces</button>
+    <button type="button" class="builder-mode-button active" data-builder-mode="build" aria-pressed="true"><span>Meronic Construction</span></button>
+    <button type="button" class="builder-mode-button" data-builder-mode="forces" aria-pressed="false"><span>Meronic Forces</span></button>
+    <button type="button" class="builder-mode-button" data-builder-mode="magnet-gravity" aria-pressed="false"><span>Magnetism &lt;-&gt; Gravity</span></button>
   </div>
   <nav class="panel-tabs" role="tablist" aria-label="Control categories">
     <button class="panel-tab active" type="button" role="tab" aria-selected="true" aria-controls="panel-build" data-panel-tab="build">Build</button>
@@ -921,6 +949,7 @@ body.panel-edge-hidden #panelEdgeZone{opacity:1;visibility:visible;pointer-event
     <button class="panel-tab" type="button" role="tab" aria-selected="false" aria-controls="panel-view" data-panel-tab="view">View</button>
     <button class="panel-tab" type="button" role="tab" aria-selected="false" aria-controls="panel-compare" data-panel-tab="compare">Compare</button>
     <button class="panel-tab" type="button" role="tab" aria-selected="false" aria-controls="panel-capture" data-panel-tab="capture">Capture</button>
+    <button class="panel-tab" type="button" role="tab" aria-selected="false" aria-controls="panel-magnet-gravity" data-panel-tab="magnet-gravity">Fields</button>
   </nav>
 
   <div class="panel-inner">
@@ -1014,6 +1043,62 @@ body.panel-edge-hidden #panelEdgeZone{opacity:1;visibility:visible;pointer-event
         </div>
       </div>
 
+    </section>
+
+    <section id="panel-magnet-gravity" class="panel-pane" role="tabpanel" data-panel-pane="magnet-gravity" hidden>
+      <div class="control-card">
+        <div class="sec-title">Magnetism &lt;-&gt; Gravity</div>
+        <div class="mg-shape-grid" aria-label="Body geometry">
+          <button type="button" class="mg-shape active" data-mg-shape="cylinder" aria-pressed="true">Cylinders · magnets</button>
+          <button type="button" class="mg-shape" data-mg-shape="sphere" aria-pressed="false">Spheres · celestial bodies</button>
+        </div>
+        <div class="mg-field-note" role="note">
+          <strong>Gravitational field · Meronic Model</strong>
+          <p>Bodies consist of Merons built from Compalphas. Their exomolecular interaction circles (CiEx/CEx) extend beyond each body and interact with those of other bodies through Rotating Interaction (IG). This interaction constitutes the gravitational field: the circles occupy space, while space itself does not curve.</p>
+        </div>
+        <div class="mg-status" id="mgStatus" role="status" aria-live="polite">CMD · diffuse Eα orientations</div>
+        <div class="mg-action-grid">
+          <button type="button" class="mg-action" id="mgDiffuse">Diffuse · CMD</button>
+          <button type="button" class="mg-action" id="mgAlign">Align · CMC</button>
+        </div>
+        <div class="mg-frame-grid" aria-label="Field camera framing">
+          <button type="button" class="mg-action active" data-mg-frame="reference" aria-pressed="true">Reference view</button>
+          <button type="button" class="mg-action" data-mg-frame="reach" aria-pressed="false">Full CI reach</button>
+          <button type="button" class="mg-action" data-mg-frame="bodies" aria-pressed="false">Focus bodies</button>
+        </div>
+        <button type="button" class="mg-action mg-camera-rotation active" id="mgCameraRotation" aria-pressed="true">Stop camera rotation</button>
+      </div>
+      <div class="control-card">
+        <div class="sec-title">Geometry and transition</div>
+        <div class="control-row">
+          <div class="flex items-center justify-between mb-1"><label for="mgGap">Surface distance</label><span id="mgGapVal" class="mono">12.00 cm</span></div>
+          <input type="range" id="mgGap" min="0.10" max="12" step="0.05" value="12.00">
+        </div>
+        <div class="control-row">
+          <div class="flex items-center justify-between mb-1"><label for="mgDuration">Transition time</label><span id="mgDurationVal" class="mono">3.0 s</span></div>
+          <input type="range" id="mgDuration" min="0.5" max="12" step="0.1" value="3">
+        </div>
+        <div class="control-row">
+          <div class="flex items-center justify-between mb-1"><label for="mgBodyOpacity">Body opacity</label><span id="mgBodyOpacityVal" class="mono">100%</span></div>
+          <input type="range" id="mgBodyOpacity" min="0" max="100" step="1" value="100">
+        </div>
+        <div class="control-row">
+          <div class="flex items-center justify-between mb-1"><label for="mgCIOpacity">CI opacity</label><span id="mgCIOpacityVal" class="mono">10.0%</span></div>
+          <input type="range" id="mgCIOpacity" min="0" max="10" step="0.1" value="10">
+          <div class="panel-note">The opacity decreases from the inner to the outer CI layers at every setting.</div>
+        </div>
+        <div id="mgSphereSizes" hidden>
+          <div class="control-row">
+            <div class="flex items-center justify-between mb-1"><label for="mgSizeA">Sphere A diameter</label><span id="mgSizeAVal" class="mono">2.0 cm</span></div>
+            <input type="range" id="mgSizeA" min="1" max="4" step="0.1" value="2">
+          </div>
+          <div class="control-row">
+            <div class="flex items-center justify-between mb-1"><label for="mgSizeB">Sphere B diameter</label><span id="mgSizeBVal" class="mono">1.2 cm</span></div>
+            <input type="range" id="mgSizeB" min="1" max="4" step="0.1" value="1.2">
+          </div>
+        </div>
+        <p class="panel-note">Cylinders: 2 cm high × 1 cm diameter. In CMC, Eα points up in A and down in B. Use Diffuse to reverse the transition or randomize the axes again.</p>
+      </div>
     </section>
 
     <section id="panel-interaction" class="panel-pane" role="tabpanel" data-panel-pane="interaction" hidden>
@@ -2675,6 +2760,387 @@ scene.add(new THREE.AmbientLight(0xffffff, 0.35));
 const universeGroup = new THREE.Group();
 scene.add(universeGroup);
 
+// A separate centimetre-scale scene with shared geometry for 48 Compalphas.
+const magnetGravity = {
+  active:false, root:new THREE.Group(), bodies:[], axes:[], built:false,
+  shape:'cylinder', gap:12, sizeA:2, sizeB:1.2, duration:3,
+  mode:'diffuse', frame:'reference', bodyOpacity:1, ciOpacity:0.1,
+  cameraRotating:true, lastOrbitTime:null,
+  ciMaterial:null, transition:null, savedView:null
+};
+magnetGravity.root.visible=false;
+scene.add(magnetGravity.root);
+
+function magnetGravityMeridianGeometry() {
+  const vertices=[], fades=[];
+  for (let layer=1;layer<=12;layer++) {
+    // A horn torus like the Builder's original CI: its outer diameter is 4R.
+    // Start at D1 and double the spacing: D1, D3, ... D23 cm.
+    const radius=(2*layer-1)/4;
+    const fade=Math.pow(0.85,layer-1);
+    for (let meridian=0;meridian<24;meridian++) {
+      const angle=meridian*Math.PI/12, c=Math.cos(angle), s=Math.sin(angle);
+      for (let part=0;part<24;part++) for (const step of [part,part+1]) {
+        const v=step*Math.PI/12, radial=radius*(1+Math.cos(v));
+        vertices.push(radial*c,radius*Math.sin(v),radial*s);
+        fades.push(fade);
+      }
+    }
+  }
+  const geometry=new THREE.BufferGeometry();
+  geometry.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));
+  geometry.setAttribute('ciFade',new THREE.Float32BufferAttribute(fades,1));
+  geometry.computeBoundingSphere();
+  return geometry;
+}
+
+function magnetGravityLabel(letter,color) {
+  const canvas=document.createElement('canvas');canvas.width=256;canvas.height=96;
+  const ctx=canvas.getContext('2d');
+  ctx.beginPath();
+  ctx.moveTo(34,9);ctx.lineTo(222,9);ctx.quadraticCurveTo(246,9,246,33);
+  ctx.lineTo(246,63);ctx.quadraticCurveTo(246,87,222,87);
+  ctx.lineTo(34,87);ctx.quadraticCurveTo(10,87,10,63);
+  ctx.lineTo(10,33);ctx.quadraticCurveTo(10,9,34,9);ctx.closePath();
+  ctx.fillStyle='rgba(2,12,26,0.91)';ctx.fill();
+  ctx.strokeStyle=color;ctx.lineWidth=3;ctx.stroke();
+  ctx.font='700 47px "Instrument Sans", sans-serif';
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillStyle='#ffffff';ctx.fillText('Body '+letter,128,50);
+  const sprite=new THREE.Sprite(new THREE.SpriteMaterial({
+    map:new THREE.CanvasTexture(canvas),transparent:true,depthTest:false
+  }));
+  sprite.renderOrder=14;
+  sprite.scale.set(2.5,0.94,1);
+  return sprite;
+}
+
+function buildMagnetGravity() {
+  if (magnetGravity.built) return;
+  magnetGravity.built=true;
+  const ciGeometry=magnetGravityMeridianGeometry();
+  // One shared material keeps all 12 layer alpha values independent of the slider.
+  magnetGravity.ciMaterial=new THREE.ShaderMaterial({
+    uniforms:{globalOpacity:{value:magnetGravity.ciOpacity}},
+    vertexShader:`
+      attribute float ciFade;
+      varying float vCiFade;
+      void main() {
+        vCiFade=ciFade;
+        gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);
+      }
+    `,
+    fragmentShader:`
+      uniform float globalOpacity;
+      varying float vCiFade;
+      void main() {
+        gl_FragColor=vec4(1.0,1.0,1.0,globalOpacity*vCiFade);
+      }
+    `,
+    transparent:true,depthWrite:false,depthTest:false
+  });
+  const axisGeometry=new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(0,-1,0),new THREE.Vector3(0,0.94,0)
+  ]);
+  const axisMaterial=new THREE.LineBasicMaterial({
+    color:0xff3636,transparent:true,depthTest:false,depthWrite:false
+  });
+  const tipGeometry=new THREE.ConeGeometry(0.055,0.15,10);
+  const tipMaterial=new THREE.MeshBasicMaterial({
+    color:0xff3636,transparent:true,depthTest:false,depthWrite:false
+  });
+  const pointGeometry=new THREE.SphereGeometry(0.037,10,8);
+  const pointMaterial=new THREE.MeshBasicMaterial({
+    color:0xff4949,transparent:true,depthTest:false,depthWrite:false
+  });
+  const cylinderGeometry=new THREE.CylinderGeometry(0.5,0.5,2,48);
+  const sphereGeometry=new THREE.SphereGeometry(1,32,20);
+  for (let bodyIndex=0;bodyIndex<2;bodyIndex++) {
+    const bodyGroup=new THREE.Group();
+    magnetGravity.root.add(bodyGroup);
+    const shellMaterial=new THREE.MeshBasicMaterial({
+      color:bodyIndex===0?0x238eb4:0x586fbc,
+      transparent:true,opacity:magnetGravity.bodyOpacity,
+      side:THREE.DoubleSide,depthWrite:false,depthTest:false
+    });
+    const edgeMaterial=new THREE.LineBasicMaterial({
+      color:bodyIndex===0?0x62dcff:0xa2b8ff,transparent:true,
+      opacity:Math.min(1,magnetGravity.bodyOpacity*1.5),
+      depthWrite:false,depthTest:false
+    });
+    const makeShell=geometry=>{
+      const shell=new THREE.Group();
+      const surface=new THREE.Mesh(geometry,shellMaterial);
+      surface.renderOrder=10;shell.add(surface);
+      const edges=new THREE.LineSegments(new THREE.EdgesGeometry(geometry,24),edgeMaterial);
+      edges.renderOrder=11;shell.add(edges);
+      bodyGroup.add(shell);
+      return shell;
+    };
+    const cylinder=makeShell(cylinderGeometry),sphere=makeShell(sphereGeometry);
+    const label=magnetGravityLabel(bodyIndex===0?'A':'B',
+      bodyIndex===0?'#95e9ff':'#b8c7ff');
+    bodyGroup.add(label);
+    const axes=[];
+    for (let level=0;level<4;level++) for (let slot=0;slot<6;slot++) {
+      const ca=new THREE.Group();
+      ca.add(new THREE.LineSegments(ciGeometry,magnetGravity.ciMaterial));
+      const axisLine=new THREE.Line(axisGeometry,axisMaterial);
+      axisLine.renderOrder=12;ca.add(axisLine);
+      const tip=new THREE.Mesh(tipGeometry,tipMaterial);
+      tip.position.y=0.94;tip.renderOrder=13;ca.add(tip);
+      const point=new THREE.Mesh(pointGeometry,pointMaterial);
+      point.renderOrder=13;ca.add(point);
+      bodyGroup.add(ca);
+      axes.push({ca,level,slot,from:new THREE.Quaternion(),to:new THREE.Quaternion()});
+    }
+    magnetGravity.axes.push(...axes);
+    magnetGravity.bodies.push({group:bodyGroup,cylinder,sphere,label,axes,
+      shellMaterial,edgeMaterial});
+  }
+  randomizeMagnetGravity(true);
+  positionMagnetGravity();
+}
+
+function randomMagnetGravityQuaternion() {
+  const y=2*Math.random()-1, angle=2*Math.PI*Math.random(), r=Math.sqrt(1-y*y);
+  return new THREE.Quaternion().setFromUnitVectors(
+    new THREE.Vector3(0,1,0),new THREE.Vector3(r*Math.cos(angle),y,r*Math.sin(angle))
+  );
+}
+
+function updateMagnetGravityStatus(message) {
+  document.getElementById('mgStatus').textContent=message;
+  for (const [id,selected] of [
+    ['mgDiffuse',magnetGravity.mode==='diffuse'],
+    ['mgAlign',magnetGravity.mode==='aligned']
+  ]) {
+    const button=document.getElementById(id);
+    button.classList.toggle('active',selected);
+    button.setAttribute('aria-pressed',String(selected));
+  }
+}
+
+function randomizeMagnetGravity(immediate=false) {
+  if (!magnetGravity.built) return;
+  magnetGravity.axes.forEach(axis=>{
+    axis.from.copy(axis.ca.quaternion);
+    axis.to.copy(randomMagnetGravityQuaternion());
+    if (immediate) axis.ca.quaternion.copy(axis.to);
+  });
+  magnetGravity.mode='diffuse';
+  magnetGravity.transition=immediate?null:{
+    start:performance.now(),duration:magnetGravity.duration*1000
+  };
+  updateMagnetGravityStatus(immediate?'CMD · diffuse Eα orientations':
+    'Transition to CMD · diffuse Eα orientations');
+}
+
+function transitionMagnetGravity(mode) {
+  if (!magnetGravity.built) buildMagnetGravity();
+  if (mode==='diffuse') { randomizeMagnetGravity();return; }
+  magnetGravity.axes.forEach((axis,index)=>{
+    axis.from.copy(axis.ca.quaternion);
+    axis.to.setFromUnitVectors(new THREE.Vector3(0,1,0),
+      new THREE.Vector3(0,index<24?1:-1,0));
+  });
+  magnetGravity.mode='aligned';
+  magnetGravity.transition={
+    start:performance.now(),duration:magnetGravity.duration*1000
+  };
+  updateMagnetGravityStatus('Transition to CMC · Eα A ↑ · Eα B ↓');
+}
+
+function positionMagnetGravity() {
+  if (!magnetGravity.built) return;
+  const sphereMode=magnetGravity.shape==='sphere';
+  const diameters=sphereMode?[magnetGravity.sizeA,magnetGravity.sizeB]:[1,1];
+  const centerDistance=(diameters[0]+diameters[1])/2+magnetGravity.gap;
+  magnetGravity.bodies.forEach((body,index)=>{
+    body.group.position.x=(index===0?-1:1)*centerDistance/2;
+    body.cylinder.visible=!sphereMode;body.sphere.visible=sphereMode;
+    const radius=diameters[index]/2;
+    body.sphere.scale.setScalar(radius);
+    body.label.position.y=(sphereMode?radius:1)+1.35;
+    body.axes.forEach(axis=>{
+      const angle=axis.slot*Math.PI/3+(axis.level%2)*Math.PI/6;
+      const y=sphereMode?(axis.level-1.5)*radius*0.43:
+        (axis.level-1.5)*0.49;
+      const radial=sphereMode?
+        Math.sqrt(Math.max(0,radius*radius-y*y))*0.55:0.33;
+      axis.ca.position.set(radial*Math.cos(angle),y,radial*Math.sin(angle));
+    });
+  });
+}
+
+function fitMagnetGravityCamera() {
+  if (!magnetGravity.active) return;
+  const diameters=magnetGravity.shape==='sphere'?
+    [magnetGravity.sizeA,magnetGravity.sizeB]:[1,1];
+  const separation=(diameters[0]+diameters[1])/2+magnetGravity.gap;
+  const fieldView=magnetGravity.frame!=='bodies';
+  // Full CI reach fits D23; the reference view matches the supplied screenshot.
+  const fieldRadius=11.5;
+  const maxRadius=Math.max(...diameters)/2;
+  const paHorizontal=magnetGravity.shape==='sphere'?maxRadius*0.55:0.33;
+  const paVertical=magnetGravity.shape==='sphere'?maxRadius*0.645:0.735;
+  const halfWidth=separation/2+(fieldView?fieldRadius+paHorizontal+0.25:
+    maxRadius+0.3);
+  const halfHeight=fieldView?fieldRadius+paVertical+separation/2+0.25:
+    Math.max(1,maxRadius)+1.8;
+  const vertical=THREE.MathUtils.degToRad(camera.fov)/2;
+  const horizontal=Math.atan(Math.tan(vertical)*window.innerWidth/window.innerHeight);
+  const distance=magnetGravity.frame==='reference'?
+    Math.max(26.5, (separation/2+maxRadius+0.6)/Math.tan(horizontal)*1.12,
+      (Math.max(1,maxRadius)+1.8)/Math.tan(vertical)*1.12):
+    Math.max(halfWidth/Math.tan(horizontal),
+      halfHeight/Math.tan(vertical))*1.22;
+  const direction=camera.position.clone().sub(controls.target);
+  if (direction.lengthSq()<1e-6) direction.set(0,-1,0.4);
+  controls.target.set(0,0,0);
+  camera.position.copy(direction.normalize().multiplyScalar(distance));
+  camera.lookAt(controls.target);controls.update();
+}
+
+function updateMagnetGravityFrame(now) {
+  if (!magnetGravity.active || !magnetGravity.transition) return;
+  const transition=magnetGravity.transition;
+  const t=Math.min(1,(now-transition.start)/transition.duration);
+  const eased=t*t*(3-2*t);
+  magnetGravity.axes.forEach(axis=>
+    axis.ca.quaternion.copy(axis.from).slerp(axis.to,eased));
+  if (t===1) {
+    magnetGravity.transition=null;
+    updateMagnetGravityStatus(magnetGravity.mode==='aligned'?
+      'CMC · Eα A ↑ · Eα B ↓ · 24 Ca per body':
+      'CMD · diffuse Eα orientations · 24 Ca per body');
+  }
+}
+
+function syncMagnetGravityCameraRotation() {
+  const button=document.getElementById('mgCameraRotation');
+  button.textContent=magnetGravity.cameraRotating?'Stop camera rotation':'Play camera rotation';
+  button.classList.toggle('active',magnetGravity.cameraRotating);
+  button.setAttribute('aria-pressed',String(magnetGravity.cameraRotating));
+  if (magnetGravity.active) controls.autoRotate=magnetGravity.cameraRotating;
+}
+
+function setMagnetGravityMode(active) {
+  if (active===magnetGravity.active) return;
+  if (active) {
+    cancelScriptPlayback();
+    if (comparisonMode) exitComparisonMode();
+    stopOpeningCameraSequence();
+    buildMagnetGravity();
+    magnetGravity.savedView={
+      position:camera.position.clone(),target:controls.target.clone(),zoom:camera.zoom,
+      view:camera.view?.enabled?{...camera.view}:null,
+      minDistance:controls.minDistance,maxDistance:controls.maxDistance,
+      autoRotate:controls.autoRotate,autoRotateSpeed:controls.autoRotateSpeed,
+      controlsEnabled:controls.enabled,universeVisible:universeGroup.visible
+    };
+    magnetGravity.active=true;
+    document.body.classList.add('magnet-gravity-active');
+    universeGroup.visible=false;magnetGravity.root.visible=true;
+    controls.enabled=true;controls.minDistance=1;controls.maxDistance=100;
+    camera.clearViewOffset();camera.zoom=1;camera.updateProjectionMatrix();
+    camera.position.set(0.8,2,10);controls.target.set(0,0,0);
+    fitMagnetGravityCamera();
+    magnetGravity.cameraRotating=true;
+    magnetGravity.lastOrbitTime=performance.now();
+    controls.autoRotateSpeed=1.2;
+    syncMagnetGravityCameraRotation();
+    randomizeMagnetGravity(true);
+    transitionMagnetGravity('aligned');
+  } else {
+    magnetGravity.active=false;magnetGravity.transition=null;
+    magnetGravity.lastOrbitTime=null;
+    document.body.classList.remove('magnet-gravity-active');
+    magnetGravity.root.visible=false;
+    const saved=magnetGravity.savedView;
+    if (!saved) return;
+    universeGroup.visible=saved.universeVisible;
+    controls.minDistance=saved.minDistance;controls.maxDistance=saved.maxDistance;
+    controls.autoRotate=saved.autoRotate;
+    controls.autoRotateSpeed=saved.autoRotateSpeed;
+    controls.enabled=saved.controlsEnabled;
+    camera.position.copy(saved.position);controls.target.copy(saved.target);
+    camera.zoom=saved.zoom;
+    if (saved.view) camera.setViewOffset(saved.view.fullWidth,saved.view.fullHeight,
+      saved.view.offsetX,saved.view.offsetY,saved.view.width,saved.view.height);
+    else camera.clearViewOffset();
+    camera.updateProjectionMatrix();controls.update();
+    magnetGravity.savedView=null;
+  }
+}
+
+document.querySelectorAll('[data-mg-shape]').forEach(button=>
+  button.addEventListener('click',()=>{
+    magnetGravity.shape=button.dataset.mgShape;
+    document.querySelectorAll('[data-mg-shape]').forEach(choice=>{
+      const selected=choice===button;choice.classList.toggle('active',selected);
+      choice.setAttribute('aria-pressed',String(selected));
+    });
+    document.getElementById('mgSphereSizes').hidden=magnetGravity.shape!=='sphere';
+    positionMagnetGravity();fitMagnetGravityCamera();
+  })
+);
+document.querySelectorAll('[data-mg-frame]').forEach(button=>
+  button.addEventListener('click',()=>{
+    magnetGravity.frame=button.dataset.mgFrame;
+    document.querySelectorAll('[data-mg-frame]').forEach(choice=>{
+      const selected=choice===button;choice.classList.toggle('active',selected);
+      choice.setAttribute('aria-pressed',String(selected));
+    });
+    fitMagnetGravityCamera();
+  })
+);
+document.getElementById('mgDiffuse').addEventListener('click',
+  ()=>transitionMagnetGravity('diffuse'));
+document.getElementById('mgAlign').addEventListener('click',
+  ()=>transitionMagnetGravity('aligned'));
+document.getElementById('mgCameraRotation').addEventListener('click',()=>{
+  magnetGravity.cameraRotating=!magnetGravity.cameraRotating;
+  syncMagnetGravityCameraRotation();
+});
+document.getElementById('mgBodyOpacity').addEventListener('input',event=>{
+  magnetGravity.bodyOpacity=Number(event.target.value)/100;
+  document.getElementById('mgBodyOpacityVal').textContent=
+    Math.round(magnetGravity.bodyOpacity*100)+'%';
+  magnetGravity.bodies.forEach(body=>{
+    body.shellMaterial.opacity=magnetGravity.bodyOpacity;
+    body.edgeMaterial.opacity=Math.min(1,magnetGravity.bodyOpacity*1.5);
+  });
+});
+document.getElementById('mgCIOpacity').addEventListener('input',event=>{
+  magnetGravity.ciOpacity=Number(event.target.value)/100;
+  document.getElementById('mgCIOpacityVal').textContent=
+    (magnetGravity.ciOpacity*100).toFixed(1)+'%';
+  if (magnetGravity.ciMaterial)
+    magnetGravity.ciMaterial.uniforms.globalOpacity.value=magnetGravity.ciOpacity;
+});
+for (const [id,key,suffix,digits,reframe] of [
+  ['mgGap','gap',' cm',2,true],['mgDuration','duration',' s',1,false],
+  ['mgSizeA','sizeA',' cm',1,true],['mgSizeB','sizeB',' cm',1,true]
+]) {
+  const input=document.getElementById(id);
+  input.addEventListener('input',()=>{
+    const previousDuration=magnetGravity.duration;
+    magnetGravity[key]=Number(input.value);
+    document.getElementById(id+'Val').textContent=
+      magnetGravity[key].toFixed(digits)+suffix;
+    if (key==='duration' && magnetGravity.transition) {
+      const progress=Math.min(1,(performance.now()-magnetGravity.transition.start)/
+        (previousDuration*1000));
+      magnetGravity.transition.duration=magnetGravity.duration*1000;
+      magnetGravity.transition.start=performance.now()-
+        progress*magnetGravity.transition.duration;
+    }
+    if (reframe) {positionMagnetGravity();fitMagnetGravityCamera();}
+  });
+}
+
+
 const rawVertices = [[1,1,0],[1,-1,0],[-1,1,0],[-1,-1,0],[1,0,1],[1,0,-1],[-1,0,1],[-1,0,-1],[0,1,1],[0,1,-1],[0,-1,1],[0,-1,-1]];
 const basePositions = rawVertices.map(v => new THREE.Vector3(...v).normalize().multiplyScalar(110));
 
@@ -2924,13 +3390,19 @@ function activatePanelTab(tabName, remember = true) {
     button.setAttribute('aria-pressed', String(selected));
   });
   if (tabName === 'forces') syncForceControls(true);
+  queueMicrotask(() => setMagnetGravityMode(tabName === 'magnet-gravity'));
   if (remember) {
     try { localStorage.setItem('meronicBuilderActivePanelTab', tabName); } catch (_) {}
   }
 }
 
 document.querySelectorAll('[data-builder-mode]').forEach(button => {
-  button.addEventListener('click', () => activatePanelTab(button.dataset.builderMode));
+  button.addEventListener('click', () => {
+    if (button.dataset.builderMode === 'magnet-gravity' && magnetGravity.active) {
+      activatePanelTab('magnet-gravity');
+      transitionMagnetGravity('aligned');
+    } else activatePanelTab(button.dataset.builderMode);
+  });
 });
 panelTabs.forEach((tab, index) => {
   tab.addEventListener('click', () => activatePanelTab(tab.dataset.panelTab));
@@ -7919,18 +8391,24 @@ document.querySelectorAll('.layer-toggle').forEach(cb => cb.addEventListener('ch
 // polarity removed
 function animate(now = performance.now()){
   requestAnimationFrame(animate);
-  if(window.autoRotate && !scriptPlaybackActive) {
+  updateMagnetGravityFrame(now);
+  if (magnetGravity.active) {
+    const elapsed=Math.min(100,Math.max(0,now-(magnetGravity.lastOrbitTime ?? now)));
+    magnetGravity.lastOrbitTime=now;
+    controls.autoRotateSpeed=1.2*elapsed/(1000/60);
+  }
+  if(!magnetGravity.active && window.autoRotate && !scriptPlaybackActive) {
     if (comparisonMode) comparisonVariantRoots.forEach(root => { root.rotation.y += rotateSpeed; });
     else universeGroup.rotation.y += rotateSpeed;
   }
   // === DANÇA ===
-  if(danceEnabled){
+  if(danceEnabled && !magnetGravity.active){
     danceTime += 0.016; // ~60fps * freq via compute
     // Atualiza geometrias com nova posição dançante
     updateLocalGeometries();
   }
 
-    if (riRunning) {
+    if (riRunning && !magnetGravity.active) {
     riAnimatedCircles.forEach(circle => {
       if (!circle.visible || !circle.userData.ri) return;
       const state = circle.userData.ri;
@@ -7942,7 +8420,7 @@ function animate(now = performance.now()){
   }
   if (comparisonMode) comparisonControls[comparisonActiveView]?.update();
   else {
-    if(pairMode) controls.target.set(0,0,0);
+    if(pairMode && !magnetGravity.active) controls.target.set(0,0,0);
     controls.update();
   }
 
@@ -7964,6 +8442,7 @@ window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
+  if (magnetGravity.active) fitMagnetGravityCamera();
 });
 
 let zoomedOut = false;
