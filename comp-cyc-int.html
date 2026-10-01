@@ -784,192 +784,222 @@
         const dirLight=new THREE.DirectionalLight(0xffffff,1.0); dirLight.position.set(10,20,15); dirLight.castShadow=true; scene.add(dirLight);
         const backLight=new THREE.DirectionalLight(0x6bafff,0.5); backLight.position.set(-10,10,-10); scene.add(backLight);
 
-        // Matte raised bench, enclosed PVC conduits and recessed electrode rods.
-        const metalMaterial=new THREE.MeshStandardMaterial({color:0xd2e1e9,metalness:0.92,roughness:0.16});
-        const darkMetalMaterial=new THREE.MeshStandardMaterial({color:0x17212c,metalness:0.58,roughness:0.46});
-        const baseMaterial=new THREE.MeshStandardMaterial({color:0x101820,metalness:0.18,roughness:0.79});
-        const base=new THREE.Mesh(new THREE.BoxGeometry(21.2,0.88,12.2),baseMaterial);
-        base.position.set(0,0.72,0); base.receiveShadow=true; base.castShadow=true; scene.add(base);
-        const benchTop=new THREE.Mesh(new THREE.BoxGeometry(21.45,0.14,12.45),baseMaterial);
-        benchTop.position.set(0,1.24,0); benchTop.receiveShadow=true; benchTop.castShadow=true; scene.add(benchTop);
-        const fascia=new THREE.Mesh(new THREE.BoxGeometry(20.9,0.16,0.12),darkMetalMaterial);
-        fascia.position.set(0,0.48,6.13); scene.add(fascia);
-        [-8.8,8.8].forEach(x=>[-4.8,4.8].forEach(z=>{
-            const foot=new THREE.Mesh(new THREE.CylinderGeometry(.28,.32,.30,24),darkMetalMaterial);
-            foot.position.set(x,0.15,z); foot.castShadow=true; scene.add(foot);
+        // Optical breadboard: brushed aluminum over a dark, low-profile frame.
+        const metalMaterial=new THREE.MeshStandardMaterial({color:0xd5e0e6,metalness:0.88,roughness:0.22});
+        const steelMaterial=new THREE.MeshStandardMaterial({color:0xabb8c1,metalness:0.82,roughness:0.31});
+        const darkMetalMaterial=new THREE.MeshStandardMaterial({color:0x18212b,metalness:0.43,roughness:0.38});
+        const baseMaterial=new THREE.MeshStandardMaterial({color:0x111a22,metalness:0.28,roughness:0.69});
+        const rubberMaterial=new THREE.MeshStandardMaterial({color:0x0a0d11,metalness:0.02,roughness:0.84});
+        const base=new THREE.Mesh(new THREE.BoxGeometry(21.25,0.78,12.18),baseMaterial);
+        base.position.set(0,0.74,0); base.receiveShadow=true; base.castShadow=true; scene.add(base);
+        const benchTop=new THREE.Mesh(new THREE.BoxGeometry(21.65,0.18,12.55),steelMaterial);
+        benchTop.position.set(0,1.22,0); benchTop.receiveShadow=true; benchTop.castShadow=true; scene.add(benchTop);
+        const boardCanvas=document.createElement('canvas');boardCanvas.width=2048;boardCanvas.height=1190;
+        const boardCtx=boardCanvas.getContext('2d');
+        const boardFill=boardCtx.createLinearGradient(0,0,0,1190);
+        boardFill.addColorStop(0,'#aab7c1');boardFill.addColorStop(.54,'#d6e0e5');boardFill.addColorStop(1,'#94a2ac');
+        boardCtx.fillStyle=boardFill;boardCtx.fillRect(0,0,2048,1190);
+        for(let y=0;y<1190;y+=3){
+            const shade=154+Math.round(17*Math.sin(y*.19)+9*Math.sin(y*.047));
+            boardCtx.strokeStyle=`rgba(${shade},${shade+7},${shade+13},.09)`;
+            boardCtx.beginPath();boardCtx.moveTo(0,y);boardCtx.lineTo(2048,y);boardCtx.stroke();
+        }
+        for(let y=37;y<1160;y+=48) for(let x=38;x<2020;x+=48){
+            boardCtx.fillStyle='#f3f6f5';boardCtx.beginPath();boardCtx.arc(x-1,y-1,9.5,0,Math.PI*2);boardCtx.fill();
+            boardCtx.fillStyle='#49525a';boardCtx.beginPath();boardCtx.arc(x,y,8.3,0,Math.PI*2);boardCtx.fill();
+            boardCtx.fillStyle='#1c252b';boardCtx.beginPath();boardCtx.arc(x+.5,y+.5,5.1,0,Math.PI*2);boardCtx.fill();
+            boardCtx.strokeStyle='#c7d3db';boardCtx.lineWidth=1.5;boardCtx.beginPath();boardCtx.arc(x,y,8.4,Math.PI*.06,Math.PI*.84);boardCtx.stroke();
+        }
+        const boardTexture=new THREE.CanvasTexture(boardCanvas);
+        boardTexture.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());
+        const boardSurface=new THREE.Mesh(new THREE.PlaneGeometry(21.6,12.5),new THREE.MeshStandardMaterial({map:boardTexture,metalness:0.54,roughness:0.38}));
+        boardSurface.rotation.x=-Math.PI/2;boardSurface.position.y=1.32;boardSurface.receiveShadow=true;scene.add(boardSurface);
+        const fascia=new THREE.Mesh(new THREE.BoxGeometry(21.48,0.35,0.12),steelMaterial);
+        fascia.position.set(0,0.94,6.14);scene.add(fascia);
+        const frontLip=new THREE.Mesh(new THREE.BoxGeometry(21.65,0.035,0.035),metalMaterial);
+        frontLip.position.set(0,1.325,6.275);scene.add(frontLip);
+        [-9.35,9.35].forEach(x=>[-5.0,5.0].forEach(z=>{
+            const foot=new THREE.Mesh(new THREE.CylinderGeometry(.30,.34,.35,24),rubberMaterial);
+            foot.position.set(x,0.18,z);foot.castShadow=true;scene.add(foot);
         }));
 
-        // Only the pointed cones remain exposed inside the glass. The short
-        // shafts overlap the cones and disappear into the insulated elbows.
-        const electrodeGeometry=new THREE.CylinderGeometry(0.14,0.14,0.55,32);
-        const rodLeft=new THREE.Mesh(electrodeGeometry,metalMaterial); rodLeft.position.set(-9.22,8,0); rodLeft.rotation.z=-Math.PI/2; scene.add(rodLeft);
-        const rodRight=new THREE.Mesh(electrodeGeometry,metalMaterial); rodRight.position.set(9.22,8,0); rodRight.rotation.z=Math.PI/2; scene.add(rodRight);
+        // The tapered electrode tips keep their original positions. Their very
+        // short metal shafts end inside the black end seals of the glass tube.
+        const electrodeGeometry=new THREE.CylinderGeometry(0.14,0.14,0.24,32);
+        const rodLeft=new THREE.Mesh(electrodeGeometry,metalMaterial);rodLeft.position.set(-9.045,8,0);rodLeft.rotation.z=-Math.PI/2;scene.add(rodLeft);
+        const rodRight=new THREE.Mesh(electrodeGeometry,metalMaterial);rodRight.position.set(9.045,8,0);rodRight.rotation.z=Math.PI/2;scene.add(rodRight);
         const tipGeometry=new THREE.ConeGeometry(0.25,0.82,32);
         const coneLeft=new THREE.Mesh(tipGeometry,metalMaterial); coneLeft.position.set(-8.72,8,0); coneLeft.rotation.z=-Math.PI/2; scene.add(coneLeft);
         const coneRight=new THREE.Mesh(tipGeometry,metalMaterial); coneRight.position.set(8.72,8,0); coneRight.rotation.z=Math.PI/2; scene.add(coneRight);
-        const conduitMaterial=new THREE.MeshStandardMaterial({color:0x24566d,metalness:0.04,roughness:0.56});
-        const conduitBaseY=1.31;
-        const conduitTopY=8;
-        const conduitRadius=0.32;
-        [-10.3,10.3].forEach(x=>{
-            const support=new THREE.Mesh(new THREE.CylinderGeometry(conduitRadius,conduitRadius,conduitTopY-conduitBaseY,32),conduitMaterial);
-            support.position.set(x,(conduitTopY+conduitBaseY)/2,0);
-            support.castShadow=true; scene.add(support);
-        });
 
-        // Keep the original tube end positions while rounding its shoulders
-        // into narrow openings at the electrode elbows.
+        // Straight borosilicate barrel, black compression rings and the two
+        // smaller clear necks from the laboratory apparatus in the reference.
         const tubeHalfLength=9.045;
         const tubeRadius=1.005;
         const tubeDiameter=tubeRadius*2;
         const cylLength=tubeHalfLength*2;
         const neckRadius=0.34;
-        const shoulderLength=3.0;
-        const straightHalfLength=tubeHalfLength-shoulderLength;
-        function glassRadiusAtX(x){
-            const distance=Math.abs(x);
-            if(distance<=straightHalfLength) return tubeRadius;
-            const t=Math.min(1,(distance-straightHalfLength)/shoulderLength);
-            return neckRadius+(tubeRadius-neckRadius)*Math.sqrt(Math.max(0,1-t*t));
-        }
         // Conventional alpha transparency keeps the additive plasma visible.
         // MeshPhysicalMaterial transmission in Three.js r134 samples an
         // intermediate opaque pass that omits transparent plasma layers.
-        const glassMaterial=new THREE.MeshPhysicalMaterial({color:0xb4e0ff,metalness:0,roughness:0.10,transmission:0,transparent:true,opacity:0.12,side:THREE.DoubleSide,depthWrite:false,depthTest:true,clearcoat:1,clearcoatRoughness:0.04});
+        const glassMaterial=new THREE.MeshPhysicalMaterial({color:0xc7e6f7,metalness:0,roughness:0.08,transmission:0,transparent:true,opacity:0.16,side:THREE.DoubleSide,depthWrite:false,depthTest:true,clearcoat:1,clearcoatRoughness:0.04});
         const glassTubeGroup=new THREE.Group();
-        const glassProfile=[];
-        for(let i=0;i<=128;i++){
-            const x=-tubeHalfLength+cylLength*i/128;
-            glassProfile.push(new THREE.Vector2(glassRadiusAtX(x),x));
-        }
-        const glassShell=new THREE.Mesh(new THREE.LatheGeometry(glassProfile,96),glassMaterial);
-        glassShell.rotation.z=Math.PI/2; glassShell.renderOrder=2; glassTubeGroup.add(glassShell);
-        const rimMaterial=new THREE.MeshStandardMaterial({color:0x293540,metalness:.88,roughness:.2});
-        [-tubeHalfLength,tubeHalfLength].forEach(x=>{
-            const collar=new THREE.Mesh(new THREE.CylinderGeometry(neckRadius+0.07,neckRadius+0.07,0.12,48,1,true),rimMaterial);
-            collar.rotation.z=Math.PI/2; collar.position.x=x; glassTubeGroup.add(collar);
-            const rim=new THREE.Mesh(new THREE.TorusGeometry(neckRadius+0.015,0.07,12,64),rimMaterial);
-            rim.position.x=x; rim.rotation.y=Math.PI/2; glassTubeGroup.add(rim);
+        const glassShell=new THREE.Mesh(new THREE.CylinderGeometry(tubeRadius,tubeRadius,cylLength,96,1,true),glassMaterial);
+        glassShell.rotation.z=Math.PI/2;glassShell.renderOrder=2;glassTubeGroup.add(glassShell);
+        const glassGlintMaterial=new THREE.LineBasicMaterial({color:0xe2f8ff,transparent:true,opacity:0.19,depthWrite:false});
+        [-Math.PI*.42,Math.PI*.21,Math.PI*.74].forEach(angle=>{
+            const r=tubeRadius*1.008;
+            const glint=new THREE.BufferGeometry().setFromPoints([
+                new THREE.Vector3(-8.93,r*Math.cos(angle),r*Math.sin(angle)),
+                new THREE.Vector3(8.93,r*Math.cos(angle),r*Math.sin(angle))
+            ]);
+            glassTubeGroup.add(new THREE.Line(glint,glassGlintMaterial));
         });
-        glassTubeGroup.position.set(0,8,0); scene.add(glassTubeGroup);
-        // A single faint glass lattice catches the light without obscuring the moving CI meshes.
-        const lattice=[];
-        for(let i=0;i<=44;i++){
-            const x=-tubeHalfLength+cylLength*i/44;
-            const shellRadius=glassRadiusAtX(x)*1.004;
-            for(let j=0;j<48;j++){
-                const a=j*Math.PI/24, b=(j+1)*Math.PI/24;
-                lattice.push(x,shellRadius*Math.cos(a),shellRadius*Math.sin(a),x,shellRadius*Math.cos(b),shellRadius*Math.sin(b));
-            }
-        }
-        for(let j=0;j<48;j++){
-            const a=j*Math.PI/24;
-            for(let i=0;i<128;i++){
-                const x0=-tubeHalfLength+cylLength*i/128, x1=-tubeHalfLength+cylLength*(i+1)/128;
-                const r0=glassRadiusAtX(x0)*1.004, r1=glassRadiusAtX(x1)*1.004;
-                lattice.push(x0,r0*Math.cos(a),r0*Math.sin(a),x1,r1*Math.cos(a),r1*Math.sin(a));
-            }
-        }
-        const latticeGeometry=new THREE.BufferGeometry();latticeGeometry.setAttribute('position',new THREE.Float32BufferAttribute(lattice,3));
-        const latticeMesh=new THREE.LineSegments(latticeGeometry,new THREE.LineBasicMaterial({color:0x82cfff,transparent:true,opacity:0.07,depthWrite:false}));
-        latticeMesh.renderOrder=3;glassTubeGroup.add(latticeMesh);
+        [-1,1].forEach(side=>{
+            const neck=new THREE.Mesh(new THREE.CylinderGeometry(neckRadius,neckRadius,1.5,48,1,true),glassMaterial);
+            neck.rotation.z=Math.PI/2;neck.position.x=side*(tubeHalfLength+.75);neck.renderOrder=2;glassTubeGroup.add(neck);
+            const lip=new THREE.Mesh(new THREE.TorusGeometry(neckRadius,.025,10,48),glassMaterial);
+            lip.rotation.y=Math.PI/2;lip.position.x=side*(tubeHalfLength+1.5);glassTubeGroup.add(lip);
+        });
+        glassTubeGroup.position.set(0,8,0);scene.add(glassTubeGroup);
 
-        // Center the only visible electrical control on the front of the bench.
+        const clampMaterial=new THREE.MeshStandardMaterial({color:0x11161c,metalness:.32,roughness:.42});
+        const gasketMaterial=new THREE.MeshStandardMaterial({color:0x080b0f,metalness:.02,roughness:.88,side:THREE.DoubleSide});
+        function addBolt(x,y,z){
+            const head=new THREE.Mesh(new THREE.CylinderGeometry(.095,.095,.075,24),metalMaterial);
+            head.position.set(x,y,z);scene.add(head);
+            const slot=new THREE.Mesh(new THREE.BoxGeometry(.105,.006,.018),darkMetalMaterial);
+            slot.position.set(x,y+.041,z);scene.add(slot);
+        }
+        function addStarKnob(x){
+            const shaft=new THREE.Mesh(new THREE.CylinderGeometry(.115,.115,.45,20),metalMaterial);
+            shaft.rotation.x=Math.PI/2;shaft.position.set(x,8,1.31);scene.add(shaft);
+            const shape=new THREE.Shape();
+            for(let i=0;i<=100;i++){
+                const a=i*Math.PI*2/100;
+                const r=.38+.09*Math.cos(5*a);
+                const px=r*Math.cos(a),py=r*Math.sin(a);
+                if(i===0) shape.moveTo(px,py); else shape.lineTo(px,py);
+            }
+            const knob=new THREE.Mesh(new THREE.ExtrudeGeometry(shape,{depth:.19,bevelEnabled:true,bevelSegments:2,steps:1,bevelSize:.035,bevelThickness:.045,curveSegments:12}),clampMaterial);
+            knob.position.set(x,8,1.53);knob.castShadow=true;scene.add(knob);
+            const hub=new THREE.Mesh(new THREE.CylinderGeometry(.12,.12,.035,24),metalMaterial);
+            hub.rotation.x=Math.PI/2;hub.position.set(x,8,1.79);scene.add(hub);
+        }
+        [-1,1].forEach(side=>{
+            const postX=side*8.65;
+            const plate=new THREE.Mesh(new THREE.BoxGeometry(1.7,.22,1.7),clampMaterial);
+            plate.position.set(postX,1.43,0);plate.castShadow=true;scene.add(plate);
+            [-.64,.64].forEach(dx=>[-.64,.64].forEach(dz=>addBolt(postX+dx,1.58,dz)));
+            const socket=new THREE.Mesh(new THREE.CylinderGeometry(.43,.48,.58,36),clampMaterial);
+            socket.position.set(postX,1.83,0);socket.castShadow=true;scene.add(socket);
+            const post=new THREE.Mesh(new THREE.CylinderGeometry(.22,.22,4.86,32),steelMaterial);
+            post.position.set(postX,4.54,0);post.castShadow=true;scene.add(post);
+            const topSocket=new THREE.Mesh(new THREE.CylinderGeometry(.35,.35,.29,32),clampMaterial);
+            topSocket.position.set(postX,6.88,0);scene.add(topSocket);
+            const cradle=new THREE.Mesh(new THREE.BoxGeometry(.78,.61,.76),clampMaterial);
+            cradle.position.set(postX,7.13,0);cradle.castShadow=true;scene.add(cradle);
+            const ringX=side*8.72;
+            const band=new THREE.Mesh(new THREE.CylinderGeometry(1.13,1.13,.32,72,1,true),clampMaterial);
+            band.rotation.z=Math.PI/2;band.position.set(ringX,8,0);band.castShadow=true;scene.add(band);
+            [-.17,.17].forEach(offset=>{
+                const seal=new THREE.Mesh(new THREE.TorusGeometry(1.025,.12,14,72),gasketMaterial);
+                seal.rotation.y=Math.PI/2;seal.position.set(ringX+offset,8,0);scene.add(seal);
+            });
+            const endSeal=new THREE.Mesh(new THREE.RingGeometry(neckRadius,tubeRadius+.06,64),gasketMaterial);
+            endSeal.rotation.y=Math.PI/2;endSeal.position.set(side*tubeHalfLength,8,0);scene.add(endSeal);
+            const endRim=new THREE.Mesh(new THREE.TorusGeometry(tubeRadius+.02,.07,12,64),clampMaterial);
+            endRim.rotation.y=Math.PI/2;endRim.position.set(side*tubeHalfLength,8,0);scene.add(endRim);
+            const electrodeBushing=new THREE.Mesh(new THREE.CylinderGeometry(.31,.31,.34,32),gasketMaterial);
+            electrodeBushing.rotation.z=Math.PI/2;electrodeBushing.position.set(side*(tubeHalfLength+.10),8,0);scene.add(electrodeBushing);
+            addStarKnob(ringX);
+            const plug=new THREE.Mesh(new THREE.CylinderGeometry(.30,.30,.52,32),clampMaterial);
+            plug.rotation.z=Math.PI/2;plug.position.set(side*(tubeHalfLength+1.53),8,0);scene.add(plug);
+            [10.45,10.57,10.69].forEach(distance=>{
+                const grip=new THREE.Mesh(new THREE.TorusGeometry(.30,.028,8,32),rubberMaterial);
+                grip.rotation.y=Math.PI/2;grip.position.set(side*distance,8,0);scene.add(grip);
+            });
+        });
+
+        // Compact central controller with a metal face, indicator and two jacks.
         const dimmerX=0;
-        const dimmerCase=new THREE.Mesh(new THREE.BoxGeometry(2.6,.72,1.85),darkMetalMaterial);
-        dimmerCase.position.set(dimmerX,1.67,5.0); dimmerCase.castShadow=true;scene.add(dimmerCase);
+        const dimmerCase=new THREE.Mesh(new THREE.BoxGeometry(2.85,.77,2.05),darkMetalMaterial);
+        dimmerCase.position.set(dimmerX,1.70,4.95);dimmerCase.castShadow=true;scene.add(dimmerCase);
+        const caseSeam=new THREE.Mesh(new THREE.BoxGeometry(2.89,.025,2.09),rubberMaterial);
+        caseSeam.position.set(dimmerX,1.42,4.95);scene.add(caseSeam);
         const dialCanvas=document.createElement('canvas');dialCanvas.width=512;dialCanvas.height=320;
         const dialCtx=dialCanvas.getContext('2d');
-        const dialFill=dialCtx.createLinearGradient(0,0,512,320);dialFill.addColorStop(0,'#444f5a');dialFill.addColorStop(1,'#1b232c');
+        const dialFill=dialCtx.createLinearGradient(0,0,512,320);dialFill.addColorStop(0,'#24313c');dialFill.addColorStop(1,'#0a0f16');
         dialCtx.fillStyle=dialFill;dialCtx.fillRect(0,0,512,320);
-        dialCtx.strokeStyle='#82909c';dialCtx.lineWidth=6;dialCtx.strokeRect(8,8,496,304);
-        dialCtx.fillStyle='#e3edf5';dialCtx.textAlign='center';dialCtx.font='bold 32px sans-serif';dialCtx.fillText('DIMMER',256,54);
-        dialCtx.strokeStyle='#d3e6ef';dialCtx.lineWidth=8;dialCtx.beginPath();dialCtx.arc(256,175,94,Math.PI*1.08,Math.PI*1.92);dialCtx.stroke();
-        dialCtx.font='22px sans-serif';dialCtx.fillText('OFF',88,269);dialCtx.fillText('ON',425,269);
-        const dialFace=new THREE.Mesh(new THREE.PlaneGeometry(2.42,1.63),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(dialCanvas),side:THREE.DoubleSide}));
-        dialFace.rotation.x=-Math.PI/2;dialFace.position.set(dimmerX,2.04,5.0);scene.add(dialFace);
-        [-1.08,1.08].forEach(x=>[-.65,.65].forEach(z=>{
+        dialCtx.strokeStyle='#6c7a84';dialCtx.lineWidth=4;dialCtx.strokeRect(8,8,496,304);
+        dialCtx.fillStyle='#dfedf2';dialCtx.textAlign='center';dialCtx.font='bold 27px sans-serif';dialCtx.fillText('DIMMER',256,48);
+        dialCtx.font='14px sans-serif';dialCtx.fillStyle='#87a1b2';dialCtx.fillText('PLASMA GENERATOR · DC CONTROL',256,300);
+        dialCtx.strokeStyle='#b8cbd6';dialCtx.lineWidth=5;dialCtx.beginPath();dialCtx.arc(256,174,103,Math.PI*1.11,Math.PI*1.89);dialCtx.stroke();
+        for(let i=0;i<=10;i++){
+            const angle=Math.PI*(1.11+.078*i);
+            dialCtx.beginPath();dialCtx.moveTo(256+114*Math.cos(angle),174+114*Math.sin(angle));
+            dialCtx.lineTo(256+126*Math.cos(angle),174+126*Math.sin(angle));dialCtx.stroke();
+        }
+        dialCtx.fillStyle='#d2e1e9';dialCtx.font='18px sans-serif';dialCtx.fillText('OFF',83,251);dialCtx.fillText('ON',431,251);
+        const dialFace=new THREE.Mesh(new THREE.PlaneGeometry(2.67,1.87),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(dialCanvas),side:THREE.DoubleSide}));
+        dialFace.rotation.x=-Math.PI/2;dialFace.position.set(dimmerX,2.089,4.95);scene.add(dialFace);
+        [-1.26,1.26].forEach(x=>[-.85,.85].forEach(z=>{
             const screw=new THREE.Mesh(new THREE.CylinderGeometry(.048,.048,.016,12),metalMaterial);
-            screw.position.set(dimmerX+x,2.055,5.0+z);scene.add(screw);
+            screw.position.set(dimmerX+x,2.10,4.95+z);scene.add(screw);
         }));
-        const dimmerKnob=new THREE.Group();dimmerKnob.position.set(dimmerX,2.18,5.10);
-        const knobBody=new THREE.Mesh(new THREE.CylinderGeometry(.24,.27,.25,32),darkMetalMaterial);dimmerKnob.add(knobBody);
+        const dimmerKnob=new THREE.Group();dimmerKnob.position.set(dimmerX,2.23,4.94);
+        const knobBody=new THREE.Mesh(new THREE.CylinderGeometry(.26,.28,.25,32),rubberMaterial);dimmerKnob.add(knobBody);
         const knobCap=new THREE.Mesh(new THREE.CylinderGeometry(.21,.21,.035,32),metalMaterial);knobCap.position.y=.14;dimmerKnob.add(knobCap);
         const knobPointer=new THREE.Mesh(new THREE.BoxGeometry(.045,.035,.19),darkMetalMaterial);knobPointer.position.set(0,.17,-.11);dimmerKnob.add(knobPointer);
         dimmerKnob.rotation.y=-Math.PI*.65+Math.PI*1.3*(20/180);scene.add(dimmerKnob);
+        const indicator=new THREE.Mesh(new THREE.SphereGeometry(.085,16,12),new THREE.MeshBasicMaterial({color:0x4ebaff}));
+        indicator.position.set(.90,2.12,4.52);scene.add(indicator);
+        const indicatorLight=new THREE.PointLight(0x369bff,.35,1.5);indicatorLight.position.copy(indicator.position);scene.add(indicatorLight);
 
-        // The colored conductors run inside the opaque bench and the matching
-        // PVC uprights. Only the dimmer and the two insulated elbows are seen.
-        const blueWireMaterial=new THREE.MeshStandardMaterial({color:0x0E5CFF,metalness:.15,roughness:.38,emissive:0x0a2a8a,emissiveIntensity:0.18});
-        const redWireMaterial=new THREE.MeshStandardMaterial({color:0xE11A1A,metalness:.15,roughness:.38,emissive:0x5a0a0a,emissiveIntensity:0.20});
+        // Flexible red and blue leads leave the visible front jacks. Their
+        // long, closely spaced helices rest just above the perforated plate.
+        const blueWireMaterial=new THREE.MeshStandardMaterial({color:0x176bff,metalness:.07,roughness:.29,emissive:0x0a2380,emissiveIntensity:.13});
+        const redWireMaterial=new THREE.MeshStandardMaterial({color:0xe62932,metalness:.07,roughness:.29,emissive:0x5d0910,emissiveIntensity:.15});
         const positiveMaterial=redWireMaterial;
         const negativeMaterial=blueWireMaterial;
-
-        const CABLE_RADIUS = 0.14;
-        const CABLE_RADIAL_SEGS = 16;
-
-        function createOrthogonalPath(vectors){
-            const path=new THREE.CurvePath();
-            for(let i=0;i<vectors.length-1;i++){
-                path.add(new THREE.LineCurve3(vectors[i], vectors[i+1]));
+        function addCoiledLead(side,material){
+            const jackX=side*.78;
+            const jack=new THREE.Mesh(new THREE.CylinderGeometry(.22,.22,.21,32),metalMaterial);
+            jack.rotation.x=Math.PI/2;jack.position.set(jackX,1.69,6.06);scene.add(jack);
+            const jackRim=new THREE.Mesh(new THREE.TorusGeometry(.22,.055,12,32),clampMaterial);
+            jackRim.position.set(jackX,1.69,6.17);scene.add(jackRim);
+            const colorSleeve=new THREE.Mesh(new THREE.CylinderGeometry(.16,.16,.20,24),material);
+            colorSleeve.rotation.x=Math.PI/2;colorSleeve.position.set(jackX,1.69,6.22);scene.add(colorSleeve);
+            const points=[
+                new THREE.Vector3(jackX,1.69,6.24),
+                new THREE.Vector3(side*1.05,1.65,6.36),
+                new THREE.Vector3(side*1.40,1.68,4.50),
+                new THREE.Vector3(side*1.60,1.90,4.05),
+                new THREE.Vector3(side*1.70,2.02,4.35)
+            ];
+            const turns=15.5,stepCount=turns*24;
+            for(let i=1;i<=stepCount;i++){
+                const t=i/stepCount,angle=t*turns*Math.PI*2;
+                points.push(new THREE.Vector3(side*(1.70+5.50*t),1.75+.27*Math.cos(angle),4.35+.27*Math.sin(angle)));
             }
-            return path;
+            points.push(
+                new THREE.Vector3(side*7.55,1.50,4.09),
+                new THREE.Vector3(side*8.60,1.66,3.88),
+                new THREE.Vector3(side*9.65,1.70,3.18),
+                new THREE.Vector3(side*10.40,2.42,2.70),
+                new THREE.Vector3(side*10.72,4.32,2.05),
+                new THREE.Vector3(side*10.78,6.45,1.05),
+                new THREE.Vector3(side*10.83,7.88,.30),
+                new THREE.Vector3(side*10.84,8,0)
+            );
+            const curve=new THREE.CatmullRomCurve3(points,false,'centripetal');
+            const cable=new THREE.Mesh(new THREE.TubeGeometry(curve,points.length*3,.105,12,false),material);
+            cable.castShadow=true;scene.add(cable);
+            const tipBand=new THREE.Mesh(new THREE.TorusGeometry(.29,.055,12,32),material);
+            tipBand.rotation.y=Math.PI/2;tipBand.position.set(side*10.82,8,0);scene.add(tipBand);
         }
-        function addCable90(points,material){
-            const path=createOrthogonalPath(points);
-            let totalLen=0;
-            for(let i=0;i<points.length-1;i++) totalLen+=points[i].distanceTo(points[i+1]);
-            const tubularSegs=Math.max(64, Math.floor(totalLen*14));
-            const tubeGeo=new THREE.TubeGeometry(path,tubularSegs,CABLE_RADIUS,CABLE_RADIAL_SEGS,false);
-            const cable=new THREE.Mesh(tubeGeo,material);
-            cable.castShadow=true;
-            scene.add(cable);
-            for(let i=1;i<points.length-1;i++){
-                const joint=new THREE.Mesh(new THREE.SphereGeometry(CABLE_RADIUS*1.01,16,16),material);
-                joint.position.copy(points[i]);
-                scene.add(joint);
-            }
-            return cable;
-        }
-
-        // One-color rounded PVC elbows meet the narrow openings of the glass.
-        function addInsulatedKneeL(baseX, sideSign){
-            const kneeGroup=new THREE.Group();
-            const endX=sideSign*tubeHalfLength;
-            const horizLen=Math.abs(endX-baseX);
-            const hGeo=new THREE.CylinderGeometry(conduitRadius,conduitRadius,horizLen,32);
-            const hMesh=new THREE.Mesh(hGeo,conduitMaterial);
-            hMesh.rotation.z=Math.PI/2;
-            hMesh.position.set((baseX+endX)/2,8,0);
-            kneeGroup.add(hMesh);
-            const elbow=new THREE.Mesh(new THREE.SphereGeometry(conduitRadius,24,16),conduitMaterial);
-            elbow.position.set(baseX,8,0);
-            kneeGroup.add(elbow);
-            scene.add(kneeGroup);
-        }
-
-        addInsulatedKneeL(-10.3,-1);
-        addInsulatedKneeL(10.3,1);
-
-        const hiddenBenchY=0.8;
-        // Wires start inside the dimmer, pass beneath the dark bench top and
-        // rise inside each continuous PVC support to the recessed electrodes.
-        addCable90([
-            new THREE.Vector3(dimmerX-0.62,1.55,5),
-            new THREE.Vector3(dimmerX-0.62,hiddenBenchY,5),
-            new THREE.Vector3(dimmerX-0.62,hiddenBenchY,0),
-            new THREE.Vector3(-10.3,hiddenBenchY,0),
-            new THREE.Vector3(-10.3,8,0),
-            new THREE.Vector3(-tubeHalfLength,8,0)
-        ],negativeMaterial);
-        addCable90([
-            new THREE.Vector3(dimmerX+0.62,1.55,5),
-            new THREE.Vector3(dimmerX+0.62,hiddenBenchY,5),
-            new THREE.Vector3(dimmerX+0.62,hiddenBenchY,0),
-            new THREE.Vector3(10.3,hiddenBenchY,0),
-            new THREE.Vector3(10.3,8,0),
-            new THREE.Vector3(tubeHalfLength,8,0)
-        ],positiveMaterial);
+        addCoiledLead(-1,negativeMaterial);
+        addCoiledLead(1,positiveMaterial);
         const grid=new THREE.GridHelper(32,32,0x243044,0x151c29); grid.position.y=0.01; scene.add(grid);
 
 
@@ -1034,7 +1064,7 @@
         const plasmaGroup = new THREE.Group();
         plasmaGroup.position.set(0,8,0);
         const plasmaLength = Math.abs(coneRight.position.x-coneLeft.position.x)-tipGeometry.parameters.height;
-        // The glow narrows at the electrode tips so it stays inside the rounded glass.
+        // The glow narrows where it meets the unchanged electrode tips.
         function plasmaGlowGeometry(radius){
             const taper=1.15;
             const profile=[];
