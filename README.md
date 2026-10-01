@@ -10,7 +10,6 @@ Pacote integrado com seis simulações independentes:
 6. `comp-cyc-cur.html` — Cyclic Current
 
 O arquivo `index.html` reúne as seis simulações em abas. Cada mecanismo permanece em um HTML independente e pode ser aberto separadamente pelo botão **Open separately**.
-Os seis endereços HTML anteriores encaminham para os novos nomes, preservando links já compartilhados e seus parâmetros ou fragmentos de URL.
 
 ## Publicação no GitHub Pages
 
