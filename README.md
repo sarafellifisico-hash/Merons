@@ -2,14 +2,15 @@
 
 Pacote integrado com seis simulações independentes:
 
-1. `rotating-interaction.html` — Meronic Builder
-2. `compalpha-rotating-interaction.html` — Rotating Interaction entre dois Compalphas
-3. `cyclical-interaction.html` — Cyclical Interaction 2D/3D
-4. `ic-2d-laboratory.html` — IC 2D Laboratory
-5. `double-slit-compalpha.html` — Double Slit
-6. `cyclic-current.html` — Cyclic Current
+1. `merons-rot-int.html` — Meronic Builder
+2. `comp-rot-int.html` — Rotating Interaction entre dois Compalphas
+3. `comp-cyc-int.html` — Cyclical Interaction 2D/3D
+4. `comp-cyc-diag.html` — IC 2D Laboratory
+5. `comp-interf-cyc.html` — Double Slit
+6. `comp-cyc-cur.html` — Cyclic Current
 
 O arquivo `index.html` reúne as seis simulações em abas. Cada mecanismo permanece em um HTML independente e pode ser aberto separadamente pelo botão **Open separately**.
+Os seis endereços HTML anteriores encaminham para os novos nomes, preservando links já compartilhados e seus parâmetros ou fragmentos de URL.
 
 ## Publicação no GitHub Pages
 
