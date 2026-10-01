@@ -54,16 +54,16 @@
       <button class="tab" id="tab-double-slit" role="tab" aria-selected="false" aria-controls="panel-double-slit" data-target="double-slit" tabindex="-1">Double Slit</button>
       <button class="tab" id="tab-current" role="tab" aria-selected="false" aria-controls="panel-current" data-target="current" tabindex="-1">Cyclic Current</button>
     </nav>
-    <div class="tools"><span class="number" id="mechanismNumber">Mechanism 01 / 06</span><a class="external" id="openStandalone" href="rotating-interaction.html?v=builder-metalpha-start-20260929" target="_blank" rel="noopener" title="Open the active simulation in a separate window"><span>Open separately</span> ↗</a></div>
+    <div class="tools"><span class="number" id="mechanismNumber">Mechanism 01 / 06</span><a class="external" id="openStandalone" href="rotating-interaction.html?v=panel-modes-20261001" target="_blank" rel="noopener" title="Open the active simulation in a separate window"><span>Open separately</span> ↗</a></div>
   </header>
 
   <main class="stage">
-    <iframe class="sim active" id="panel-rotating" role="tabpanel" aria-labelledby="tab-rotating" title="Meronic Builder — From the Metalpha Meron to Meron 303" src="rotating-interaction.html?v=builder-metalpha-start-20260929" data-key="rotating"></iframe>
-    <iframe class="sim" id="panel-compalpha-ri" role="tabpanel" aria-labelledby="tab-compalpha-ri" title="Rotating Interaction Between Two Compalphas" data-src="compalpha-rotating-interaction.html?v=unified-mobile-20260927" data-key="compalpha-ri"></iframe>
-    <iframe class="sim" id="panel-cyclical" role="tabpanel" aria-labelledby="tab-cyclical" title="Cyclical Interaction Between Compalphas and Metalpha Merons" data-src="cyclical-interaction.html?v=unified-mobile-20260927" data-key="cyclical"></iframe>
-    <iframe class="sim" id="panel-laboratory" role="tabpanel" aria-labelledby="tab-laboratory" title="CI Diagrams — Between Two or Three Compalphas" data-src="ic-2d-laboratory.html?v=unified-mobile-20260927" data-key="laboratory"></iframe>
-    <iframe class="sim" id="panel-double-slit" role="tabpanel" aria-labelledby="tab-double-slit" title="Cyclical Interaction and Its Oscillatory Interference" data-src="double-slit-compalpha.html?v=unified-mobile-20260927" data-key="double-slit"></iframe>
-    <iframe class="sim" id="panel-current" role="tabpanel" aria-labelledby="tab-current" title="Cyclical Interaction With Electric Current Amplitude" data-src="cyclic-current.html?v=shaft-generator-20260929" data-key="current"></iframe>
+    <iframe class="sim active" id="panel-rotating" role="tabpanel" aria-labelledby="tab-rotating" title="Meronic Builder — From the Metalpha Meron to Meron 303" src="rotating-interaction.html?v=panel-modes-20261001" data-key="rotating"></iframe>
+    <iframe class="sim" id="panel-compalpha-ri" role="tabpanel" aria-labelledby="tab-compalpha-ri" title="Rotating Interaction Between Two Compalphas" data-src="compalpha-rotating-interaction.html?v=panel-modes-20261001" data-key="compalpha-ri"></iframe>
+    <iframe class="sim" id="panel-cyclical" role="tabpanel" aria-labelledby="tab-cyclical" title="Cyclical Interaction Between Compalphas and Metalpha Merons" data-src="cyclical-interaction.html?v=panel-modes-20261001" data-key="cyclical"></iframe>
+    <iframe class="sim" id="panel-laboratory" role="tabpanel" aria-labelledby="tab-laboratory" title="CI Diagrams — Between Two or Three Compalphas" data-src="ic-2d-laboratory.html?v=panel-modes-20261001" data-key="laboratory"></iframe>
+    <iframe class="sim" id="panel-double-slit" role="tabpanel" aria-labelledby="tab-double-slit" title="Cyclical Interaction and Its Oscillatory Interference" data-src="double-slit-compalpha.html?v=panel-modes-20261001" data-key="double-slit"></iframe>
+    <iframe class="sim" id="panel-current" role="tabpanel" aria-labelledby="tab-current" title="Cyclical Interaction With Electric Current Amplitude" data-src="cyclic-current.html?v=panel-modes-20261001" data-key="current"></iframe>
   </main>
   <noscript><div class="noscript">JavaScript is required to open the TUIDG interactive simulations.</div></noscript>
 
@@ -71,12 +71,12 @@
     (() => {
       const order = ['rotating','compalpha-ri','cyclical','laboratory','double-slit','current'];
       const labels = {
-        rotating:'rotating-interaction.html?v=builder-metalpha-start-20260929',
-        'compalpha-ri':'compalpha-rotating-interaction.html?v=unified-mobile-20260927',
-        cyclical:'cyclical-interaction.html?v=unified-mobile-20260927',
-        laboratory:'ic-2d-laboratory.html?v=unified-mobile-20260927',
-        'double-slit':'double-slit-compalpha.html?v=unified-mobile-20260927',
-        current:'cyclic-current.html?v=shaft-generator-20260929'
+        rotating:'rotating-interaction.html?v=panel-modes-20261001',
+        'compalpha-ri':'compalpha-rotating-interaction.html?v=panel-modes-20261001',
+        cyclical:'cyclical-interaction.html?v=panel-modes-20261001',
+        laboratory:'ic-2d-laboratory.html?v=panel-modes-20261001',
+        'double-slit':'double-slit-compalpha.html?v=panel-modes-20261001',
+        current:'cyclic-current.html?v=panel-modes-20261001'
       };
       const tabs = [...document.querySelectorAll('.tab')];
       const frames = [...document.querySelectorAll('.sim')];

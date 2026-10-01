@@ -251,7 +251,7 @@ Check your Browserslist config to be sure that your targets are set up correctly
     background:rgba(5,12,22,.58);
   }
   .builder-mode-button {
-    display:flex;align-items:center;justify-content:center;text-align:center;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;
     min-width:0;
     padding:9px 5px;
     border:1px solid rgba(105,215,243,.19);
@@ -261,7 +261,7 @@ Check your Browserslist config to be sure that your targets are set up correctly
     font:700 11px/1.2 "Instrument Sans",system-ui,sans-serif;
     cursor:pointer;
   }
-  .builder-mode-button span { min-width:0;max-width:100%;white-space:normal; }
+  .builder-mode-button span { display:block;min-width:0;max-width:100%;white-space:nowrap; }
   .builder-mode-button:hover { border-color:#69d7f3;color:#f0f9ff; }
   .builder-mode-button.active {
     border-color:#69d7f3;
@@ -862,7 +862,7 @@ body.magnet-gravity-active #presentationContextMenu { display:none!important; }
 body.pair-mode.magnet-gravity-active #panel:not(.minimized) { top:16px!important;max-height:calc(100dvh - 32px); }
 @media(max-width:760px){body.pair-mode.magnet-gravity-active #panel:not(.minimized){top:auto!important;bottom:8px!important;max-height:calc(100dvh - 16px)}}
 </style>
-<link rel="stylesheet" href="mobile-controls.css?v=unified-mobile-20260927">
+<link rel="stylesheet" href="mobile-controls.css?v=single-outline-20261001">
 </head>
 <body data-tuidg-simulator="builder">
 <div id="canvas-wrap"></div>
@@ -938,9 +938,9 @@ body.pair-mode.magnet-gravity-active #panel:not(.minimized) { top:16px!important
   </header>
 
   <div class="builder-mode-switch" role="group" aria-label="Meronic Builder mode">
-    <button type="button" class="builder-mode-button active" data-builder-mode="build" aria-pressed="true"><span>Meronic Construction</span></button>
-    <button type="button" class="builder-mode-button" data-builder-mode="forces" aria-pressed="false"><span>Meronic Forces</span></button>
-    <button type="button" class="builder-mode-button" data-builder-mode="magnet-gravity" aria-pressed="false"><span>Magnetism &lt;-&gt; Gravity</span></button>
+    <button type="button" class="builder-mode-button active" data-builder-mode="build" aria-label="Meronic Construction" aria-pressed="true"><span>Meronic</span><span>Construction</span></button>
+    <button type="button" class="builder-mode-button" data-builder-mode="forces" aria-label="Meronic Forces" aria-pressed="false"><span>Meronic</span><span>Forces</span></button>
+    <button type="button" class="builder-mode-button" data-builder-mode="magnet-gravity" aria-label="Magnetism Gravity" aria-pressed="false"><span>Magnetism</span><span>Gravity</span></button>
   </div>
   <nav class="panel-tabs" role="tablist" aria-label="Control categories">
     <button class="panel-tab active" type="button" role="tab" aria-selected="true" aria-controls="panel-build" data-panel-tab="build">Build</button>
@@ -1011,7 +1011,6 @@ body.pair-mode.magnet-gravity-active #panel:not(.minimized) { top:16px!important
           <button type="button" id="separateTriadsBtn" class="force-action">Separate Tα to Exd</button>
           <button type="button" id="runRIBtn" class="force-action">Run Rotating Interaction</button>
           <button type="button" id="toggleFiveMetalphasBtn" class="force-action">Hide Metalpha Structures</button>
-          <button type="button" id="returnToMeronModeBtn" class="force-action">Return to Meron Mode</button>
         </div>
       </div>
       <div class="control-card">
@@ -3333,6 +3332,8 @@ const panel = document.getElementById('panel');
 const panelBody = panel.querySelector('.panel-inner');
 const panelTabs = [...panel.querySelectorAll('[data-panel-tab]')];
 const panelPanes = [...panel.querySelectorAll('[data-panel-pane]')];
+let activeBuilderMode = 'build';
+let lastMeronicMode = 'build';
 let lastForceControlsKey = '';
 
 function syncForceControls(force = false) {
@@ -3351,13 +3352,12 @@ function syncForceControls(force = false) {
     button.classList.toggle('off', !visible);
     button.setAttribute('aria-pressed', String(visible));
   });
-  ['separateTriadsBtn', 'runRIBtn', 'toggleFiveMetalphasBtn', 'returnToMeronModeBtn'].forEach(command => {
+  ['separateTriadsBtn', 'runRIBtn', 'toggleFiveMetalphasBtn'].forEach(command => {
     const button = document.getElementById(command);
     const labels = {
       separateTriadsBtn: triadsSeparated ? 'Join Tα · Exd' : 'Separate Tα to Exd',
       runRIBtn: riRunning ? 'Stop Rotating Interaction' : 'Run Rotating Interaction',
-      toggleFiveMetalphasBtn: fiveMeronMetalphasVisible ? 'Hide Metalpha Structures' : 'Show Metalpha Structures',
-      returnToMeronModeBtn: 'Return to Meron Mode'
+      toggleFiveMetalphasBtn: fiveMeronMetalphasVisible ? 'Hide Metalpha Structures' : 'Show Metalpha Structures'
     };
     button.textContent = labels[command];
     button.disabled = command === 'toggleFiveMetalphasBtn' && !(fiveMeronRIDistanceMode && currentMeronCount === 5);
@@ -3371,6 +3371,7 @@ function syncForceControls(force = false) {
 }
 
 function activatePanelTab(tabName) {
+  if (tabName !== 'magnet-gravity' && activeBuilderMode === 'magnet-gravity') activeBuilderMode = lastMeronicMode;
   panelTabs.forEach(tab => {
     const selected = tab.dataset.panelTab === tabName;
     tab.classList.toggle('active', selected);
@@ -3383,9 +3384,9 @@ function activatePanelTab(tabName) {
     pane.hidden = !selected;
   });
   panelBody.scrollTop = 0;
-  document.body.classList.toggle('builder-forces-active', tabName === 'forces');
+  document.body.classList.toggle('builder-forces-active', activeBuilderMode === 'forces' || tabName === 'forces');
   document.querySelectorAll('[data-builder-mode]').forEach(button => {
-    const selected = button.dataset.builderMode === tabName;
+    const selected = button.dataset.builderMode === activeBuilderMode;
     button.classList.toggle('active', selected);
     button.setAttribute('aria-pressed', String(selected));
   });
@@ -3395,10 +3396,22 @@ function activatePanelTab(tabName) {
 
 document.querySelectorAll('[data-builder-mode]').forEach(button => {
   button.addEventListener('click', () => {
-    if (button.dataset.builderMode === 'magnet-gravity' && magnetGravity.active) {
-      activatePanelTab('magnet-gravity');
-      transitionMagnetGravity('aligned');
-    } else activatePanelTab(button.dataset.builderMode);
+    const mode = button.dataset.builderMode;
+    if (mode === 'build') {
+      if (magnetGravity.active) setMagnetGravityMode(false);
+      returnToMeronMode();
+      activeBuilderMode = lastMeronicMode = 'build';
+      activatePanelTab('build');
+    } else if (mode === 'forces') {
+      activeBuilderMode = lastMeronicMode = 'forces';
+      activatePanelTab('forces');
+    } else {
+      activeBuilderMode = 'magnet-gravity';
+      if (magnetGravity.active) {
+        activatePanelTab('magnet-gravity');
+        transitionMagnetGravity('aligned');
+      } else activatePanelTab('magnet-gravity');
+    }
   });
 });
 panelTabs.forEach((tab, index) => {
@@ -5919,10 +5932,14 @@ function activateFiveMeronRIDistance(stageName, animate = true) {
 }
 
 function returnToMeronMode() {
+  if (pairMode) exitPairMode();
+  if (comparisonMode) exitComparisonMode();
+  const restoreCount = fiveMeronRIDistanceMode ? meronModeRestoreCount : currentMeronCount;
   if (fiveMeronRIDistanceAnimation) {
     cancelAnimationFrame(fiveMeronRIDistanceAnimation);
     fiveMeronRIDistanceAnimation = null;
   }
+  triadSeparationAnimation = null;
   fiveMeronRIDistanceMode = false;
   fiveMeronMetalphasVisible = true;
   fiveMeronRIDistanceStage = 'md';
@@ -5930,7 +5947,7 @@ function returnToMeronMode() {
   triadsSeparated = false;
   currentInterMeronDist = 0;
   riRunning = false;
-  currentMeronCount = THREE.MathUtils.clamp(Math.round(meronModeRestoreCount || 1), 1, MAX_MERON_COUNT);
+  currentMeronCount = THREE.MathUtils.clamp(Math.round(restoreCount || 1), 1, MAX_MERON_COUNT);
   buildUniverse();
   syncMeronCountUI();
   syncMetalphaScriptUi();
@@ -5986,10 +6003,6 @@ function setupMetalphaControls() {
     fitCameraToCurrentStructure();
   });
 
-  document.getElementById('returnToMeronModeBtn').addEventListener('click', event => {
-    event.stopPropagation();
-    returnToMeronMode();
-  });
 }
 
 function setupPresentationContextMenu() {
@@ -6044,7 +6057,7 @@ function setupPresentationContextMenu() {
         <div class="context-control"><label><span>Metalpha Merons · Mass Number</span><span><input class="context-number" type="number" min="1" max="303" step="1" value="${currentMeronCount}" data-context-meron-count></span></label></div>
         <div class="context-actions">${quickMasses.map(count=>button(`${count} ${count===1?'Meron':'Merons'}`,`data-context-meron="${count}"`,currentMeronCount===count?'active':'')).join('')}</div>
         <p class="context-status">${document.getElementById('meronInfo').textContent}</p>
-        <div class="context-actions">${button('Open Meronic Construction','data-context-panel-tab="build"','wide')}</div>`;
+        <div class="context-actions">${button('Meronic Construction','data-context-builder-mode="build"','wide')}</div>`;
     }
     if (category === 'layers') {
       const layers = [['IMC','0.464'],['MC','1'],['IMoC','12'],['MoC','24'],['IExC','48'],['ExC','96']];
@@ -6082,14 +6095,14 @@ function setupPresentationContextMenu() {
         ${button(riRunning ? 'Stop Rotating Interaction' : 'Run Rotating Interaction','data-context-action="ri-toggle"',riRunning?'active':'')}
         ${button('5-Metalpha RI Distances','data-context-action="five-meron-ri"','wide')}
         ${button(fiveMeronMetalphasVisible ? 'Hide Metalpha Structures' : 'Show Metalpha Structures','data-context-action="toggle-five-metalphas"',fiveMeronMetalphasVisible?'wide':'off wide')}
-        ${button('Return to Meron Mode','data-context-action="return-meron-mode"','wide')}
+        ${button('Meronic Construction','data-context-builder-mode="build"','wide')}
       </div><div class="context-triads">${metalphaTriadVisible.map((visible,index)=>button(`${visible?'Hide':'Show'} Tα${index+1}`,`data-context-triad="${index}"`,visible?'':'off')).join('')}</div>
       <div class="context-control"><div class="context-title">Five-Metalpha RI scales</div><div class="context-actions">
         ${button('Md · 1','data-context-ri-distance="md"',fiveMeronRIDistanceMode&&activeDistance==='md'?'active':'')}
         ${button('Mod · 24','data-context-ri-distance="mod"',fiveMeronRIDistanceMode&&activeDistance==='mod'?'active':'')}
         ${button('Exd · 96','data-context-ri-distance="exd"',fiveMeronRIDistanceMode&&activeDistance==='exd'?'active':'')}
       </div></div>
-      <div class="context-actions">${button('Open Meronic Forces','data-context-panel-tab="forces"','wide')}</div>`;
+      <div class="context-actions">${button('Meronic Forces','data-context-builder-mode="forces"','wide')}</div>`;
     }
     if (category === 'cyclic') {
       const amp = document.getElementById('danceAmp');
@@ -6248,6 +6261,13 @@ function setupPresentationContextMenu() {
       renderPanel(activeCategory,activeNode);
       return;
     }
+    const builderModeButton=event.target.closest('[data-context-builder-mode]');
+    if(builderModeButton){
+      closeMenu();
+      document.querySelector(`[data-builder-mode="${builderModeButton.dataset.contextBuilderMode}"]`)?.click();
+      window.revealControlPanel?.();
+      return;
+    }
     const panelTab=event.target.closest('[data-context-panel-tab]');
     if(panelTab){
       closeMenu();
@@ -6296,9 +6316,6 @@ function setupPresentationContextMenu() {
         break;
       case 'toggle-five-metalphas':
         document.getElementById('toggleFiveMetalphasBtn')?.click();
-        break;
-      case 'return-meron-mode':
-        returnToMeronMode();
         break;
       case 'rotation-toggle':
         document.getElementById('rotateToggle')?.click();

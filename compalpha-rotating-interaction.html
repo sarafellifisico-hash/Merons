@@ -1536,6 +1536,10 @@
     #control-panel .control-group,#control-panel .principle,#control-panel .force-law{min-width:0;margin:0;padding:12px;border:1px solid rgba(255,255,255,.065);border-radius:13px;background:rgba(19,27,42,.66);box-shadow:inset 0 1px 0 rgba(255,255,255,.025)}
     #control-panel .group-heading,#control-panel .principle-label,#control-panel .force-law-label{color:#8292b3;font:700 11px/1.35 "Instrument Sans",system-ui,sans-serif;letter-spacing:.11em;text-transform:uppercase}
     #control-panel .panel-body button{font-family:"Instrument Sans",system-ui,sans-serif;border-radius:9px}
+    .stage{inset:0}
+    #control-panel .panel-view-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+    #control-panel .panel-view-actions .ghost-button{width:100%;min-width:0;padding:8px 5px;white-space:nowrap}
+    #control-panel .panel-view-actions .ghost-button span{display:inline}
     #control-panel input[type=range]{-webkit-appearance:none;appearance:none;height:22px;background:transparent}
     #control-panel input[type=range]::-webkit-slider-runnable-track{height:4px;background:#253247;border-radius:99px}
     #control-panel input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:16px;height:16px;margin-top:-6px;border-radius:50%;background:#e9f0ff;box-shadow:0 0 0 4px rgba(124,167,255,.14)}
@@ -1543,36 +1547,10 @@
     #control-panel input[type=range]::-moz-range-thumb{width:16px;height:16px;border:0;border-radius:50%;background:#e9f0ff;box-shadow:0 0 0 4px rgba(124,167,255,.14)}
     @media(max-width:760px){#control-panel:not(.collapsed),#control-panel.collapsed{top:8px;left:8px}#control-panel:not(.collapsed){width:min(312px,calc(100vw - 16px));max-height:calc(100dvh - 16px)}}
   </style>
-<link rel="stylesheet" href="mobile-controls.css?v=unified-mobile-20260927">
+<link rel="stylesheet" href="mobile-controls.css?v=single-outline-20261001">
 </head>
 <body data-tuidg-simulator="rotating">
   <div class="app" id="app">
-    <header class="topbar">
-      <div class="brand" aria-label="TUIDG">
-        <span class="brand-mark" aria-hidden="true"></span>
-        <span class="brand-copy">
-          <strong>TUIDG</strong>
-          <span>The Universe as Immaterial Geometry</span>
-        </span>
-      </div>
-
-      <div class="title-block">
-        <div class="eyebrow">Geometric interaction laboratory</div>
-        <h1>This is TUIDG’s Rotating Interaction</h1>
-      </div>
-
-      <div class="top-actions">
-        <button class="ghost-button" id="labels-button" type="button" aria-pressed="true" title="Show or hide labels">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12s3.2-6 9-6 9 6 9 6-3.2 6-9 6-9-6-9-6Z"/><circle cx="12" cy="12" r="2.6"/></svg>
-          <span>Labels</span>
-        </button>
-        <button class="ghost-button" id="reset-view" type="button" title="Reset 3D view">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.7 8.1A8 8 0 1 1 4 14"/><path d="M4 4v4.5h4.5"/></svg>
-          <span>Reset view</span>
-        </button>
-      </div>
-    </header>
-
     <main class="stage" id="stage">
       <canvas id="underlay" aria-hidden="true"></canvas>
       <canvas id="gl-canvas" aria-label="Interactive 3D visualization of two Compalphas. Drag to orbit and use the mouse wheel to zoom."></canvas>
@@ -1587,6 +1565,19 @@
         </div>
 
         <div class="panel-body">
+          <section class="control-group" aria-label="View controls">
+            <div class="group-heading"><span>View</span></div>
+            <div class="panel-view-actions">
+              <button class="ghost-button" id="labels-button" type="button" aria-pressed="true" title="Show or hide labels">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12s3.2-6 9-6 9 6 9 6-3.2 6-9 6-9-6-9-6Z"/><circle cx="12" cy="12" r="2.6"/></svg>
+                <span>Labels</span>
+              </button>
+              <button class="ghost-button" id="reset-view" type="button" title="Reset 3D view">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.7 8.1A8 8 0 1 1 4 14"/><path d="M4 4v4.5h4.5"/></svg>
+                <span>Reset view</span>
+              </button>
+            </div>
+          </section>
           <section class="control-group" aria-labelledby="distance-heading">
             <div class="group-heading" id="distance-heading"><span>αP separation</span><output id="panel-distance">96 Md</output></div>
             <div class="preset-grid">

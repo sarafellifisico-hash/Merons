@@ -372,3 +372,118 @@
     transition: none !important;
   }
 }
+
+/* One border belongs to the minimized button, never to its surrounding shell. */
+body[data-tuidg-simulator="rotating"] :is(.control-panel.collapsed, .theory-panel.collapsed),
+body[data-tuidg-simulator="cyclical"] #icDiagramContainer.minimized,
+body[data-tuidg-simulator="diagrams"] #ic2d-lab.panel-collapsed .ic2d-panel,
+body[data-tuidg-simulator="double-slit"] .panel.minimized,
+body[data-tuidg-simulator="current"] .panel.minimized {
+  box-sizing: border-box !important;
+  width: 128px !important;
+  min-width: 0 !important;
+  height: 48px !important;
+  min-height: 0 !important;
+  max-height: 48px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 12px !important;
+  background: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  overflow: visible !important;
+}
+body[data-tuidg-simulator="rotating"] :is(.control-panel.collapsed .panel-header, .theory-panel.collapsed .theory-panel-header),
+body[data-tuidg-simulator="double-slit"] .panel.minimized .panel-head {
+  width: 100% !important;
+  height: 48px !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: none !important;
+}
+body[data-tuidg-simulator="builder"] #panelEdgeZone,
+body[data-tuidg-simulator="rotating"] :is(.control-panel.collapsed .collapse-button, .theory-panel.collapsed .theory-collapse-button),
+body[data-tuidg-simulator="cyclical"] :is(#controlsEdgeZone, #icDiagramContainer.minimized .toggle-btn),
+body[data-tuidg-simulator="diagrams"] #ic2d-lab.panel-collapsed .ic2d-panel-toggle,
+body[data-tuidg-simulator="double-slit"] :is(.panel.minimized .panel-toggle, #explanationIndicator),
+body[data-tuidg-simulator="current"] :is(.panel.minimized #panelToggle, #explanationIndicator) {
+  box-sizing: border-box !important;
+  position: static !important;
+  width: 128px !important;
+  min-width: 128px !important;
+  height: 48px !important;
+  min-height: 48px !important;
+  margin: 0 !important;
+  padding: 0 9px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  border: 1px solid #416078 !important;
+  border-radius: 12px !important;
+  background: rgba(9,25,36,.96) !important;
+  color: #d8eff7 !important;
+  box-shadow: 0 8px 24px rgba(0,0,0,.46) !important;
+  font: 700 12px/1.2 "Instrument Sans",system-ui,sans-serif !important;
+  text-align: center !important;
+  touch-action: manipulation;
+}
+/* Edge buttons and guide indicators retain their fixed screen positions. */
+body[data-tuidg-simulator="builder"] #panelEdgeZone,
+body[data-tuidg-simulator="cyclical"] #controlsEdgeZone,
+body[data-tuidg-simulator="double-slit"] #explanationIndicator,
+body[data-tuidg-simulator="current"] #explanationIndicator {
+  position: fixed !important;
+}
+body[data-tuidg-simulator="double-slit"] #explanationIndicator { position: absolute !important; }
+
+/* Secondary information chips follow the same single-outline construction. */
+body[data-tuidg-simulator="builder"] #pairNotes.collapsed,
+body[data-tuidg-simulator="rotating"] :is(.distance-hud.auto-hidden, .camera-tip.auto-hidden),
+body[data-tuidg-simulator="cyclical"] :is(#functionInfo.auto-hidden, #meronicIntro.auto-hidden),
+body[data-tuidg-simulator="diagrams"] #ic2d-lab .ic2d-mode-caption.auto-hidden,
+body[data-tuidg-simulator="double-slit"] :is(.tip.auto-hidden, .legend.auto-hidden, .exp-box.auto-hidden),
+body[data-tuidg-simulator="current"] .note.auto-hidden {
+  box-sizing: border-box !important;
+  width: 128px !important;
+  min-width: 0 !important;
+  height: 48px !important;
+  min-height: 0 !important;
+  max-height: 48px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 12px !important;
+  background: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  overflow: visible !important;
+}
+body[data-tuidg-simulator="double-slit"] .exp-box.auto-hidden { width: 48px !important; }
+body[data-tuidg-simulator="builder"] #pairNotes.collapsed #pairNotesToggle,
+body[data-tuidg-simulator="rotating"] :is(.distance-hud.auto-hidden .distance-hud-toggle, .camera-tip.auto-hidden .camera-tip-toggle),
+body[data-tuidg-simulator="cyclical"] :is(#functionInfo.auto-hidden #functionInfoToggle, #meronicIntro.auto-hidden #meronicIntroToggle),
+body[data-tuidg-simulator="diagrams"] #ic2d-lab .ic2d-mode-caption.auto-hidden .ic2d-caption-toggle,
+body[data-tuidg-simulator="double-slit"] :is(.tip.auto-hidden .auto-indicator, .legend.auto-hidden .auto-indicator, .exp-box.auto-hidden .auto-indicator),
+body[data-tuidg-simulator="current"] .note.auto-hidden button {
+  box-sizing: border-box !important;
+  position: static !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  height: 48px !important;
+  min-height: 48px !important;
+  margin: 0 !important;
+  padding: 0 8px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 5px !important;
+  border: 1px solid #416078 !important;
+  border-radius: 12px !important;
+  background: rgba(9,25,36,.96) !important;
+  color: #d8eff7 !important;
+  box-shadow: 0 8px 24px rgba(0,0,0,.46) !important;
+  font: 700 12px/1.2 "Instrument Sans",system-ui,sans-serif !important;
+  text-align: center !important;
+  touch-action: manipulation;
+}
