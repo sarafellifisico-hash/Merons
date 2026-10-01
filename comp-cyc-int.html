@@ -784,7 +784,7 @@
         const dirLight=new THREE.DirectionalLight(0xffffff,1.0); dirLight.position.set(10,20,15); dirLight.castShadow=true; scene.add(dirLight);
         const backLight=new THREE.DirectionalLight(0x6bafff,0.5); backLight.position.set(-10,10,-10); scene.add(backLight);
 
-        // Matte raised bench, ceramic end mounts and polished electrode rods.
+        // Matte raised bench, enclosed PVC conduits and recessed electrode rods.
         const metalMaterial=new THREE.MeshStandardMaterial({color:0xd2e1e9,metalness:0.92,roughness:0.16});
         const darkMetalMaterial=new THREE.MeshStandardMaterial({color:0x17212c,metalness:0.58,roughness:0.46});
         const baseMaterial=new THREE.MeshStandardMaterial({color:0x101820,metalness:0.18,roughness:0.79});
@@ -799,56 +799,83 @@
             foot.position.set(x,0.15,z); foot.castShadow=true; scene.add(foot);
         }));
 
-        const electrodeGeometry=new THREE.CylinderGeometry(0.16,0.16,2.8,32);
-        const rodLeft=new THREE.Mesh(electrodeGeometry,metalMaterial); rodLeft.position.set(-10.05,8,0); rodLeft.rotation.z=-Math.PI/2; scene.add(rodLeft);
-        const rodRight=new THREE.Mesh(electrodeGeometry,metalMaterial); rodRight.position.set(10.05,8,0); rodRight.rotation.z=Math.PI/2; scene.add(rodRight);
+        // Only the pointed cones remain exposed inside the glass. The short
+        // shafts overlap the cones and disappear into the insulated elbows.
+        const electrodeGeometry=new THREE.CylinderGeometry(0.14,0.14,0.55,32);
+        const rodLeft=new THREE.Mesh(electrodeGeometry,metalMaterial); rodLeft.position.set(-9.22,8,0); rodLeft.rotation.z=-Math.PI/2; scene.add(rodLeft);
+        const rodRight=new THREE.Mesh(electrodeGeometry,metalMaterial); rodRight.position.set(9.22,8,0); rodRight.rotation.z=Math.PI/2; scene.add(rodRight);
         const tipGeometry=new THREE.ConeGeometry(0.25,0.82,32);
         const coneLeft=new THREE.Mesh(tipGeometry,metalMaterial); coneLeft.position.set(-8.72,8,0); coneLeft.rotation.z=-Math.PI/2; scene.add(coneLeft);
         const coneRight=new THREE.Mesh(tipGeometry,metalMaterial); coneRight.position.set(8.72,8,0); coneRight.rotation.z=Math.PI/2; scene.add(coneRight);
-        const ceramicMaterial=new THREE.MeshStandardMaterial({color:0xe8f1fa,metalness:0.04,roughness:0.24});
+        const conduitMaterial=new THREE.MeshStandardMaterial({color:0x24566d,metalness:0.04,roughness:0.56});
+        const conduitBaseY=1.31;
+        const conduitTopY=8;
+        const conduitRadius=0.32;
         [-10.3,10.3].forEach(x=>{
-            const support=new THREE.Mesh(new THREE.CylinderGeometry(.45,.61,1.35,32),ceramicMaterial);
-            support.position.set(x,7.15,0); support.castShadow=true; scene.add(support);
-            const collar=new THREE.Mesh(new THREE.TorusGeometry(.48,.085,12,48),darkMetalMaterial);
-            collar.position.set(x,7.84,0); collar.rotation.x=Math.PI/2; scene.add(collar);
-            const rimCap=new THREE.Mesh(new THREE.CylinderGeometry(.45,.45,.10,32),darkMetalMaterial);
-            rimCap.position.set(x,7.86,0); scene.add(rimCap);
+            const support=new THREE.Mesh(new THREE.CylinderGeometry(conduitRadius,conduitRadius,conduitTopY-conduitBaseY,32),conduitMaterial);
+            support.position.set(x,(conduitTopY+conduitBaseY)/2,0);
+            support.castShadow=true; scene.add(support);
         });
 
-        const totalLength=Math.abs(rodRight.position.x-rodLeft.position.x);
-        const tubeDiameter=totalLength/10; const tubeRadius=tubeDiameter/2; const cylLength=totalLength-tubeDiameter;
+        // Keep the original tube end positions while rounding its shoulders
+        // into narrow openings at the electrode elbows.
+        const tubeHalfLength=9.045;
+        const tubeRadius=1.005;
+        const tubeDiameter=tubeRadius*2;
+        const cylLength=tubeHalfLength*2;
+        const neckRadius=0.34;
+        const shoulderLength=3.0;
+        const straightHalfLength=tubeHalfLength-shoulderLength;
+        function glassRadiusAtX(x){
+            const distance=Math.abs(x);
+            if(distance<=straightHalfLength) return tubeRadius;
+            const t=Math.min(1,(distance-straightHalfLength)/shoulderLength);
+            return neckRadius+(tubeRadius-neckRadius)*Math.sqrt(Math.max(0,1-t*t));
+        }
         // Conventional alpha transparency keeps the additive plasma visible.
         // MeshPhysicalMaterial transmission in Three.js r134 samples an
         // intermediate opaque pass that omits transparent plasma layers.
         const glassMaterial=new THREE.MeshPhysicalMaterial({color:0xb4e0ff,metalness:0,roughness:0.10,transmission:0,transparent:true,opacity:0.12,side:THREE.DoubleSide,depthWrite:false,depthTest:true,clearcoat:1,clearcoatRoughness:0.04});
-        const glassTubeGroup=new THREE.Group(); const cylGeo=new THREE.CylinderGeometry(tubeRadius,tubeRadius,cylLength,96,1,false); const cylMesh=new THREE.Mesh(cylGeo,glassMaterial); cylMesh.rotation.z=Math.PI/2; cylMesh.renderOrder=2; glassTubeGroup.add(cylMesh);
+        const glassTubeGroup=new THREE.Group();
+        const glassProfile=[];
+        for(let i=0;i<=128;i++){
+            const x=-tubeHalfLength+cylLength*i/128;
+            glassProfile.push(new THREE.Vector2(glassRadiusAtX(x),x));
+        }
+        const glassShell=new THREE.Mesh(new THREE.LatheGeometry(glassProfile,96),glassMaterial);
+        glassShell.rotation.z=Math.PI/2; glassShell.renderOrder=2; glassTubeGroup.add(glassShell);
         const rimMaterial=new THREE.MeshStandardMaterial({color:0x293540,metalness:.88,roughness:.2});
-        [-cylLength/2,cylLength/2].forEach(x=>{
-            const rim=new THREE.Mesh(new THREE.TorusGeometry(tubeRadius,0.095,16,64),rimMaterial);
+        [-tubeHalfLength,tubeHalfLength].forEach(x=>{
+            const collar=new THREE.Mesh(new THREE.CylinderGeometry(neckRadius+0.07,neckRadius+0.07,0.12,48,1,true),rimMaterial);
+            collar.rotation.z=Math.PI/2; collar.position.x=x; glassTubeGroup.add(collar);
+            const rim=new THREE.Mesh(new THREE.TorusGeometry(neckRadius+0.015,0.07,12,64),rimMaterial);
             rim.position.x=x; rim.rotation.y=Math.PI/2; glassTubeGroup.add(rim);
-            const polishedEdge=new THREE.Mesh(new THREE.TorusGeometry(tubeRadius,0.022,8,64),metalMaterial);
-            polishedEdge.position.x=x+(x<0?-0.07:0.07); polishedEdge.rotation.y=Math.PI/2; glassTubeGroup.add(polishedEdge);
         });
-        glassTubeGroup.position.set((rodLeft.position.x+rodRight.position.x)/2,8,0); scene.add(glassTubeGroup);
+        glassTubeGroup.position.set(0,8,0); scene.add(glassTubeGroup);
         // A single faint glass lattice catches the light without obscuring the moving CI meshes.
-        const lattice=[]; const shellRadius=tubeRadius*1.004;
+        const lattice=[];
         for(let i=0;i<=44;i++){
-            const x=-cylLength/2+cylLength*i/44;
+            const x=-tubeHalfLength+cylLength*i/44;
+            const shellRadius=glassRadiusAtX(x)*1.004;
             for(let j=0;j<48;j++){
                 const a=j*Math.PI/24, b=(j+1)*Math.PI/24;
                 lattice.push(x,shellRadius*Math.cos(a),shellRadius*Math.sin(a),x,shellRadius*Math.cos(b),shellRadius*Math.sin(b));
             }
         }
         for(let j=0;j<48;j++){
-            const a=j*Math.PI/24, y=shellRadius*Math.cos(a),z=shellRadius*Math.sin(a);
-            lattice.push(-cylLength/2,y,z,cylLength/2,y,z);
+            const a=j*Math.PI/24;
+            for(let i=0;i<128;i++){
+                const x0=-tubeHalfLength+cylLength*i/128, x1=-tubeHalfLength+cylLength*(i+1)/128;
+                const r0=glassRadiusAtX(x0)*1.004, r1=glassRadiusAtX(x1)*1.004;
+                lattice.push(x0,r0*Math.cos(a),r0*Math.sin(a),x1,r1*Math.cos(a),r1*Math.sin(a));
+            }
         }
         const latticeGeometry=new THREE.BufferGeometry();latticeGeometry.setAttribute('position',new THREE.Float32BufferAttribute(lattice,3));
         const latticeMesh=new THREE.LineSegments(latticeGeometry,new THREE.LineBasicMaterial({color:0x82cfff,transparent:true,opacity:0.07,depthWrite:false}));
         latticeMesh.renderOrder=3;glassTubeGroup.add(latticeMesh);
 
-        // A small front-mounted dimmer echoes the reference; the amplitude slider turns its knob.
-        const dimmerX=2.2;
+        // Center the only visible electrical control on the front of the bench.
+        const dimmerX=0;
         const dimmerCase=new THREE.Mesh(new THREE.BoxGeometry(2.6,.72,1.85),darkMetalMaterial);
         dimmerCase.position.set(dimmerX,1.67,5.0); dimmerCase.castShadow=true;scene.add(dimmerCase);
         const dialCanvas=document.createElement('canvas');dialCanvas.width=512;dialCanvas.height=320;
@@ -871,21 +898,15 @@
         const knobPointer=new THREE.Mesh(new THREE.BoxGeometry(.045,.035,.19),darkMetalMaterial);knobPointer.position.set(0,.17,-.11);dimmerKnob.add(knobPointer);
         dimmerKnob.rotation.y=-Math.PI*.65+Math.PI*1.3*(20/180);scene.add(dimmerKnob);
 
-                // --- Condutores V3 FINAL: azul e vermelho, finos, apoiados na bancada, joelho L curto encostado FORA do tubo ---
+        // The colored conductors run inside the opaque bench and the matching
+        // PVC uprights. Only the dimmer and the two insulated elbows are seen.
         const blueWireMaterial=new THREE.MeshStandardMaterial({color:0x0E5CFF,metalness:.15,roughness:.38,emissive:0x0a2a8a,emissiveIntensity:0.18});
         const redWireMaterial=new THREE.MeshStandardMaterial({color:0xE11A1A,metalness:.15,roughness:.38,emissive:0x5a0a0a,emissiveIntensity:0.20});
         const positiveMaterial=redWireMaterial;
         const negativeMaterial=blueWireMaterial;
 
-        const CABLE_RADIUS = 0.32 * 0.9; // 10% mais fino = 0.288
+        const CABLE_RADIUS = 0.14;
         const CABLE_RADIAL_SEGS = 16;
-
-        function addTerminal(x,material){
-            const terminal=new THREE.Mesh(new THREE.CylinderGeometry(.26,.26,.22,24),material);
-            terminal.position.set(x,1.42,5.52);terminal.castShadow=true;scene.add(terminal);
-            const ring=new THREE.Mesh(new THREE.TorusGeometry(.28,.045,10,24),darkMetalMaterial);
-            ring.position.set(x,1.53,5.52); ring.rotation.x=Math.PI/2; scene.add(ring);
-        }
 
         function createOrthogonalPath(vectors){
             const path=new THREE.CurvePath();
@@ -911,86 +932,43 @@
             return cable;
         }
 
-        // Joelho isolante em L CURTO, encostado por FORA do tubo de vidro
-        // Deixa o eletrodo prateado visível, não entra no vidro
+        // One-color rounded PVC elbows meet the narrow openings of the glass.
         function addInsulatedKneeL(baseX, sideSign){
-            // sideSign -1 = esquerda aponta +X, +1 = direita aponta -X
             const kneeGroup=new THREE.Group();
-            const insMat=ceramicMaterial;
-            const insRadius=0.50;
-            const vertLen=1.55; // de y=8 até y=6.45
-            const horizLen=0.95; // CURTO: só até encostar fora do tubo, não entra no vidro
-            // tubo de vidro termina em x=±9.045 (cylLength/2). Deixamos a capa até 9.20 / -9.20
-
-            // vertical para baixo
-            const vGeo=new THREE.CylinderGeometry(insRadius,insRadius,vertLen,24);
-            const vMesh=new THREE.Mesh(vGeo,insMat);
-            vMesh.position.set(baseX, 8 - vertLen/2, 0);
-            kneeGroup.add(vMesh);
-
-            // horizontal curto, apenas encostado no lado de fora do tubo
-            const hGeo=new THREE.CylinderGeometry(insRadius*0.92,insRadius*0.92,horizLen,24);
-            const hMesh=new THREE.Mesh(hGeo,insMat);
+            const endX=sideSign*tubeHalfLength;
+            const horizLen=Math.abs(endX-baseX);
+            const hGeo=new THREE.CylinderGeometry(conduitRadius,conduitRadius,horizLen,32);
+            const hMesh=new THREE.Mesh(hGeo,conduitMaterial);
             hMesh.rotation.z=Math.PI/2;
-            const hCenterX = baseX + (sideSign===-1 ? horizLen/2 : -horizLen/2);
-            hMesh.position.set(hCenterX, 8, 0);
+            hMesh.position.set((baseX+endX)/2,8,0);
             kneeGroup.add(hMesh);
-
-            // cotovelo
-            const elbow=new THREE.Mesh(new THREE.SphereGeometry(insRadius*1.05,20,20),insMat);
-            elbow.position.set(baseX, 8, 0);
+            const elbow=new THREE.Mesh(new THREE.SphereGeometry(conduitRadius,24,16),conduitMaterial);
+            elbow.position.set(baseX,8,0);
             kneeGroup.add(elbow);
-
-            // anel onde encosta no vidro (só encostado, não dentro)
-            const endX = baseX + (sideSign===-1 ? horizLen : -horizLen);
-            const touchRing=new THREE.Mesh(new THREE.TorusGeometry(insRadius*0.88,0.055,12,24),darkMetalMaterial);
-            touchRing.position.set(endX, 8, 0);
-            touchRing.rotation.y=Math.PI/2;
-            kneeGroup.add(touchRing);
-
-            // prensa-cabo embaixo
-            const bottomY = 8 - vertLen;
-            const press=new THREE.Mesh(new THREE.TorusGeometry(CABLE_RADIUS+0.07,0.06,12,22),darkMetalMaterial);
-            press.position.set(baseX, bottomY, 0);
-            press.rotation.x=Math.PI/2;
-            kneeGroup.add(press);
-
-            // tampa externa
-            const capGeo=new THREE.CylinderGeometry(insRadius*0.92,insRadius*0.92,0.10,24);
-            const cap=new THREE.Mesh(capGeo,insMat);
-            cap.rotation.z=Math.PI/2;
-            cap.position.set(baseX + (sideSign===-1 ? -0.05 : 0.05), 8, 0);
-            kneeGroup.add(cap);
-
             scene.add(kneeGroup);
-            return bottomY;
         }
 
-        addTerminal(dimmerX-1.42,negativeMaterial);
-        addTerminal(dimmerX+1.42,positiveMaterial);
+        addInsulatedKneeL(-10.3,-1);
+        addInsulatedKneeL(10.3,1);
 
-        const benchY = 1.65; // apoiado na bancada
-        const frontZ = 5.52;
-        const midZ = 0.0; // meio da bancada em Z
-        const kneeBottomYLeft = addInsulatedKneeL(-10.3, -1);
-        const kneeBottomYRight = addInsulatedKneeL(10.3, 1);
-
-        // Esquerda AZUL: sai reto do dimmer até meio, dobra 90° lateral até eletrodo, dobra 90° sobe
+        const hiddenBenchY=0.8;
+        // Wires start inside the dimmer, pass beneath the dark bench top and
+        // rise inside each continuous PVC support to the recessed electrodes.
         addCable90([
-            new THREE.Vector3(dimmerX-1.42,1.42,frontZ),
-            new THREE.Vector3(dimmerX-1.42,benchY,frontZ),
-            new THREE.Vector3(dimmerX-1.42,benchY,midZ),
-            new THREE.Vector3(-10.3,benchY,midZ),
-            new THREE.Vector3(-10.3,kneeBottomYLeft,midZ)
+            new THREE.Vector3(dimmerX-0.62,1.55,5),
+            new THREE.Vector3(dimmerX-0.62,hiddenBenchY,5),
+            new THREE.Vector3(dimmerX-0.62,hiddenBenchY,0),
+            new THREE.Vector3(-10.3,hiddenBenchY,0),
+            new THREE.Vector3(-10.3,8,0),
+            new THREE.Vector3(-tubeHalfLength,8,0)
         ],negativeMaterial);
-
-        // Direita VERMELHO
         addCable90([
-            new THREE.Vector3(dimmerX+1.42,1.42,frontZ),
-            new THREE.Vector3(dimmerX+1.42,benchY,frontZ),
-            new THREE.Vector3(dimmerX+1.42,benchY,midZ),
-            new THREE.Vector3(10.3,benchY,midZ),
-            new THREE.Vector3(10.3,kneeBottomYRight,midZ)
+            new THREE.Vector3(dimmerX+0.62,1.55,5),
+            new THREE.Vector3(dimmerX+0.62,hiddenBenchY,5),
+            new THREE.Vector3(dimmerX+0.62,hiddenBenchY,0),
+            new THREE.Vector3(10.3,hiddenBenchY,0),
+            new THREE.Vector3(10.3,8,0),
+            new THREE.Vector3(tubeHalfLength,8,0)
         ],positiveMaterial);
         const grid=new THREE.GridHelper(32,32,0x243044,0x151c29); grid.position.y=0.01; scene.add(grid);
 
@@ -1055,7 +1033,24 @@
         // ----- PLASMA BEAM (MACROSCOPIC LIGHT) -----
         const plasmaGroup = new THREE.Group();
         plasmaGroup.position.set(0,8,0);
-        const plasmaLength = 18; // between electrode tips -9 to +9
+        const plasmaLength = Math.abs(coneRight.position.x-coneLeft.position.x)-tipGeometry.parameters.height;
+        // The glow narrows at the electrode tips so it stays inside the rounded glass.
+        function plasmaGlowGeometry(radius){
+            const taper=1.15;
+            const profile=[];
+            for(let i=0;i<=12;i++){
+                const t=i/12;
+                const radiusFactor=0.24+0.76*Math.sin(t*Math.PI/2);
+                profile.push(new THREE.Vector2(radius*radiusFactor,-plasmaLength/2+taper*t));
+            }
+            profile.push(new THREE.Vector2(radius,plasmaLength/2-taper));
+            for(let i=1;i<=12;i++){
+                const t=i/12;
+                const radiusFactor=0.24+0.76*Math.cos(t*Math.PI/2);
+                profile.push(new THREE.Vector2(radius*radiusFactor,plasmaLength/2-taper+taper*t));
+            }
+            return new THREE.LatheGeometry(profile,48);
+        }
         // Three concentric cylindrical layers form one long plasma filament.
         const plasmaCoreGeo = new THREE.CylinderGeometry(0.04,0.04,plasmaLength,32);
         const plasmaCoreMat = new THREE.MeshBasicMaterial({color:0xff0000, transparent:true, opacity:0, blending:THREE.AdditiveBlending, depthWrite:false});
@@ -1064,14 +1059,14 @@
         plasmaCore.renderOrder = 1;
         plasmaGroup.add(plasmaCore);
         // Inner glow
-        const plasmaGlowGeo = new THREE.CylinderGeometry(0.14,0.14,plasmaLength,48);
+        const plasmaGlowGeo = plasmaGlowGeometry(0.14);
         const plasmaGlowMat = new THREE.MeshBasicMaterial({color:0xff0000, transparent:true, opacity:0.45, blending:THREE.AdditiveBlending, depthWrite:false});
         const plasmaGlow = new THREE.Mesh(plasmaGlowGeo, plasmaGlowMat);
         plasmaGlow.rotation.z = Math.PI/2;
         plasmaGlow.renderOrder = 1;
         plasmaGroup.add(plasmaGlow);
         // Outer glow
-        const plasmaOuterGeo = new THREE.CylinderGeometry(0.32,0.32,plasmaLength,64);
+        const plasmaOuterGeo = plasmaGlowGeometry(0.32);
         const plasmaOuterMat = new THREE.MeshBasicMaterial({color:0xff0000, transparent:true, opacity:0.18, blending:THREE.AdditiveBlending, depthWrite:false});
         const plasmaOuter = new THREE.Mesh(plasmaOuterGeo, plasmaOuterMat);
         plasmaOuter.rotation.z = Math.PI/2;
@@ -1114,7 +1109,7 @@
             const ampNorm = Math.min(1, ampEffDeg/90);
             const freqNorm = Math.min(1, frequency/15);
 
-            // RADIAL ONLY: length fixed at 18 ( -9 to +9 ), only diameter pulses
+            // Radial pulse only; the filament length remains tip to tip.
             // Synchronized with Compalpha frequency via |sinW|
             let radialPulse = 1.0 + absSin*1.2 + freqNorm*0.4 + ampNorm*0.3;
 
@@ -1127,8 +1122,7 @@
                 radialPulse += whiteBoost*0.5;
             }
 
-            // Clamp to tube diameter - never exceed glass wall
-            // tubeRadius ~0.975, tubeDiameter ~1.95
+            // Clamp the center of the glow to the tube diameter; its ends taper.
             const maxCore = (tubeRadius*0.50)/0.04;
             const maxGlow = (tubeRadius*0.85)/0.14;
             const maxOuter = (tubeRadius*0.95)/0.32;
