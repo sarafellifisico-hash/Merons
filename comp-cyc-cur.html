@@ -326,6 +326,9 @@
     const finMaterial=new THREE.MeshStandardMaterial({color:0xc6e1e8,metalness:.5,roughness:.28,transparent:true,opacity:.22,depthWrite:false,side:THREE.DoubleSide});
     const footMaterial=new THREE.MeshStandardMaterial({color:0xa4b9c6,metalness:.58,roughness:.31,transparent:true,opacity:.62,side:THREE.DoubleSide});
     const boreMaterial=new THREE.MeshBasicMaterial({color:0x172731,side:THREE.DoubleSide});
+    const coverGlass=new THREE.MeshStandardMaterial({color:0xc9e9f0,metalness:.12,roughness:.17,transparent:true,opacity:.14,depthWrite:false,side:THREE.DoubleSide});
+    const coverRib=new THREE.MeshStandardMaterial({color:0xd6f0f6,metalness:.38,roughness:.2,transparent:true,opacity:.52,depthWrite:false,side:THREE.DoubleSide});
+    const coverRim=new THREE.MeshStandardMaterial({color:0xc8eaf2,metalness:.44,roughness:.2,transparent:true,opacity:.58,depthWrite:false,side:THREE.DoubleSide});
     const shell=new THREE.Mesh(new THREE.CylinderGeometry(housingRadius,housingRadius,12.45,120,1,true,housingStart,housingSweep),ghost);
     shell.rotation.z=Math.PI/2;mechanics.add(shell);
     function housingArc(x,r,t,mat){
@@ -333,39 +336,60 @@
       geometry.rotateZ(housingStart);
       const arc=new THREE.Mesh(geometry,mat);arc.rotation.y=-Math.PI/2;arc.position.x=x;mechanics.add(arc);
     }
-    function coverBand(x,inner,outer){
-      const part=new THREE.Mesh(new THREE.RingGeometry(inner,outer,120,1,housingStart,housingSweep),ghost);
+    function coverBand(x,inner,outer,mat=coverGlass,start=housingStart,sweep=housingSweep){
+      const part=new THREE.Mesh(new THREE.RingGeometry(inner,outer,120,1,start,sweep),mat);
       part.rotation.y=-Math.PI/2;part.position.x=x;mechanics.add(part);
     }
+    function coverSpoke(x,angle,inner,outer,radius=0.055,mat=coverRib){
+      const y=Math.sin(angle),z=Math.cos(angle);
+      rod([x,inner*y,inner*z],[x,outer*y,outer*z],radius,mat);
+    }
     for(const x of [-6.22,6.22]){
-      // One ribbed closed cover and one vented cover, both with the same cutaway.
-      if(x<0)coverBand(x,.36,3.05);
-      else{
-        coverBand(x,.36,1.05);
-        coverBand(x,1.60,1.73);
-        coverBand(x,2.52,3.05);
+      // A cast transparent end cap: thick rim, framed ventilation panels and a
+      // raised bearing hub. The sector missing from each cap matches the shell.
+      const direction=Math.sign(x),faceX=x+direction*.17;
+      coverBand(faceX,.91,2.83);
+      coverBand(faceX,.32,.91,coverGlass,0,Math.PI*2);
+      housingArc(x,3.01,.12,coverRim);
+      housingArc(faceX,2.84,.065,coverRib);
+      housingArc(faceX,1.10,.055,coverRib);
+      housingArc(x-direction*.10,2.84,.045,coverRib);
+      ring(faceX,.76,.095,coverRim);
+      ring(faceX,.35,.07,coverRim);
+      ring(x-direction*.08,.76,.045,coverRib);
+      for(const degrees of [135,225,315]){
+        const angle=degrees*Math.PI/180;
+        coverSpoke(faceX,angle,.88,2.84,.09,coverRim);
       }
-      housingArc(x,2.96,.085,statorEdge);
-      housingArc(x,2.69,.045,frameMat);
-      housingArc(x,1.05,.035,finMaterial);
-      if(x>0)housingArc(x,1.73,.04,finMaterial);
-      ring(x,.52,.075,frameMat);
-      const faceX=x+(x<0?-.025:.025);
-      const ribs=x<0?[115,130,145,160,195,210,225,240,275,290,305,320,335,350]:[112,145,178,211,244,277,310,343];
-      for(const degrees of ribs){
-        const angle=degrees*Math.PI/180,y=Math.sin(angle),z=Math.cos(angle);
-        rod([faceX,(x<0?1.05:.96)*y,(x<0?1.05:.96)*z],[faceX,2.64*y,2.64*z],x<0?.045:.075,finMaterial);
+      // Five fine, parallel cooling ribs per surviving quadrant. Their ends
+      // stop short of the concentric inner and outer frames.
+      for(const degrees of [135,225,315]){
+        const angle=degrees*Math.PI/180;
+        const radialY=Math.sin(angle),radialZ=Math.cos(angle);
+        const tangentY=Math.cos(angle),tangentZ=-Math.sin(angle);
+        for(let i=-2;i<=2;i++){
+          const offset=i*.22;
+          rod([faceX+direction*.025,radialY*1.32+tangentY*offset,radialZ*1.32+tangentZ*offset],
+              [faceX+direction*.025,radialY*2.55+tangentY*offset,radialZ*2.55+tangentZ*offset],.037,coverRib);
+        }
+      }
+      // Clear mounting ears with visible circular bolt holes, like the cast
+      // cover in the reference, follow the remaining rim of the cutaway.
+      for(const degrees of [125,190,275,345]){
+        const angle=degrees*Math.PI/180,y=3.13*Math.sin(angle),z=3.13*Math.cos(angle);
+        const ear=new THREE.Mesh(new THREE.BoxGeometry(.34,.48,.48),coverRim);
+        ear.rotation.x=Math.PI/2-angle;ear.position.set(x,y,z);mechanics.add(ear);
+        const boss=new THREE.Mesh(new THREE.CylinderGeometry(.14,.14,.39,24),coverRib);
+        boss.rotation.z=Math.PI/2;boss.position.set(x,y,z);mechanics.add(boss);
+        const bore=new THREE.Mesh(new THREE.CircleGeometry(.075,24),boreMaterial);
+        bore.rotation.y=Math.PI/2;bore.position.set(x+direction*.205,y,z);mechanics.add(bore);
+        const eyelet=new THREE.Mesh(new THREE.TorusGeometry(.082,.017,8,24),coverRim);
+        eyelet.rotation.y=Math.PI/2;eyelet.position.set(x+direction*.207,y,z);mechanics.add(eyelet);
       }
       for(const angle of [housingStart,housingStart+housingSweep]){
         const y=Math.sin(angle),z=Math.cos(angle);
-        rod([faceX,.36*y,.36*z],[faceX,3.02*y,3.02*z],.05,statorEdge);
-      }
-      for(const angle of [120,180,240,300].map(degrees=>degrees*Math.PI/180)){
-        const y=3.02*Math.sin(angle),z=3.02*Math.cos(angle);
-        const boss=new THREE.Mesh(new THREE.CylinderGeometry(.145,.145,.19,24),footMaterial);
-        boss.rotation.z=Math.PI/2;boss.position.set(x,y,z);mechanics.add(boss);
-        const bore=new THREE.Mesh(new THREE.CircleGeometry(.075,24),boreMaterial);
-        bore.rotation.y=Math.PI/2;bore.position.set(x+(x<0?-.11:.11),y,z);mechanics.add(bore);
+        rod([faceX,.85*y,.85*z],[faceX,3.02*y,3.02*z],.07,coverRim);
+        rod([x,y*3.01,z*3.01],[faceX,y*3.01,z*3.01],.08,coverRim);
       }
     }
     for(const angle of [housingStart,housingStart+housingSweep]){
