@@ -229,25 +229,19 @@
     restoreOverview();
     scene.add(new THREE.HemisphereLight(0xb8ddff,0x080b0f,1.8));const key=new THREE.DirectionalLight(0xffffff,3.4);key.position.set(5,10,8);scene.add(key);const fill=new THREE.PointLight(0x327dff,18,22);fill.position.set(-7,-3,-5);scene.add(fill);
     const copper=new THREE.MeshStandardMaterial({color:0xd96d20,metalness:.82,roughness:.2,emissive:0x4b1502,emissiveIntensity:.38});
-    function openTube(points,r=.075,segments=180){const curve=new THREE.CatmullRomCurve3(points,false,'centripetal');const mesh=new THREE.Mesh(new THREE.TubeGeometry(curve,segments,r,12,false),copper);mesh.castShadow=true;return mesh}
-    function closedTube(points,r=.105){const curve=new THREE.CatmullRomCurve3(points,true,'catmullrom',.04);const mesh=new THREE.Mesh(new THREE.TubeGeometry(curve,260,r,14,true),copper);mesh.castShadow=true;return mesh}
-    // The fixed copper winding rises over the shaft, including its left return bend.
+    // Straight copper runs; only the return around the shaft bends upward.
     const coilHalfWidth=2.24;
-    function coilHeight(x){const t=Math.min(1,Math.abs(x)/5.45);return .42+.78*(1-t*t)}
-    const coilPoints=[new THREE.Vector3(5.8,0,coilHalfWidth)];
-    for(let i=0;i<=24;i++){
-      const x=5.45-i*10.9/24;coilPoints.push(new THREE.Vector3(x,coilHeight(x),coilHalfWidth));
-    }
-    coilPoints.push(
-      new THREE.Vector3(-5.75,.65,2.04),new THREE.Vector3(-5.95,1.08,1.43),
-      new THREE.Vector3(-6.03,1.50,0),new THREE.Vector3(-5.95,1.08,-1.43),
-      new THREE.Vector3(-5.75,.65,-2.04)
-    );
-    for(let i=0;i<=24;i++){
-      const x=-5.45+i*10.9/24;coilPoints.push(new THREE.Vector3(x,coilHeight(x),-coilHalfWidth));
-    }
-    coilPoints.push(new THREE.Vector3(5.8,0,-coilHalfWidth));
-    const loop=openTube(coilPoints,.13,360);scene.add(loop);
+    const coilPath=new THREE.CurvePath();
+    coilPath.add(new THREE.LineCurve3(new THREE.Vector3(5.8,0,coilHalfWidth),new THREE.Vector3(-5.45,0,coilHalfWidth)));
+    coilPath.add(new THREE.CatmullRomCurve3([
+      new THREE.Vector3(-5.45,0,coilHalfWidth),new THREE.Vector3(-5.78,0,2.1),
+      new THREE.Vector3(-5.92,.16,1.08),new THREE.Vector3(-5.96,.52,.45),
+      new THREE.Vector3(-5.96,.56,0),new THREE.Vector3(-5.96,.52,-.45),
+      new THREE.Vector3(-5.92,.16,-1.08),new THREE.Vector3(-5.78,0,-2.1),
+      new THREE.Vector3(-5.45,0,-coilHalfWidth)
+    ],false,'centripetal'));
+    coilPath.add(new THREE.LineCurve3(new THREE.Vector3(-5.45,0,-coilHalfWidth),new THREE.Vector3(5.8,0,-coilHalfWidth)));
+    const loop=new THREE.Mesh(new THREE.TubeGeometry(coilPath,360,.13,12,false),copper);loop.castShadow=true;scene.add(loop);
     // Twelve Compalphas on each of the two long, stationary copper runs.
     const compalphas=[];
     const whiteLine=new THREE.LineBasicMaterial({color:0xf4f7ff,transparent:true,opacity:.9});
@@ -277,7 +271,7 @@
     const alphaAxisGeometry=new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,-.82),new THREE.Vector3(0,0,.73)]);
     const alphaTipGeometry=new THREE.ConeGeometry(.105,.25,18);
     const alphaTipMaterial=new THREE.MeshBasicMaterial({color:0xff6969});
-    function createCompalpha(x,z,index,row){const group=new THREE.Group();group.position.set(x,coilHeight(x),z);group.add(meridianLayer(.13,whiteLine,24),meridianLayer(.65,blueLine,24));
+    function createCompalpha(x,z,index,row){const group=new THREE.Group();group.position.set(x,0,z);group.add(meridianLayer(.13,whiteLine,24),meridianLayer(.65,blueLine,24));
       const axis=new THREE.Line(alphaAxisGeometry,axisMat);group.add(axis);
       const tip=new THREE.Mesh(alphaTipGeometry,alphaTipMaterial);tip.rotation.x=Math.PI/2;tip.position.z=.78;group.add(tip);
       const alpha=((index*137.508+row*43.7+17)%360)*Math.PI/180;group.rotation.y=alpha;scene.add(group);compalphas.push({group,initial:alpha,current:alpha,row});
@@ -292,8 +286,8 @@
       // Mesma orientação polar global nas duas barras: entre elas, N fica diante de S.
       north.position.set(0,y+th/2,0);south.position.set(0,y-th/2,0);north.castShadow=south.castShadow=true;magnets.add(north,south);
       const n=sprite('N','#ffe4e4'),s=sprite('S','#e1f2ff');n.position.set(0,y+.24,.43);s.position.set(0,y-.24,.43);magnets.add(n,s)}addMagnet(1);addMagnet(-1);
-    // One visible flux arrow passes through each stationary Compalpha.
-    const fieldLines=new THREE.Group();fieldLines.name='Soft red flux arrows at the Compalphas';scene.add(fieldLines);
+    // Flux arrows belong to the rotor and turn together with the magnets.
+    const fieldLines=new THREE.Group();fieldLines.name='Soft red flux arrows fixed to the magnets';magnets.add(fieldLines);
     const fluxCanvas=document.createElement('canvas');fluxCanvas.width=128;fluxCanvas.height=512;
     const fq=fluxCanvas.getContext('2d');
     function fluxSilhouette(){fq.beginPath();fq.moveTo(64,24);fq.lineTo(111,112);fq.lineTo(76,104);fq.lineTo(76,478);fq.lineTo(52,478);fq.lineTo(52,104);fq.lineTo(17,112);fq.closePath()}
@@ -306,14 +300,16 @@
     // Opacity controls the overall transparency of the red arrows.
     const fieldMat=new THREE.MeshBasicMaterial({map:fluxTexture,transparent:true,opacity:.66,depthWrite:false,side:THREE.DoubleSide});
     const fluxGeometry=new THREE.PlaneGeometry(.42,1.55),fluxArrows=[];
-    for(const c of compalphas){
+    for(let i=0;i<12;i++){
       const arrow=new THREE.Mesh(fluxGeometry,fieldMat);
-      arrow.position.copy(c.group.position);arrow.scale.y=c.row;fieldLines.add(arrow);fluxArrows.push(arrow);
+      arrow.position.set(-4.95+i*9.9/11,0,.49);fieldLines.add(arrow);fluxArrows.push(arrow);
     }
+    const fluxCameraLocal=new THREE.Vector3();
     function faceFluxArrows(){
       if(!fieldLines.visible)return;
-      // Billboard around the vertical direction without shifting the arrow away from its Ca.
-      for(const arrow of fluxArrows)arrow.rotation.y=Math.atan2(camera.position.x-arrow.position.x,camera.position.z-arrow.position.z);
+      magnets.updateWorldMatrix(true,false);fluxCameraLocal.copy(camera.position);magnets.worldToLocal(fluxCameraLocal);
+      // Billboard in rotor coordinates without changing the flux direction.
+      for(const arrow of fluxArrows)arrow.rotation.y=Math.atan2(fluxCameraLocal.x-arrow.position.x,fluxCameraLocal.z-arrow.position.z);
     }
     // Align the shell and both end covers with a roughly 100-degree upper-front cut.
     const mechanics=new THREE.Group();mechanics.name='Cutaway finned stator housing';scene.add(mechanics);
@@ -337,18 +333,32 @@
       geometry.rotateZ(housingStart);
       const arc=new THREE.Mesh(geometry,mat);arc.rotation.y=-Math.PI/2;arc.position.x=x;mechanics.add(arc);
     }
+    function coverBand(x,inner,outer){
+      const part=new THREE.Mesh(new THREE.RingGeometry(inner,outer,120,1,housingStart,housingSweep),ghost);
+      part.rotation.y=-Math.PI/2;part.position.x=x;mechanics.add(part);
+    }
     for(const x of [-6.22,6.22]){
-      // Full translucent end cover, open from the left edge up past the top.
-      const end=new THREE.Mesh(new THREE.RingGeometry(.62,3.05,120,1,housingStart,housingSweep),ghost);
-      end.rotation.y=-Math.PI/2;end.position.x=x;mechanics.add(end);
+      // One ribbed closed cover and one vented cover, both with the same cutaway.
+      if(x<0)coverBand(x,.36,3.05);
+      else{
+        coverBand(x,.36,1.05);
+        coverBand(x,1.60,1.73);
+        coverBand(x,2.52,3.05);
+      }
       housingArc(x,2.96,.085,statorEdge);
       housingArc(x,2.69,.045,frameMat);
       housingArc(x,1.05,.035,finMaterial);
+      if(x>0)housingArc(x,1.73,.04,finMaterial);
       ring(x,.52,.075,frameMat);
       const faceX=x+(x<0?-.025:.025);
-      for(const degrees of [125,155,185,215,245,275,305,335]){
+      const ribs=x<0?[115,130,145,160,195,210,225,240,275,290,305,320,335,350]:[112,145,178,211,244,277,310,343];
+      for(const degrees of ribs){
         const angle=degrees*Math.PI/180,y=Math.sin(angle),z=Math.cos(angle);
-        rod([faceX,.98*y,.98*z],[faceX,2.58*y,2.58*z],.037,finMaterial);
+        rod([faceX,(x<0?1.05:.96)*y,(x<0?1.05:.96)*z],[faceX,2.64*y,2.64*z],x<0?.045:.075,finMaterial);
+      }
+      for(const angle of [housingStart,housingStart+housingSweep]){
+        const y=Math.sin(angle),z=Math.cos(angle);
+        rod([faceX,.36*y,.36*z],[faceX,3.02*y,3.02*z],.05,statorEdge);
       }
       for(const angle of [120,180,240,300].map(degrees=>degrees*Math.PI/180)){
         const y=3.02*Math.sin(angle),z=3.02*Math.cos(angle);
@@ -437,17 +447,7 @@
       const foot=new THREE.Mesh(new THREE.CylinderGeometry(.30,.34,.35,24),rubberMaterial);
       foot.position.set(x,-6.04,z);bench.add(foot);
     }
-    // Two bearings hold the shaft above the bench and leave the guarded rotor visible.
-    function upright(x){
-      const sh=new THREE.Shape();sh.moveTo(-1.18,-4.91);sh.lineTo(1.18,-4.91);sh.lineTo(.7,.37);
-      sh.quadraticCurveTo(.66,.78,.25,.78);sh.lineTo(-.25,.78);sh.quadraticCurveTo(-.66,.78,-.7,.37);sh.closePath();
-      const hole=new THREE.Path();hole.absarc(0,0,.36,0,Math.PI*2,true);sh.holes.push(hole);
-      const m=new THREE.Mesh(new THREE.ExtrudeGeometry(sh,{depth:.42,bevelEnabled:false,curveSegments:28}),supportMaterial);
-      m.rotation.y=Math.PI/2;m.position.x=x-.21;bench.add(m);
-      box(1.15,.18,3.1,x,-4.88,0,supportMaterial,bench);
-      ring(x,.38,.10,contactMat,bench);
-    }
-    upright(-6.87);upright(6.87);
+    // The end-cover hubs support the shaft; the housing rails fasten the motor to the bench.
     // Two output contacts pass through fixed insulating blocks near the right end ring.
     for(const z of [-coilHalfWidth,coilHalfWidth]){
       rod([5.8,0,z],[6.5,0,z],.11,copper,scene);
@@ -541,9 +541,6 @@
         let allowed=THREE.MathUtils.clamp(shortestTurn(c.initial,flux),-maxAmplitude,maxAmplitude);if(mode.value==='dc+')allowed=Math.abs(allowed);if(mode.value==='dc-')allowed=-Math.abs(allowed);
         // Direct angular response: no damping tail outside the induction window.
         c.current=c.initial+allowed*pulse;c.group.rotation.y=c.current;
-      }
-      for(let i=0;i<fluxArrows.length;i++){
-        fluxArrows[i].scale.y=mode.value==='ac'?compalphas[i].row*(carrier>=0?1:-1):(mode.value==='dc+'?1:-1);
       }
       // LED and illustrative voltage use exactly the same angular envelope as the Ca.
       outputPulse=running&&rpm>0?pulse*(rpm/120)*(maxAmplitude/(Math.PI/2)):0;
