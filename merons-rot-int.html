@@ -872,24 +872,6 @@ body.pair-mode.magnet-gravity-active #panel:not(.minimized) { top:16px!important
   <button type="button" class="distance-stage" data-distance-stage="exd" title="Exomolecular Distance">Exd · 96</button>
   <button type="button" id="topStructuresToggle" class="distance-stage structures-toggle" title="Hide or show the five Metalpha structures">Hide Structures</button>
 </div>
-<div id="presentationContextMenu" role="menu" aria-label="Meronic Builder radial functions menu">
-  <svg class="context-connectors" viewBox="0 0 333 280" aria-hidden="true">
-    <path d="M167 101V50 M146 110L138 76 M190 110L192 75 M131 119L117 118 M205 119L218 118 M131 159L115 160 M205 159L218 160 M146 170L138 186 M190 170L194 186 M167 177V231"/>
-  </svg>
-  <div class="context-hub" aria-hidden="true"><svg class="context-hub-shape" viewBox="0 0 74 76" preserveAspectRatio="none"><polygon points="25,0 49,0 66,14 74,38 66,62 49,76 25,76 8,62 0,38 8,14"/></svg><span>Functions</span></div>
-  <button type="button" class="context-node" role="menuitem" data-context-category="build" title="Choose the Meronic Mass"><span>Meron<br>Build</span></button>
-  <button type="button" class="context-node" role="menuitem" data-context-category="layers" title="Show or hide Interaction Circle layers">IC Layers</button>
-  <button type="button" class="context-node" role="menuitem" data-context-category="geometry" title="Meronic geometry and Compalpha detail">Geometry</button>
-  <button type="button" class="context-node" role="menuitem" data-context-category="triads" title="Alpha Triads and Rotating Interaction"><span>Alpha<br>Triads</span></button>
-  <button type="button" class="context-node" role="menuitem" data-context-category="cyclic" title="Cuboctahedral Cyclic Interaction">Cyclic IC</button>
-  <button type="button" class="context-node" role="menuitem" data-context-category="rotation" title="Meronic rotation">Rotation</button>
-  <button type="button" class="context-node" role="menuitem" data-context-category="view" title="Visible elements and camera positions">View / Camera</button>
-  <button type="button" class="context-node" role="menuitem" data-context-category="isomers" title="Stable Isomeric Varieties">Isomers</button>
-  <button type="button" class="context-node" role="menuitem" data-context-category="scripts" title="Ready-made and editable video scripts">Video Scripts</button>
-  <button type="button" class="context-node" role="menuitem" data-context-category="recording" title="Master and Facebook recording profiles">Recording</button>
-</div>
-<section id="contextFlyout" role="dialog" aria-live="polite" aria-label="Selected quick controls"></section>
-
 <section id="comparisonOverlay" aria-hidden="true" aria-label="Stable Meronic Isomer comparison workspace">
   <div class="comparison-grid" aria-live="polite">
     <article class="comparison-cell active" data-comparison-cell="0"><div class="comparison-cell-header"><div class="comparison-cell-title">Stable Isomer A</div><div class="comparison-cell-meta">Waiting for structure</div></div></article>
@@ -6008,369 +5990,6 @@ function setupMetalphaControls() {
 
 }
 
-function setupPresentationContextMenu() {
-  const menu = document.getElementById('presentationContextMenu');
-  const flyout = document.getElementById('contextFlyout');
-  if (!menu || !flyout) return;
-  let activeCategory = null;
-  let activeNode = null;
-  let hoverCloseTimer = 0;
-
-  const button = (label, attrs = '', classes = '') =>
-    `<button type="button" class="context-action ${classes}" ${attrs}>${label}</button>`;
-  const rangeValueIds = {
-    faceOpacity: 'faceOpacityVal',
-    interMeronDist: 'interMeronDistVal',
-    meridianResolution: 'meridianResVal',
-    danceAmp: 'danceAmpVal',
-    danceFreq: 'danceFreqVal',
-    rotateSpeed: 'rotateSpeedVal'
-  };
-  const rangeMarkup = (id, label) => {
-    const source = document.getElementById(id);
-    const value = document.getElementById(rangeValueIds[id])?.textContent || source.value;
-    return `<div class="context-control"><label><span>${label}</span><b data-context-value-for="${id}">${value}</b></label><input type="range" min="${source.min}" max="${source.max}" step="${source.step}" value="${source.value}" data-context-range="${id}"></div>`;
-  };
-  const cancelHoverClose = () => {
-    if (hoverCloseTimer) window.clearTimeout(hoverCloseTimer);
-    hoverCloseTimer = 0;
-  };
-  const closeFlyout = () => {
-    flyout.classList.remove('open');
-    menu.querySelectorAll('.context-node').forEach(node => {
-      node.classList.remove('active');
-      node.setAttribute('aria-expanded','false');
-    });
-    activeCategory = activeNode = null;
-  };
-  const closeMenu = () => { cancelHoverClose(); menu.classList.remove('open'); closeFlyout(); };
-  const scheduleHoverClose = () => {
-    cancelHoverClose();
-    hoverCloseTimer = window.setTimeout(() => {
-      const focused = document.activeElement;
-      if (menu.matches(':hover') || flyout.matches(':hover') || menu.contains(focused) || flyout.contains(focused)) return;
-      closeMenu();
-    }, 360);
-  };
-
-  function panelMarkup(category) {
-    if (category === 'build') {
-      const quickMasses = [1,2,3,4,5];
-      return `<div class="context-title">1 · Meron Build</div><p class="context-copy">Choose any Meronic Mass from 1 to 303.</p>
-        <div class="context-control"><label><span>Metalpha Merons · Mass Number</span><span><input class="context-number" type="number" min="1" max="303" step="1" value="${currentMeronCount}" data-context-meron-count></span></label></div>
-        <div class="context-actions">${quickMasses.map(count=>button(`${count} ${count===1?'Meron':'Merons'}`,`data-context-meron="${count}"`,currentMeronCount===count?'active':'')).join('')}</div>
-        <p class="context-status">${document.getElementById('meronInfo').textContent}</p>
-        <div class="context-actions">${button('Meronic Construction','data-context-builder-mode="build"','wide')}</div>`;
-    }
-    if (category === 'layers') {
-      const layers = [['IMC','0.464'],['MC','1'],['IMoC','12'],['MoC','24'],['IExC','48'],['ExC','96']];
-      return `<div class="context-title">2 · Interaction Circle Layers</div><div class="context-checks">${layers.map(([name,diameter],index)=>{
-        const source = document.querySelector(`.layer-toggle[data-layer="${index}"]`);
-        return `<label class="context-check"><input type="checkbox" data-context-layer="${index}" ${source?.checked?'checked':''}>${name} · D ${diameter}</label>`;
-      }).join('')}</div><div class="context-actions">
-        ${button('Show all IC layers','data-context-action="layers-all"','wide')}
-        ${button('Hide all IC layers','data-context-action="layers-none"','wide off')}
-      </div>`;
-    }
-    if (category === 'geometry') {
-      const meridians = document.querySelector('input[name="meridians"]:checked')?.value || '36';
-      return `<div class="context-title">3 · Meronic Geometry &amp; Compalpha Detail</div>
-        ${rangeMarkup('faceOpacity','Cuboctahedron opacity')}
-        ${rangeMarkup('interMeronDist','Intermeronic distance')}
-        <div class="context-control"><div class="context-title">Interaction scales</div><div class="context-actions">
-          ${button('Meronic distance','data-context-pair-mode="meronic"',pairMode==='meronic'?'active':'')}
-          ${button('Molecular distance','data-context-pair-mode="molecular"',pairMode==='molecular'?'active':'')}
-          ${button('Exomolecular distance','data-context-pair-mode="exomolecular"',pairMode==='exomolecular'?'active':'')}
-          ${pairMode?button('All six IC','data-context-command="pairFit"'):''}
-          ${pairMode?button('Selected scale','data-context-command="pairFocus"'):''}
-          ${pairMode?button('Return to Builder','data-context-command="pairExit"','wide'):''}
-        </div></div>
-        <div class="context-control"><div class="context-title">Compalpha Meridians</div><div class="context-actions">${[12,18,36].map(value=>button(String(value),`data-context-meridians="${value}"`,meridians===String(value)?'active':'')).join('')}</div></div>
-        <label class="context-check"><input type="checkbox" data-context-check="emphasizeMeridians" ${document.getElementById('emphasizeMeridians').checked?'checked':''}>Highlight Meridians</label>
-        ${rangeMarkup('meridianResolution','Circle smoothness')}`;
-    }
-    if (category === 'triads') {
-      const showAll = !metalphaTriadVisible.every(Boolean);
-      const activeDistance = fiveMeronRIDistanceStage;
-      return `<div class="context-title">4 · Alpha Triads &amp; Rotating Interaction</div><div class="context-actions">
-        ${button(showAll ? 'Show all Alpha Triads' : 'Hide all Alpha Triads','data-context-action="triads-all"','wide')}
-        ${button(triadsSeparated ? 'Join Alpha Triads · Exd' : 'Separate Alpha Triads to Exd','data-context-action="triads-separate"',triadsSeparated?'active':'')}
-        ${button(riRunning ? 'Stop Rotating Interaction' : 'Run Rotating Interaction','data-context-action="ri-toggle"',riRunning?'active':'')}
-        ${button('5-Metalpha RI Distances','data-context-action="five-meron-ri"','wide')}
-        ${button(fiveMeronMetalphasVisible ? 'Hide Metalpha Structures' : 'Show Metalpha Structures','data-context-action="toggle-five-metalphas"',fiveMeronMetalphasVisible?'wide':'off wide')}
-        ${button('Meronic Construction','data-context-builder-mode="build"','wide')}
-      </div><div class="context-triads">${metalphaTriadVisible.map((visible,index)=>button(`${visible?'Hide':'Show'} Tα${index+1}`,`data-context-triad="${index}"`,visible?'':'off')).join('')}</div>
-      <div class="context-control"><div class="context-title">Five-Metalpha RI scales</div><div class="context-actions">
-        ${button('Md · 1','data-context-ri-distance="md"',fiveMeronRIDistanceMode&&activeDistance==='md'?'active':'')}
-        ${button('Mod · 24','data-context-ri-distance="mod"',fiveMeronRIDistanceMode&&activeDistance==='mod'?'active':'')}
-        ${button('Exd · 96','data-context-ri-distance="exd"',fiveMeronRIDistanceMode&&activeDistance==='exd'?'active':'')}
-      </div></div>
-      <div class="context-actions">${button('Meronic Forces','data-context-builder-mode="forces"','wide')}</div>`;
-    }
-    if (category === 'cyclic') {
-      const amp = document.getElementById('danceAmp');
-      const freq = document.getElementById('danceFreq');
-      const enabled = document.getElementById('danceEnabled');
-      const modeButtons = [...document.querySelectorAll('.dance-mode')];
-      return `<div class="context-title">5 · Cuboctahedral Cyclic Interaction</div>
-        <label class="context-check"><input type="checkbox" data-context-check="danceEnabled" ${enabled.checked?'checked':''}>Cuboctahedral Cyclic Interaction</label>
-        <div class="context-control"><label><span>Amplitude · 0–40° stable · 120° = ∞</span><b>${amp.value}°</b></label><input type="range" min="${amp.min}" max="${amp.max}" step="${amp.step}" value="${amp.value}" data-context-range="danceAmp"></div>
-        <div class="context-control"><label><span>Frequency</span><b>${freq.value} Hz</b></label><input type="range" min="${freq.min}" max="${freq.max}" step="${freq.step}" value="${freq.value}" data-context-range="danceFreq"></div>
-        <div class="context-control"><div class="context-title">Oscillation Planes / Modes</div><div class="context-actions">${modeButtons.map(source=>button(source.textContent,`data-context-dance-mode="${source.dataset.mode}"`,source.classList.contains('active')?'active':'')).join('')}</div></div>`;
-    }
-    if (category === 'rotation') {
-      return `<div class="context-title">6 · Meronic Rotation</div><p class="context-copy">Control the joint orbital spin of the complete structure.</p><div class="context-actions">
-        ${button(window.autoRotate ? 'Pause Meronic Rotation' : 'Resume Meronic Rotation','data-context-action="rotation-toggle"','wide active')}
-      </div>${rangeMarkup('rotateSpeed','Rotation speed')}`;
-    }
-    if (category === 'view') {
-      const checks = [['showVectors','Alpha Axes'],['showEdges','Edges'],['showTriades','Faces (Triads)'],['showFaces','Translucent Faces'],['showLabels','Cα Labels']];
-      const cameras = [['geral','General View'],['iso','Iso'],['topo','Top'],['frente','Front'],['tras','Back'],['esquerda','Left'],['direita','Right']];
-      return `<div class="context-title">7 · View &amp; Camera</div><div class="context-checks">${checks.map(([id,label])=>`<label class="context-check"><input type="checkbox" data-context-check="${id}" ${document.getElementById(id).checked?'checked':''}>${label}</label>`).join('')}</div>
-        <div class="context-title">Camera Position</div><div class="context-actions">${cameras.map(([id,label])=>button(label,`data-context-camera="${id}"`)).join('')}${button(document.getElementById('zoomIMCExC').textContent,'data-context-command="zoomIMCExC"')}</div>`;
-    }
-    if (category === 'isomers') {
-      const toggle = document.getElementById('comparisonModeToggle');
-      return `<div class="context-title">8 · Stable Isomeric Varieties</div><p class="context-copy">Compare up to four compact final structures with the same Meronic Mass.</p><div class="context-actions">
-        ${button(toggle.textContent,'data-context-command="comparisonModeToggle"','wide active')}
-        ${button(document.getElementById('comparisonSyncPanel').textContent,'data-context-command="comparisonSyncPanel"')}
-        ${button('Reset views','data-context-command="comparisonResetPanel"')}
-      </div><p class="context-status">${document.getElementById('comparisonStatus').textContent}</p>`;
-    }
-    if (category === 'scripts') {
-      const duration = document.getElementById('scriptDuration');
-      const preset = document.getElementById('scriptPresetSelect');
-      const options = [...preset.options].map(option=>`<option value="${option.value}" ${option.selected?'selected':''}>${option.textContent}</option>`).join('');
-      const load = document.getElementById('loadScriptPreset');
-      const mark = document.getElementById('markScriptStep');
-      const preview = document.getElementById('previewScript');
-      const clear = document.getElementById('clearScript');
-      return `<div class="context-title">9 · Video Scripts</div><p class="context-copy">Load a standardized script or add editable steps to the current scene.</p>
-        <select class="context-select" data-context-select="scriptPresetSelect">${options}</select>
-        <p class="context-status">${document.getElementById('scriptPresetDescription').textContent}</p>
-        <div class="context-actions">${button('Load Ready Script',`data-context-command="loadScriptPreset" ${load.disabled?'disabled':''}`,'wide active')}</div>
-        <div class="context-control"><label><span>Next transition</span><span><input class="context-number" type="number" min="${duration.min}" max="${duration.max}" step="${duration.step}" value="${duration.value}" data-context-number="scriptDuration"> s</span></label></div>
-        <div class="context-actions">${button('＋ Mark Current Step',`data-context-command="markScriptStep" ${mark.disabled?'disabled':''}`,'wide active')}${button('▶ Preview',`data-context-command="previewScript" ${preview.disabled?'disabled':''}`)}${button('Clear Script',`data-context-command="clearScript" ${clear.disabled?'disabled':''}`)}${button('Edit Step List in Panel','data-context-panel-tab="capture"','wide')}</div>
-        <p class="context-status">${document.getElementById('scriptStatus').textContent}</p>`;
-    }
-    const startMaster = document.getElementById('startRecording');
-    const startFacebook = document.getElementById('startFacebookRecording');
-    const stop = document.getElementById('stopRecording');
-    return `<div class="context-title">10 · Scene Recording</div><p class="context-copy">Record only the 3D scene with high-definition Interaction Circles.</p><div class="context-actions">
-      ${button('● Master 16:9 · 2560 × 1440',`data-context-command="startRecording" ${startMaster.disabled?'disabled':''}`,'wide')}
-      ${button('● Facebook Reel 9:16 · 1080 × 1920',`data-context-command="startFacebookRecording" ${startFacebook.disabled?'disabled':''}`,'wide')}
-      ${button(stop.textContent,`data-context-command="stopRecording" ${stop.disabled?'disabled':''}`,'wide')}
-      ${button('Open Capture Panel','data-context-panel-tab="capture"','wide')}
-    </div><p class="context-status">${document.getElementById('recordStatusText').textContent} · ${document.getElementById('recordTimer').textContent}</p>`;
-  }
-
-  function positionFlyout(node) {
-    flyout.style.left = '0px'; flyout.style.top = '0px';
-    const nodeRect = node.getBoundingClientRect();
-    const rect = flyout.getBoundingClientRect();
-    const openRight = nodeRect.right + 14 + rect.width <= window.innerWidth - 10;
-    const left = openRight ? nodeRect.right + 14 : nodeRect.left - rect.width - 14;
-    const top = Math.min(Math.max(10,nodeRect.top + nodeRect.height/2 - rect.height/2),window.innerHeight - rect.height - 10);
-    flyout.style.left = `${Math.max(10,left)}px`; flyout.style.top = `${top}px`;
-  }
-
-  function renderPanel(category,node) {
-    if (!category || !node) return;
-    cancelHoverClose();
-    activeCategory = category; activeNode = node;
-    menu.querySelectorAll('.context-node').forEach(item=>{
-      const selected=item===node;
-      item.classList.toggle('active',selected);
-      item.setAttribute('aria-expanded',String(selected));
-    });
-    flyout.innerHTML = panelMarkup(category);
-    flyout.classList.add('open');
-    positionFlyout(node);
-  }
-
-  const openMenu = event => {
-    event.preventDefault();
-    event.stopPropagation();
-    closeFlyout();
-    menu.classList.add('open');
-    const width = menu.offsetWidth, height = menu.offsetHeight;
-    const left = Math.min(event.clientX - width/2, window.innerWidth - width - 10);
-    const top = Math.min(event.clientY - height/2, window.innerHeight - height - 10);
-    menu.style.left = `${Math.max(10, left)}px`;
-    menu.style.top = `${Math.max(10, top)}px`;
-  };
-
-  // Reserve the secondary mouse button for this menu instead of allowing
-  // OrbitControls to pan the scene immediately before the menu opens.
-  renderer.domElement.addEventListener('pointerdown', event => {
-    if (event.button !== 2) return;
-    event.preventDefault();
-    event.stopImmediatePropagation();
-  }, true);
-  renderer.domElement.addEventListener('contextmenu', openMenu);
-
-  [menu,flyout].forEach(element=>{
-    element.addEventListener('pointerdown',event=>event.stopPropagation());
-    element.addEventListener('contextmenu',event=>event.preventDefault());
-    element.addEventListener('pointerenter',cancelHoverClose);
-    element.addEventListener('pointerleave',scheduleHoverClose);
-  });
-  menu.addEventListener('pointerover',event=>{
-    const node=event.target.closest('[data-context-category]');
-    if(node && node!==activeNode)renderPanel(node.dataset.contextCategory,node);
-  });
-  menu.addEventListener('focusin',event=>{
-    const node=event.target.closest('[data-context-category]');
-    if(node)renderPanel(node.dataset.contextCategory,node);
-  });
-  menu.addEventListener('click',event=>{
-    const node=event.target.closest('[data-context-category]');
-    if(node)renderPanel(node.dataset.contextCategory,node);
-  });
-  flyout.addEventListener('click', event => {
-    const triadButton=event.target.closest('[data-context-triad]');
-    if (triadButton) {
-      selectMetalpha();
-      const index = Number(triadButton.dataset.contextTriad);
-      metalphaTriadVisible[index] = !metalphaTriadVisible[index];
-      syncMetalphaScriptUi();
-      applyMetalphaVisibility();
-      applyRIState();
-      renderPanel(activeCategory,activeNode);
-      return;
-    }
-    const meronButton=event.target.closest('[data-context-meron]');
-    if (meronButton) {
-      document.querySelector(`#meronCountContainer input[value="${meronButton.dataset.contextMeron}"]`)?.click();
-      renderPanel(activeCategory,activeNode);
-      return;
-    }
-    const pairButton=event.target.closest('[data-context-pair-mode]');
-    if (pairButton) {
-      document.querySelector(`[data-pair-mode="${pairButton.dataset.contextPairMode}"]`)?.click();
-      renderPanel(activeCategory,activeNode);
-      return;
-    }
-    const riDistanceButton=event.target.closest('[data-context-ri-distance]');
-    if (riDistanceButton) {
-      activateFiveMeronRIDistance(riDistanceButton.dataset.contextRiDistance,true);
-      renderPanel(activeCategory,activeNode);
-      return;
-    }
-    const meridiansButton=event.target.closest('[data-context-meridians]');
-    if (meridiansButton) {
-      const original=document.querySelector(`input[name="meridians"][value="${meridiansButton.dataset.contextMeridians}"]`);
-      if(original){original.checked=true;original.dispatchEvent(new Event('change',{bubbles:true}));}
-      renderPanel(activeCategory,activeNode);
-      return;
-    }
-    const builderModeButton=event.target.closest('[data-context-builder-mode]');
-    if(builderModeButton){
-      closeMenu();
-      document.querySelector(`[data-builder-mode="${builderModeButton.dataset.contextBuilderMode}"]`)?.click();
-      window.revealControlPanel?.();
-      return;
-    }
-    const panelTab=event.target.closest('[data-context-panel-tab]');
-    if(panelTab){
-      closeMenu();
-      if(panel.classList.contains('minimized'))document.getElementById('toggleBtn')?.click();
-      activatePanelTab(panelTab.dataset.contextPanelTab);
-      window.revealControlPanel?.();
-      return;
-    }
-    const command=event.target.closest('[data-context-command]');
-    if(command && !command.disabled){document.getElementById(command.dataset.contextCommand)?.click();setTimeout(()=>activeNode&&renderPanel(activeCategory,activeNode),0);return}
-    const camera=event.target.closest('[data-context-camera]');
-    if(camera){document.querySelector(`.cam-btn[data-cam="${camera.dataset.contextCamera}"]`)?.click();return}
-    const danceMode=event.target.closest('[data-context-dance-mode]');
-    if(danceMode){document.querySelector(`.dance-mode[data-mode="${danceMode.dataset.contextDanceMode}"]`)?.click();renderPanel(activeCategory,activeNode);return}
-    const actionButton=event.target.closest('[data-context-action]');
-    if(!actionButton)return;
-    switch(actionButton.dataset.contextAction){
-      case 'triads-all': {
-        selectMetalpha();
-        const show = !metalphaTriadVisible.every(Boolean);
-        metalphaTriadVisible = metalphaTriadVisible.map(() => show);
-        syncMetalphaScriptUi();
-        applyMetalphaVisibility();
-        applyRIState();
-        renderPanel(activeCategory,activeNode);
-        return;
-      }
-      case 'layers-all':
-      case 'layers-none': {
-        const checked = actionButton.dataset.contextAction === 'layers-all';
-        document.querySelectorAll('.layer-toggle').forEach(original=>{
-          original.checked=checked;
-          original.dispatchEvent(new Event('change',{bubbles:true}));
-        });
-        renderPanel(activeCategory,activeNode);
-        return;
-      }
-      case 'triads-separate':
-        document.getElementById('separateTriadsBtn')?.click();
-        break;
-      case 'ri-toggle':
-        document.getElementById('runRIBtn')?.click();
-        break;
-      case 'five-meron-ri':
-        activateFiveMeronRIDistance('exd', true);
-        break;
-      case 'toggle-five-metalphas':
-        document.getElementById('toggleFiveMetalphasBtn')?.click();
-        break;
-      case 'rotation-toggle':
-        document.getElementById('rotateToggle')?.click();
-        break;
-    }
-    renderPanel(activeCategory,activeNode);
-  });
-
-  flyout.addEventListener('change',event=>{
-    const meronCount=event.target.closest('[data-context-meron-count]');
-    if(meronCount){
-      const count=Math.max(1,Math.min(303,Math.round(Number(meronCount.value)||1)));
-      document.querySelector(`#meronCountContainer input[value="${count}"]`)?.click();
-      renderPanel(activeCategory,activeNode);
-      return;
-    }
-    const layer=event.target.closest('[data-context-layer]');
-    if(layer){
-      const original=document.querySelector(`.layer-toggle[data-layer="${layer.dataset.contextLayer}"]`);
-      if(original){original.checked=layer.checked;original.dispatchEvent(new Event('change',{bubbles:true}));}
-      renderPanel(activeCategory,activeNode);
-      return;
-    }
-    const check=event.target.closest('[data-context-check]');
-    if(check){const original=document.getElementById(check.dataset.contextCheck);original.checked=check.checked;original.dispatchEvent(new Event('change',{bubbles:true}));renderPanel(activeCategory,activeNode);return}
-    const select=event.target.closest('[data-context-select]');
-    if(select){const original=document.getElementById(select.dataset.contextSelect);original.value=select.value;original.dispatchEvent(new Event('change',{bubbles:true}));renderPanel(activeCategory,activeNode);return}
-    const number=event.target.closest('[data-context-number]');
-    if(number){const original=document.getElementById(number.dataset.contextNumber);original.value=number.value;original.dispatchEvent(new Event('change',{bubbles:true}))}
-  });
-  flyout.addEventListener('input',event=>{
-    const range=event.target.closest('[data-context-range]');
-    if(!range)return;
-    const original=document.getElementById(range.dataset.contextRange);original.value=range.value;original.dispatchEvent(new Event('input',{bubbles:true}));
-    const valueSource=document.getElementById(rangeValueIds[range.dataset.contextRange]);
-    const output=range.closest('.context-control')?.querySelector(`[data-context-value-for="${range.dataset.contextRange}"]`) || range.previousElementSibling?.querySelector('b');
-    if(output)output.textContent=valueSource?.textContent || range.value;
-  });
-
-  document.addEventListener('pointerdown', event => {
-    if (!menu.contains(event.target) && !flyout.contains(event.target)) closeMenu();
-  });
-  document.addEventListener('keydown', event => {
-    if (event.key === 'Escape') closeMenu();
-  });
-  window.addEventListener('blur', closeMenu);
-  window.addEventListener('resize', closeMenu);
-  window.addEventListener('scroll', event => {
-    if (!flyout.contains(event.target)) closeMenu();
-  }, true);
-}
-
 function createMeronCountUI() {
   const container = document.getElementById('meronCountContainer');
   container.innerHTML = '';
@@ -8290,7 +7909,7 @@ document.getElementById('pairFocus').addEventListener('click',()=>fitPairCamera(
 // Initialization
 createMeronCountUI();
 setupMetalphaControls();
-setupPresentationContextMenu();
+
 syncMeronCountUI();
 buildUniverse();
 
@@ -8411,13 +8030,13 @@ const bodyEditor = (() => {
     <p>Dimensions and coordinates in Md · fixed Metalpha scale</p>
     <div class="be-row"><select id="be-shape"><option value="plate">Plate</option><option value="box">Box / cube</option><option value="sphere">Sphere</option><option value="cone">Cone</option></select><button id="be-add">Add body</button></div>
     <div class="be-row"><select id="be-body" aria-label="Selected body"></select><button id="be-delete">Delete</button><button id="be-fit">Frame bodies</button></div>
-    <div class="be-grid">${field('w','Width / diameter',12,'0.1',0.1)}${field('h','Height',12,'0.1',0.1)}${field('z','Depth / thickness',3,'0.1',0.1)}${field('count','Metalphas',12,'1',1)}</div>
+    <div class="be-grid">${field('w','Width / diameter',20,'0.1',0.1)}${field('h','Height',20,'0.1',0.1)}${field('z','Depth / thickness',4,'0.1',0.1)}${field('count','Metalphas',12,'1',1)}</div>
     <button id="be-rebuild">Apply dimensions / distribute</button>
     <h3>Body position / rotation</h3><div class="be-grid">${['x','y','zpos'].map((k,i)=>field(k,['X','Y','Z'][i],0)).join('')}${['rx','ry','rz'].map((k,i)=>field(k,['X°','Y°','Z°'][i],0,'1')).join('')}</div>
     <div class="be-row"><label>Drag plane <select id="be-plane"><option>XY</option><option>XZ</option><option>YZ</option></select></label><button id="be-apply">Apply transform</button></div>
     <p>Click a body and drag on the chosen plane. Orbit on empty space. Shift-click a Metalpha to move it individually.</p>
     <h3>Individual Metalpha</h3><select id="be-meron"><option value="-1">Whole body</option></select><div class="be-grid">${['mx','my','mz'].map((k,i)=>field(k,['Local X','Local Y','Local Z'][i],0)).join('')}</div><button id="be-move-meron">Apply local position</button>
-    <h3>Interaction</h3><div class="be-row"><select id="be-sign"><option value="1">Concordant · attraction</option><option value="-1">Discordant · repulsion</option></select><label><input id="be-exc" type="checkbox"> Show ExC</label></div>
+    <h3>Interaction</h3><div class="be-row"><select id="be-sign"><option value="1">Concordant · attraction</option><option value="-1">Discordant · repulsion</option></select><label><input id="be-exc" type="checkbox" checked> Show ExC</label></div>
     <label>Metalpha CI opacity <input id="be-ci-opacity" type="range" min="0" max="0.8" step="0.005" value="0.06"></label>
     <label><input id="be-grid" type="checkbox" checked> Grid XZ · 1 Md squares</label>
     <label>Body opacity <input id="be-opacity" type="range" min="0.02" max="0.7" step="0.01" value="0.12"></label>
@@ -8430,28 +8049,32 @@ const bodyEditor = (() => {
   const blueMaterial=new THREE.LineBasicMaterial({color:0x5aafff,transparent:true,opacity:.06,blending:THREE.AdditiveBlending,depthWrite:false,depthTest:true});
   const pointMaterial=new THREE.MeshBasicMaterial({color:0x5aafff,transparent:true,opacity:.7,depthWrite:false});
   const unitCI=(()=>{const pts=[];for(let i=0;i<18;i++){const u=i*Math.PI*2/18;let prev=null;for(let j=0;j<=24;j++){const v=j*Math.PI*2/24;const r=1+Math.cos(v);const p=new THREE.Vector3(r*Math.cos(u),r*Math.sin(u),Math.sin(v));if(prev)pts.push(prev,p);prev=p;}}return new THREE.BufferGeometry().setFromPoints(pts);})();
-  const mats=[blueMaterial,pointMaterial];
+  const faceBlueMaterial=new THREE.MeshBasicMaterial({color:0x5aafff,transparent:true,opacity:.06,side:THREE.DoubleSide,depthWrite:false});
+  const mats=[blueMaterial,pointMaterial,faceBlueMaterial];
   // Grid stays fixed in world XZ, with one small square per Md.
   const grid=new THREE.GridHelper(200,200,0x5a91bc,0x233c55);grid.name='BodyEditor_Grid_XZ_1Md';grid.material.transparent=true;grid.material.opacity=.5;root.add(grid);
   const axes=new THREE.AxesHelper(8);root.add(axes);
-  const vertices=rawVertices.map(v=>new THREE.Vector3(...v).divideScalar(Math.sqrt(2)));
+  const vertices=rawVertices.map(v=>new THREE.Vector3(...v).normalize().multiplyScalar(Math.sqrt(3)));
   const quats=vertices.map(()=>new THREE.Quaternion());
   triades.forEach(t=>{const c=t.indices.reduce((a,i)=>a.add(vertices[i]),new THREE.Vector3()).divideScalar(3);t.indices.forEach(i=>quats[i].setFromUnitVectors(new THREE.Vector3(0,0,1),new THREE.Vector3().crossVectors(c.clone().normalize(),vertices[i].clone().sub(c).normalize()).normalize()));});
   function metalpha(){
     const g=new THREE.Group();g.userData.pas=[];g.userData.exc=[];g.userData.cis=[];
-    vertices.forEach((p,i)=>{const ca=new THREE.Group();ca.position.copy(p);ca.quaternion.setFromUnitVectors(new THREE.Vector3(0,0,1),p.clone().normalize());g.add(ca);g.userData.pas.push(ca);
-      const pa=new THREE.Mesh(getSharedCompalphaResources().sphereGeometry,pointMaterial);pa.scale.setScalar(.3);ca.add(pa);
-      const ci=new THREE.LineSegments(unitCI,blueMaterial);ci.scale.setScalar(.5);ci.name='Metalpha_CI_'+(i+1);ca.add(ci);g.userData.cis.push(ci);
-      const exc=new THREE.LineSegments(unitCI,blueMaterial);exc.scale.setScalar(48);exc.visible=false;ca.add(exc);g.userData.exc.push(exc);
-    });return g;
+    vertices.forEach((p,i)=>{const ca=new THREE.Group();ca.position.copy(p);ca.quaternion.copy(quats[i]);g.add(ca);g.userData.pas.push(ca);ca.userData.excTargets=new Map();
+      const resources=getSharedCompalphaResources();const pa=new THREE.Mesh(resources.sphereGeometry,pointMaterial);ca.add(pa);
+      const axis=new THREE.Line(resources.axisGeometry,blueMaterial);ca.add(axis);
+      LAYER_DEFS.slice(0,5).forEach((ld,k)=>{const ci=new THREE.LineSegments(getMeridianGeometry(12,k,ld),blueMaterial);ci.name='Metalpha_'+IC_NAMES[k];ca.add(ci);g.userData.cis.push(ci);});
+    });
+    // Same cuboctahedron faces as Construction, in the common blue palette.
+    const faceVertices=[];cuboFaces.forEach(f=>{const indices=f.indices;const triangles=indices.length===4?[[0,1,2],[0,2,3]]:[[0,1,2]];triangles.forEach(t=>t.forEach(k=>faceVertices.push(vertices[indices[k]].clone())));});
+    const faceGeo=new THREE.BufferGeometry().setFromPoints(faceVertices);g.add(new THREE.Mesh(faceGeo,faceBlueMaterial));return g;
   }
   function clearOwned(group){const geometries=new Set(),materials=new Set();group.traverse(o=>{if(o.geometry && o.geometry!==unitCI && !Array.from(meridianGeometryCache.values()).includes(o.geometry) && !Object.values(getSharedCompalphaResources()).includes(o.geometry))geometries.add(o.geometry);if(o.material&&!mats.includes(o.material)&&!Object.values(getSharedCompalphaResources()).includes(o.material))materials.add(o.material);});geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());group.clear();}
-  function inside(b,p){const [w,h,z]=b.dims;if(b.shape==='sphere')return p.length()<=w/2-1;if(b.shape==='cone'){const radius=(w/2)*(h/2-p.y)/h;return Math.hypot(p.x,p.z)+1<=radius&&Math.abs(p.y)<=h/2-1;}return Math.abs(p.x)<=w/2-1&&Math.abs(p.y)<=h/2-1&&Math.abs(p.z)<=z/2-1;}
+  function inside(b,p){const [w,h,z]=b.dims;if(b.shape==='sphere')return p.length()<=w/2-1.75;if(b.shape==='cone'){const radius=(w/2)*(h/2-p.y)/h;return Math.hypot(p.x,p.z)+1.75<=radius&&Math.abs(p.y)<=h/2-1.75;}return Math.abs(p.x)<=w/2-1.75&&Math.abs(p.y)<=h/2-1.75&&Math.abs(p.z)<=z/2-1.75;}
   function distribute(b){
     const [w,h,z]=b.dims;
     if(b.shape==='plate'){
       // Shared vertices of regular hexagons, rather than a square/triangular grid.
-      const pitch=2.15, seen=new Set(), candidates=[];
+      const pitch=3.5, seen=new Set(), candidates=[];
       const cols=Math.ceil(w/(1.5*pitch))+2,rows=Math.ceil(h/(Math.sqrt(3)*pitch))+2;
       for(let q=-cols;q<=cols;q++)for(let r=-rows;r<=rows;r++)for(let k=0;k<6;k++){
         const x=1.5*pitch*q+pitch*Math.cos(k*Math.PI/3),y=Math.sqrt(3)*pitch*(r+q/2)+pitch*Math.sin(k*Math.PI/3);
@@ -8463,13 +8086,13 @@ const bodyEditor = (() => {
       return candidates.slice(0,b.count);
     }
     const candidates=[],depth=b.shape==='sphere'||b.shape==='cone'?w:z,height=b.shape==='sphere'?w:h;
-    for(let y=-height/2+1;y<=height/2-1+1e-7;y+=2.15)for(let x=-w/2+1;x<=w/2-1+1e-7;x+=2.15)for(let zz=-depth/2+1;zz<=depth/2-1+1e-7;zz+=2.15){if(candidates.length>20000)break;const p=new THREE.Vector3(x,y,zz);if(inside(b,p))candidates.push(p);}
+    for(let y=-height/2+1.75;y<=height/2-1.75+1e-7;y+=3.5)for(let x=-w/2+1.75;x<=w/2-1.75+1e-7;x+=3.5)for(let zz=-depth/2+1.75;zz<=depth/2-1.75+1e-7;zz+=3.5){if(candidates.length>20000)break;const p=new THREE.Vector3(x,y,zz);if(inside(b,p))candidates.push(p);}
     candidates.sort((a,c)=>a.lengthSq()-c.lengthSq());if(candidates.length<b.count)throw new Error(`Only ${candidates.length} Metalphas fit at fixed scale. Enlarge the body or reduce the count.`);
     return candidates.slice(0,b.count);
   }
   function geometry(b){const [w,h,z]=b.dims;return b.shape==='sphere'?new THREE.SphereGeometry(w/2,32,20):b.shape==='cone'?new THREE.ConeGeometry(w/2,h,32):new THREE.BoxGeometry(w,h,z);}
   function rebuild(b,positions){const pos=positions||distribute(b);clearOwned(b.group);b.merons=[];const geo=geometry(b);b.shell=new THREE.Mesh(geo,new THREE.MeshBasicMaterial({color:b.color,transparent:true,opacity:num('opacity'),depthWrite:false,side:THREE.DoubleSide}));b.group.add(b.shell);b.edges=new THREE.LineSegments(new THREE.EdgesGeometry(geo),new THREE.LineBasicMaterial({color:b.color,transparent:true,opacity:.7}));b.group.add(b.edges);pos.forEach(p=>{const m=metalpha();m.position.copy(p);b.group.add(m);b.merons.push(m);});}
-  function add(shape='plate',dims=[12,12,3],count=12,position=new THREE.Vector3()){validate(dims,count);if(bodies.length>=8)throw new Error('Maximum 8 bodies.');const b={id:++serial,shape,dims,count,color:bodies.length%2?0xffb583:0x76cfff,group:new THREE.Group(),merons:[]};rebuild(b);b.group.position.copy(position);root.add(b.group);bodies.push(b);select(b);return b;}
+  function add(shape='plate',dims=[20,20,4],count=12,position=new THREE.Vector3()){validate(dims,count);if(bodies.length>=8)throw new Error('Maximum 8 bodies.');const b={id:++serial,shape,dims,count,color:bodies.length%2?0xffb583:0x76cfff,group:new THREE.Group(),merons:[]};rebuild(b);b.group.position.copy(position);b.group.position.y=(shape==='sphere'?dims[0]:dims[1])/2;root.add(b.group);bodies.push(b);select(b);return b;}
   function select(b,index=-1){selected=b;selectedMeron=index;list();sync();bodies.forEach(c=>c.edges.material.color.set(c===b?0xffff99:c.color));}
   function list(){$('body').innerHTML=bodies.map(b=>`<option value="${b.id}">Body ${b.id} · ${b.shape}</option>`).join('');if(selected)$('body').value=selected.id;}
   function sync(){if(!selected)return;const b=selected;$('shape').value=b.shape;['w','h','z'].forEach((k,i)=>$(k).value=b.dims[i]);$('count').value=b.count;['x','y','zpos'].forEach((k,i)=>$(k).value=b.group.position.getComponent(i).toFixed(3));['rx','ry','rz'].forEach((k,i)=>$(k).value=THREE.MathUtils.radToDeg(b.group.rotation[['x','y','z'][i]]).toFixed(2));$('meron').innerHTML='<option value="-1">Whole body</option>'+b.merons.map((m,i)=>`<option value="${i}">Metalpha ${i+1}</option>`).join('');$('meron').value=selectedMeron;syncMeron();update();}
@@ -8477,29 +8100,36 @@ const bodyEditor = (() => {
   function update(){if(!active)return;root.updateMatrixWorld(true);let minimum=Infinity,pairs=0;const force=new THREE.Vector3();let overlap=false;const points=bodies.map(b=>b.merons.flatMap(m=>m.userData.pas.map(p=>p.getWorldPosition(new THREE.Vector3()))));
     for(let a=0;a<bodies.length;a++)for(let b=a+1;b<bodies.length;b++){const f=new THREE.Vector3();for(const p of points[a])for(const q of points[b]){const delta=q.clone().sub(p),d=delta.length();minimum=Math.min(minimum,d);pairs++;if(d<1e-8){overlap=true;continue;}f.addScaledVector(delta,num('sign')/(d*d*d));}if(bodies[a]===selected)force.add(f);if(bodies[b]===selected)force.sub(f);}
     let diameterMin=Infinity,diameterMax=0;
-    bodies.forEach((b,i)=>b.merons.forEach((m,mi)=>m.userData.pas.forEach((ca,k)=>{
-      const p=ca.getWorldPosition(new THREE.Vector3());let nearest=Infinity;
-      b.merons.forEach((other,oi)=>{if(oi!==mi)other.userData.pas.forEach(pa=>nearest=Math.min(nearest,p.distanceTo(pa.getWorldPosition(new THREE.Vector3()))));});
-      // Same horn-torus diameter rule as the IC simulator, applied to actual PA spacing.
-      const d=Number.isFinite(nearest)&&nearest>1e-8?nearest+1/nearest:1;
-      m.userData.cis[k].scale.setScalar(d/2);diameterMin=Math.min(diameterMin,d);diameterMax=Math.max(diameterMax,d);
-      let reach=96;if($('exc').checked)points.forEach((ps,j)=>{if(i!==j)ps.forEach(q=>reach=Math.max(reach,p.distanceTo(q)));});
-      const line=m.userData.exc[k];line.visible=$('exc').checked;line.scale.setScalar(reach/2);
-    })));
-    $('status').textContent=`${bodies.length} bodies · ${bodies.reduce((s,b)=>s+b.count,0)} Metalphas\n${pairs} interbody PA pairs\nMinimum PA distance: ${Number.isFinite(minimum)?minimum.toFixed(3)+' Md':'—'}\nIn-body CI Ø: ${Number.isFinite(diameterMin)?diameterMin.toFixed(3):'—'}–${diameterMax.toFixed(3)} Md\nSelected body |ΣF| / F₀: ${force.length().toPrecision(5)}\nF / F₀ = (1 Md / d)²${overlap?'\nCoincident PA: singular interaction; move bodies apart.':''}`;
+    const merons=bodies.flatMap(b=>b.merons);
+    merons.forEach(m=>m.userData.pas.forEach(ca=>{
+      const targets=ca.userData.excTargets,used=new Set();
+      merons.forEach(other=>{if(other===m)return;used.add(other.uuid);let line=targets.get(other.uuid);
+        if(!line){line=new THREE.LineSegments(unitCI,blueMaterial);line.name='ExC_to_'+other.uuid;ca.add(line);targets.set(other.uuid,line);}
+        const target=ca.worldToLocal(other.getWorldPosition(new THREE.Vector3()));
+        const rho=Math.hypot(target.x,target.y),distance=target.length();
+        // Horn torus through the target center: R = (rho² + z²) / (2 rho).
+        // Axial degeneracy uses a perpendicular plane for this connection only.
+        line.quaternion.identity();let radius=distance<1e-8?0:distance*distance/(2*Math.max(rho,1e-8));
+        if(rho<1e-6&&distance>1e-8){line.quaternion.setFromUnitVectors(new THREE.Vector3(0,0,1),new THREE.Vector3(1,0,0));radius=distance/2;}
+        line.scale.setScalar(radius);line.visible=$('exc').checked&&radius>0;line.userData.target=other;line.userData.radius=radius;
+        diameterMin=Math.min(diameterMin,2*radius);diameterMax=Math.max(diameterMax,2*radius);
+      });
+      targets.forEach((line,key)=>{if(!used.has(key)){ca.remove(line);targets.delete(key);}});
+    }));
+    $('status').textContent=`${bodies.length} bodies · ${bodies.reduce((s,b)=>s+b.count,0)} Metalphas\n${pairs} interbody PA pairs\nMinimum PA distance: ${Number.isFinite(minimum)?minimum.toFixed(3)+' Md':'—'}\nVariable ExC Ø: ${Number.isFinite(diameterMin)?diameterMin.toFixed(3):'—'}–${diameterMax.toFixed(3)} Md\nSelected body |ΣF| / F₀: ${force.length().toPrecision(5)}\nF / F₀ = (1 Md / d)²${overlap?'\nCoincident PA: singular interaction; move bodies apart.':''}`;
   }
   function fit(){const bounds=new THREE.Box3();bodies.forEach(b=>{b.group.updateMatrixWorld(true);bounds.union(new THREE.Box3().setFromObject(b.shell));});if(bounds.isEmpty())return;const center=bounds.getCenter(new THREE.Vector3()),size=bounds.getSize(new THREE.Vector3()).length();controls.target.copy(center);camera.position.copy(center).add(new THREE.Vector3(.4,.3,1).normalize().multiplyScalar(Math.max(8,size*1.5)));controls.update();}
-  function enter(){if(active)return;cancelScriptPlayback();if(comparisonMode)exitComparisonMode();stopOpeningCameraSequence();if(magnetGravity.active)setMagnetGravityMode(false);saved={pos:camera.position.clone(),target:controls.target.clone(),min:controls.minDistance,max:controls.maxDistance,auto:controls.autoRotate,pair:pairMode};pairMode=null;active=true;root.visible=true;universeGroup.visible=false;panel.hidden=false;document.body.classList.add('body-editor-active');activatePanelTab('body-editor');controls.autoRotate=false;controls.minDistance=.1;controls.maxDistance=100000;if(!bodies.length){add('plate',[12,12,3],12,new THREE.Vector3(0,0,-4));add('plate',[12,12,3],12,new THREE.Vector3(0,0,4));}fit();update();}
+  function enter(){if(active)return;cancelScriptPlayback();if(comparisonMode)exitComparisonMode();stopOpeningCameraSequence();if(magnetGravity.active)setMagnetGravityMode(false);saved={pos:camera.position.clone(),target:controls.target.clone(),min:controls.minDistance,max:controls.maxDistance,auto:controls.autoRotate,pair:pairMode};pairMode=null;active=true;root.visible=true;universeGroup.visible=false;panel.hidden=false;document.body.classList.add('body-editor-active');activatePanelTab('body-editor');controls.autoRotate=false;controls.minDistance=.1;controls.maxDistance=100000;if(!bodies.length){add('plate',[20,20,4],12,new THREE.Vector3(0,0,-4.5));add('plate',[20,20,4],12,new THREE.Vector3(0,0,4.5));}fit();update();}
   function leave(){if(!active)return;endDrag();active=false;root.visible=false;panel.hidden=true;universeGroup.visible=true;document.body.classList.remove('body-editor-active');pairMode=saved.pair;camera.position.copy(saved.pos);controls.target.copy(saved.target);controls.minDistance=saved.min;controls.maxDistance=saved.max;controls.autoRotate=saved.auto;controls.update();}
   function safe(fn){try{fn();}catch(e){$('status').textContent=e.message;}}
   $('close').onclick=()=>activatePanelTab(lastMeronicMode);$('add').onclick=()=>safe(()=>{add($('shape').value,[num('w'),num('h'),num('z')],Math.round(num('count')),new THREE.Vector3(bodies.length*15,0,0));fit();});
   $('body').onchange=()=>select(bodies.find(b=>b.id===num('body')));$('fit').onclick=fit;$('meron').onchange=()=>{selectedMeron=num('meron');syncMeron();};
   function validate(dims,count){if(dims.some(d=>!Number.isFinite(d)||d<.1||d>500)||!Number.isInteger(count)||count<1||count>48)throw new Error('Dimensions: 0.1–500 Md. Metalphas per body: 1–48.');}
-  $('rebuild').onclick=()=>safe(()=>{if(!selected)return;const dims=[num('w'),num('h'),num('z')],count=num('count');validate(dims,count);const proposed={...selected,shape:$('shape').value,dims,count};const positions=distribute(proposed);Object.assign(selected,{shape:proposed.shape,dims,count});rebuild(selected,positions);selectedMeron=-1;sync();});
+  $('rebuild').onclick=()=>safe(()=>{if(!selected)return;const dims=[num('w'),num('h'),num('z')],count=num('count');validate(dims,count);const proposed={...selected,shape:$('shape').value,dims,count};const positions=distribute(proposed);Object.assign(selected,{shape:proposed.shape,dims,count});rebuild(selected,positions);const box=new THREE.Box3().setFromObject(selected.shell);selected.group.position.y-=box.min.y;selectedMeron=-1;sync();});
   $('apply').onclick=()=>safe(()=>{if(!selected)return;const p=['x','y','zpos'].map(num),r=['rx','ry','rz'].map(num);if([...p,...r].some(v=>!Number.isFinite(v)))throw new Error('Enter finite coordinates and angles.');selected.group.position.fromArray(p);selected.group.rotation.set(...r.map(THREE.MathUtils.degToRad));sync();});
   $('move-meron').onclick=()=>safe(()=>{const m=selected?.merons[selectedMeron];if(!m)return;const p=new THREE.Vector3(num('mx'),num('my'),num('mz'));if(!inside(selected,p))throw new Error('The Metalpha must remain inside its body.');m.position.copy(p);update();});
   $('delete').onclick=()=>{if(!selected)return;root.remove(selected.group);clearOwned(selected.group);bodies.splice(bodies.indexOf(selected),1);selected=null;if(bodies.length)select(bodies[0]);else{list();update();}};
-  $('ci-opacity').oninput=()=>blueMaterial.opacity=num('ci-opacity');$('grid').onchange=()=>{grid.visible=$('grid').checked;axes.visible=$('grid').checked;};
+  $('ci-opacity').oninput=()=>{blueMaterial.opacity=num('ci-opacity');faceBlueMaterial.opacity=num('ci-opacity');pointMaterial.opacity=num('ci-opacity');};$('grid').onchange=()=>{grid.visible=$('grid').checked;axes.visible=$('grid').checked;};
   $('sign').onchange=update;$('exc').onchange=update;$('opacity').oninput=()=>bodies.forEach(b=>b.shell.material.opacity=num('opacity'));
   $('gap-apply').onclick=()=>safe(()=>{if(bodies.length!==2||bodies.some(b=>!['plate','box'].includes(b.shape)||b.group.rotation.x||b.group.rotation.y||b.group.rotation.z))throw new Error('Gap preset requires two unrotated plates / boxes.');const gap=num('gap');if(!Number.isFinite(gap)||gap<0)throw new Error('Gap must be nonnegative.');bodies[1].group.position.copy(bodies[0].group.position).add(new THREE.Vector3(0,0,(bodies[0].dims[2]+bodies[1].dims[2])/2+gap));sync();});
   function setRay(e){const rect=renderer.domElement.getBoundingClientRect();pointer.set((e.clientX-rect.left)/rect.width*2-1,-(e.clientY-rect.top)/rect.height*2+1);raycaster.setFromCamera(pointer,camera);}
