@@ -3371,6 +3371,9 @@ function syncForceControls(force = false) {
 }
 
 function activatePanelTab(tabName) {
+  if (tabName !== 'body-editor' && window.meronicBodyEditor?.active) window.meronicBodyEditor.leave();
+  if (tabName === 'body-editor') activeBuilderMode = 'body-editor';
+  else if (activeBuilderMode === 'body-editor') activeBuilderMode = lastMeronicMode;
   if (tabName !== 'magnet-gravity' && activeBuilderMode === 'magnet-gravity') activeBuilderMode = lastMeronicMode;
   panelTabs.forEach(tab => {
     const selected = tab.dataset.panelTab === tabName;
@@ -8402,70 +8405,101 @@ const bodyEditor = (() => {
   const root=new THREE.Group(); root.visible=false; scene.add(root);
   const bodies=[]; let active=false, selected=null, selectedMeron=-1, serial=0, saved=null, drag=null;
   const raycaster=new THREE.Raycaster(), pointer=new THREE.Vector2();
-  const panel=document.createElement('section'); panel.id='bodyEditorPanel'; panel.hidden=true;
+  const panel=document.createElement('section'); panel.id='bodyEditorPanel'; panel.className='panel-pane'; panel.dataset.panelPane='body-editor'; panel.setAttribute('role','tabpanel'); panel.hidden=true;
   const field=(id,label,value,step='0.1',min='')=>`<label>${label}<input id="be-${id}" type="number" step="${step}" value="${value}" ${min!==''?`min="${min}"`:''}></label>`;
   panel.innerHTML=`<h2>Body Editor <button id="be-close" type="button">Close</button></h2>
     <p>Dimensions and coordinates in Md · fixed Metalpha scale</p>
     <div class="be-row"><select id="be-shape"><option value="plate">Plate</option><option value="box">Box / cube</option><option value="sphere">Sphere</option><option value="cone">Cone</option></select><button id="be-add">Add body</button></div>
     <div class="be-row"><select id="be-body" aria-label="Selected body"></select><button id="be-delete">Delete</button><button id="be-fit">Frame bodies</button></div>
-    <div class="be-grid">${field('w','Width / diameter',12,'0.1',0.1)}${field('h','Height',9,'0.1',0.1)}${field('z','Depth / thickness',3,'0.1',0.1)}${field('count','Metalphas',12,'1',1)}</div>
+    <div class="be-grid">${field('w','Width / diameter',12,'0.1',0.1)}${field('h','Height',12,'0.1',0.1)}${field('z','Depth / thickness',3,'0.1',0.1)}${field('count','Metalphas',12,'1',1)}</div>
     <button id="be-rebuild">Apply dimensions / distribute</button>
     <h3>Body position / rotation</h3><div class="be-grid">${['x','y','zpos'].map((k,i)=>field(k,['X','Y','Z'][i],0)).join('')}${['rx','ry','rz'].map((k,i)=>field(k,['X°','Y°','Z°'][i],0,'1')).join('')}</div>
     <div class="be-row"><label>Drag plane <select id="be-plane"><option>XY</option><option>XZ</option><option>YZ</option></select></label><button id="be-apply">Apply transform</button></div>
     <p>Click a body and drag on the chosen plane. Orbit on empty space. Shift-click a Metalpha to move it individually.</p>
     <h3>Individual Metalpha</h3><select id="be-meron"><option value="-1">Whole body</option></select><div class="be-grid">${['mx','my','mz'].map((k,i)=>field(k,['Local X','Local Y','Local Z'][i],0)).join('')}</div><button id="be-move-meron">Apply local position</button>
     <h3>Interaction</h3><div class="be-row"><select id="be-sign"><option value="1">Concordant · attraction</option><option value="-1">Discordant · repulsion</option></select><label><input id="be-exc" type="checkbox"> Show ExC</label></div>
+    <label>Metalpha CI opacity <input id="be-ci-opacity" type="range" min="0" max="0.8" step="0.005" value="0.06"></label>
+    <label><input id="be-grid" type="checkbox" checked> Grid XZ · 1 Md squares</label>
     <label>Body opacity <input id="be-opacity" type="range" min="0.02" max="0.7" step="0.01" value="0.12"></label>
     <div class="be-row">${field('gap','Initial plates: face gap',5,'0.1',0)}<button id="be-gap-apply">Set gap</button></div>
     <output id="be-status" aria-live="polite"></output><div class="be-row"><button id="be-save">Save scene</button><button id="be-load">Load scene</button><input id="be-file" type="file" accept="application/json,.json" hidden></div>`;
-  document.body.appendChild(panel);
-  const style=document.createElement('style');style.textContent=`#bodyEditorPanel{position:fixed;right:12px;top:12px;bottom:12px;width:310px;overflow:auto;z-index:1050;background:rgba(10,18,32,.93);border:1px solid #536783;border-radius:14px;padding:14px;color:#dfebff;font:12px system-ui;backdrop-filter:blur(10px)}#bodyEditorPanel[hidden]{display:none}#bodyEditorPanel h2{font-size:17px;display:flex;justify-content:space-between}#bodyEditorPanel h3{margin:12px 0 6px;font-size:12px;color:#91c9ed}#bodyEditorPanel p{font-size:11px;color:#a8bad0}#bodyEditorPanel button,#bodyEditorPanel select,#bodyEditorPanel input[type=number]{background:#1b2c43;color:#eaf3ff;border:1px solid #526782;border-radius:7px;padding:6px;min-width:0}#bodyEditorPanel button{cursor:pointer}#bodyEditorPanel label{display:flex;flex-direction:column;gap:3px}#bodyEditorPanel .be-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:6px 0}#bodyEditorPanel .be-grid input{width:100%;box-sizing:border-box}.be-row{display:flex;gap:6px;align-items:center;margin:7px 0}.be-row select{flex:1;max-width:180px}#be-status{display:block;white-space:pre-line;padding:9px;background:#101a2c;border-radius:8px}body.body-editor-active #panel{display:none}@media(max-width:600px){#bodyEditorPanel{width:250px;max-height:60vh;top:auto;bottom:8px;right:8px}}`;document.head.appendChild(style);
+  panelBody.appendChild(panel); panelPanes.push(panel);
+  const style=document.createElement('style');style.textContent=`#bodyEditorPanel{color:#dfebff;font:12px system-ui}#bodyEditorPanel[hidden]{display:none}#bodyEditorPanel h2{font-size:16px;display:flex;justify-content:space-between}#bodyEditorPanel h3{margin:12px 0 6px;font-size:12px;color:#91c9ed}#bodyEditorPanel p{font-size:11px;color:#a8bad0}#bodyEditorPanel button,#bodyEditorPanel select,#bodyEditorPanel input[type=number]{background:#1b2c43;color:#eaf3ff;border:1px solid #526782;border-radius:7px;padding:6px;min-width:0}#bodyEditorPanel button{cursor:pointer}#bodyEditorPanel label{display:flex;flex-direction:column;gap:3px}#bodyEditorPanel .be-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:6px 0}#bodyEditorPanel .be-grid input{width:100%;box-sizing:border-box}#bodyEditorPanel .be-row{display:flex;gap:6px;align-items:center;margin:7px 0;flex-wrap:wrap}#bodyEditorPanel .be-row select{flex:1;max-width:180px}#be-status{display:block;white-space:pre-line;padding:9px;background:#101a2c;border-radius:8px}.builder-mode-switch{grid-template-columns:repeat(4,minmax(0,1fr))!important}`;document.head.appendChild(style);
   const $=id=>document.getElementById('be-'+id), num=id=>Number($(id).value);
-  const button=document.createElement('button');button.type='button';button.className='builder-mode-button';button.innerHTML='<span>Body</span><span>Editor</span>';button.addEventListener('click',()=>enter());document.querySelector('.builder-mode-switch').appendChild(button);
-  const mats=LAYER_DEFS.map(ld=>new THREE.LineBasicMaterial({color:ld.cor,transparent:true,opacity:0.24,depthWrite:false}));
+  const button=document.createElement('button');button.type='button';button.className='builder-mode-button';button.dataset.builderMode='body-editor';button.setAttribute('aria-pressed','false');button.innerHTML='<span>Body</span><span>Editor</span>';button.addEventListener('click',()=>enter());document.querySelector('.builder-mode-switch').appendChild(button);
+  const blueMaterial=new THREE.LineBasicMaterial({color:0x5aafff,transparent:true,opacity:.06,blending:THREE.AdditiveBlending,depthWrite:false,depthTest:true});
+  const pointMaterial=new THREE.MeshBasicMaterial({color:0x5aafff,transparent:true,opacity:.7,depthWrite:false});
+  const unitCI=(()=>{const pts=[];for(let i=0;i<18;i++){const u=i*Math.PI*2/18;let prev=null;for(let j=0;j<=24;j++){const v=j*Math.PI*2/24;const r=1+Math.cos(v);const p=new THREE.Vector3(r*Math.cos(u),r*Math.sin(u),Math.sin(v));if(prev)pts.push(prev,p);prev=p;}}return new THREE.BufferGeometry().setFromPoints(pts);})();
+  const mats=[blueMaterial,pointMaterial];
+  // Grid stays fixed in world XZ, with one small square per Md.
+  const grid=new THREE.GridHelper(200,200,0x5a91bc,0x233c55);grid.name='BodyEditor_Grid_XZ_1Md';grid.material.transparent=true;grid.material.opacity=.5;root.add(grid);
+  const axes=new THREE.AxesHelper(8);root.add(axes);
   const vertices=rawVertices.map(v=>new THREE.Vector3(...v).divideScalar(Math.sqrt(2)));
   const quats=vertices.map(()=>new THREE.Quaternion());
   triades.forEach(t=>{const c=t.indices.reduce((a,i)=>a.add(vertices[i]),new THREE.Vector3()).divideScalar(3);t.indices.forEach(i=>quats[i].setFromUnitVectors(new THREE.Vector3(0,0,1),new THREE.Vector3().crossVectors(c.clone().normalize(),vertices[i].clone().sub(c).normalize()).normalize()));});
   function metalpha(){
-    const g=new THREE.Group();g.userData.pas=[];g.userData.exc=[];
-    vertices.forEach((p,i)=>{const ca=new THREE.Group();ca.position.copy(p);ca.quaternion.copy(quats[i]);g.add(ca);g.userData.pas.push(ca);
-      const resources=getSharedCompalphaResources();const pa=new THREE.Mesh(resources.sphereGeometry,resources.sphereMaterial);pa.scale.setScalar(.3);ca.add(pa);
-      const axis=new THREE.Line(resources.axisGeometry,resources.axisMaterial);axis.scale.setScalar(.27);ca.add(axis);
-      LAYER_DEFS.forEach((ld,k)=>{const line=new THREE.LineSegments(getMeridianGeometry(12,k,ld),mats[k]);line.scale.setScalar(.25);line.visible=k<2;ca.add(line);if(k===5)g.userData.exc.push(line);});
-    });
-    const points=[];vertices.forEach((p,i)=>vertices.slice(i+1).forEach(q=>{if(Math.abs(p.distanceTo(q)-1)<1e-6)points.push(p,q);}));
-    g.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(points),new THREE.LineBasicMaterial({color:0xbac9e4,transparent:true,opacity:.6})));return g;
+    const g=new THREE.Group();g.userData.pas=[];g.userData.exc=[];g.userData.cis=[];
+    vertices.forEach((p,i)=>{const ca=new THREE.Group();ca.position.copy(p);ca.quaternion.setFromUnitVectors(new THREE.Vector3(0,0,1),p.clone().normalize());g.add(ca);g.userData.pas.push(ca);
+      const pa=new THREE.Mesh(getSharedCompalphaResources().sphereGeometry,pointMaterial);pa.scale.setScalar(.3);ca.add(pa);
+      const ci=new THREE.LineSegments(unitCI,blueMaterial);ci.scale.setScalar(.5);ci.name='Metalpha_CI_'+(i+1);ca.add(ci);g.userData.cis.push(ci);
+      const exc=new THREE.LineSegments(unitCI,blueMaterial);exc.scale.setScalar(48);exc.visible=false;ca.add(exc);g.userData.exc.push(exc);
+    });return g;
   }
-  function clearOwned(group){const geometries=new Set(),materials=new Set();group.traverse(o=>{if(o.geometry && !Array.from(meridianGeometryCache.values()).includes(o.geometry) && !Object.values(getSharedCompalphaResources()).includes(o.geometry))geometries.add(o.geometry);if(o.material&&!mats.includes(o.material)&&!Object.values(getSharedCompalphaResources()).includes(o.material))materials.add(o.material);});geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());group.clear();}
+  function clearOwned(group){const geometries=new Set(),materials=new Set();group.traverse(o=>{if(o.geometry && o.geometry!==unitCI && !Array.from(meridianGeometryCache.values()).includes(o.geometry) && !Object.values(getSharedCompalphaResources()).includes(o.geometry))geometries.add(o.geometry);if(o.material&&!mats.includes(o.material)&&!Object.values(getSharedCompalphaResources()).includes(o.material))materials.add(o.material);});geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());group.clear();}
   function inside(b,p){const [w,h,z]=b.dims;if(b.shape==='sphere')return p.length()<=w/2-1;if(b.shape==='cone'){const radius=(w/2)*(h/2-p.y)/h;return Math.hypot(p.x,p.z)+1<=radius&&Math.abs(p.y)<=h/2-1;}return Math.abs(p.x)<=w/2-1&&Math.abs(p.y)<=h/2-1&&Math.abs(p.z)<=z/2-1;}
-  function distribute(b){const [w,h,z]=b.dims;const candidates=[];const depth=b.shape==='sphere'||b.shape==='cone'?w:z;const height=b.shape==='sphere'?w:h;
+  function distribute(b){
+    const [w,h,z]=b.dims;
+    if(b.shape==='plate'){
+      // Shared vertices of regular hexagons, rather than a square/triangular grid.
+      const pitch=2.15, seen=new Set(), candidates=[];
+      const cols=Math.ceil(w/(1.5*pitch))+2,rows=Math.ceil(h/(Math.sqrt(3)*pitch))+2;
+      for(let q=-cols;q<=cols;q++)for(let r=-rows;r<=rows;r++)for(let k=0;k<6;k++){
+        const x=1.5*pitch*q+pitch*Math.cos(k*Math.PI/3),y=Math.sqrt(3)*pitch*(r+q/2)+pitch*Math.sin(k*Math.PI/3);
+        const point=new THREE.Vector3(x,y,0),key=x.toFixed(5)+','+y.toFixed(5);
+        if(!seen.has(key)&&inside(b,point)){seen.add(key);candidates.push(point);}
+      }
+      candidates.sort((a,c)=>a.lengthSq()-c.lengthSq()||a.y-c.y||a.x-c.x);
+      if(candidates.length<b.count)throw new Error(`Only ${candidates.length} Metalphas fit in the hexagonal plate. Enlarge the plate or reduce the count.`);
+      return candidates.slice(0,b.count);
+    }
+    const candidates=[],depth=b.shape==='sphere'||b.shape==='cone'?w:z,height=b.shape==='sphere'?w:h;
     for(let y=-height/2+1;y<=height/2-1+1e-7;y+=2.15)for(let x=-w/2+1;x<=w/2-1+1e-7;x+=2.15)for(let zz=-depth/2+1;zz<=depth/2-1+1e-7;zz+=2.15){if(candidates.length>20000)break;const p=new THREE.Vector3(x,y,zz);if(inside(b,p))candidates.push(p);}
     candidates.sort((a,c)=>a.lengthSq()-c.lengthSq());if(candidates.length<b.count)throw new Error(`Only ${candidates.length} Metalphas fit at fixed scale. Enlarge the body or reduce the count.`);
-    return Array.from({length:b.count},(_,i)=>candidates[Math.floor(i*candidates.length/b.count)]);
+    return candidates.slice(0,b.count);
   }
   function geometry(b){const [w,h,z]=b.dims;return b.shape==='sphere'?new THREE.SphereGeometry(w/2,32,20):b.shape==='cone'?new THREE.ConeGeometry(w/2,h,32):new THREE.BoxGeometry(w,h,z);}
   function rebuild(b,positions){const pos=positions||distribute(b);clearOwned(b.group);b.merons=[];const geo=geometry(b);b.shell=new THREE.Mesh(geo,new THREE.MeshBasicMaterial({color:b.color,transparent:true,opacity:num('opacity'),depthWrite:false,side:THREE.DoubleSide}));b.group.add(b.shell);b.edges=new THREE.LineSegments(new THREE.EdgesGeometry(geo),new THREE.LineBasicMaterial({color:b.color,transparent:true,opacity:.7}));b.group.add(b.edges);pos.forEach(p=>{const m=metalpha();m.position.copy(p);b.group.add(m);b.merons.push(m);});}
-  function add(shape='plate',dims=[12,9,3],count=12,position=new THREE.Vector3()){validate(dims,count);if(bodies.length>=8)throw new Error('Maximum 8 bodies.');const b={id:++serial,shape,dims,count,color:bodies.length%2?0xffb583:0x76cfff,group:new THREE.Group(),merons:[]};rebuild(b);b.group.position.copy(position);root.add(b.group);bodies.push(b);select(b);return b;}
+  function add(shape='plate',dims=[12,12,3],count=12,position=new THREE.Vector3()){validate(dims,count);if(bodies.length>=8)throw new Error('Maximum 8 bodies.');const b={id:++serial,shape,dims,count,color:bodies.length%2?0xffb583:0x76cfff,group:new THREE.Group(),merons:[]};rebuild(b);b.group.position.copy(position);root.add(b.group);bodies.push(b);select(b);return b;}
   function select(b,index=-1){selected=b;selectedMeron=index;list();sync();bodies.forEach(c=>c.edges.material.color.set(c===b?0xffff99:c.color));}
   function list(){$('body').innerHTML=bodies.map(b=>`<option value="${b.id}">Body ${b.id} · ${b.shape}</option>`).join('');if(selected)$('body').value=selected.id;}
   function sync(){if(!selected)return;const b=selected;$('shape').value=b.shape;['w','h','z'].forEach((k,i)=>$(k).value=b.dims[i]);$('count').value=b.count;['x','y','zpos'].forEach((k,i)=>$(k).value=b.group.position.getComponent(i).toFixed(3));['rx','ry','rz'].forEach((k,i)=>$(k).value=THREE.MathUtils.radToDeg(b.group.rotation[['x','y','z'][i]]).toFixed(2));$('meron').innerHTML='<option value="-1">Whole body</option>'+b.merons.map((m,i)=>`<option value="${i}">Metalpha ${i+1}</option>`).join('');$('meron').value=selectedMeron;syncMeron();update();}
   function syncMeron(){const m=selected?.merons[selectedMeron];['mx','my','mz'].forEach((k,i)=>$(k).value=m?m.position.getComponent(i).toFixed(3):0);}
   function update(){if(!active)return;root.updateMatrixWorld(true);let minimum=Infinity,pairs=0;const force=new THREE.Vector3();let overlap=false;const points=bodies.map(b=>b.merons.flatMap(m=>m.userData.pas.map(p=>p.getWorldPosition(new THREE.Vector3()))));
     for(let a=0;a<bodies.length;a++)for(let b=a+1;b<bodies.length;b++){const f=new THREE.Vector3();for(const p of points[a])for(const q of points[b]){const delta=q.clone().sub(p),d=delta.length();minimum=Math.min(minimum,d);pairs++;if(d<1e-8){overlap=true;continue;}f.addScaledVector(delta,num('sign')/(d*d*d));}if(bodies[a]===selected)force.add(f);if(bodies[b]===selected)force.sub(f);}
-    bodies.forEach((b,i)=>b.merons.forEach(m=>m.userData.pas.forEach((ca,k)=>{const p=ca.getWorldPosition(new THREE.Vector3());let reach=96;if($('exc').checked)points.forEach((ps,j)=>{if(i!==j)ps.forEach(q=>reach=Math.max(reach,p.distanceTo(q)));});const line=m.userData.exc[k];line.visible=$('exc').checked;line.scale.setScalar(.25*reach/96);} )));
-    $('status').textContent=`${bodies.length} bodies · ${bodies.reduce((s,b)=>s+b.count,0)} Metalphas\n${pairs} interbody PA pairs\nMinimum PA distance: ${Number.isFinite(minimum)?minimum.toFixed(3)+' Md':'—'}\nSelected body |ΣF| / F₀: ${force.length().toPrecision(5)}\nF / F₀ = (1 Md / d)²${overlap?'\nCoincident PA: singular interaction; move bodies apart.':''}`;
+    let diameterMin=Infinity,diameterMax=0;
+    bodies.forEach((b,i)=>b.merons.forEach((m,mi)=>m.userData.pas.forEach((ca,k)=>{
+      const p=ca.getWorldPosition(new THREE.Vector3());let nearest=Infinity;
+      b.merons.forEach((other,oi)=>{if(oi!==mi)other.userData.pas.forEach(pa=>nearest=Math.min(nearest,p.distanceTo(pa.getWorldPosition(new THREE.Vector3()))));});
+      // Same horn-torus diameter rule as the IC simulator, applied to actual PA spacing.
+      const d=Number.isFinite(nearest)&&nearest>1e-8?nearest+1/nearest:1;
+      m.userData.cis[k].scale.setScalar(d/2);diameterMin=Math.min(diameterMin,d);diameterMax=Math.max(diameterMax,d);
+      let reach=96;if($('exc').checked)points.forEach((ps,j)=>{if(i!==j)ps.forEach(q=>reach=Math.max(reach,p.distanceTo(q)));});
+      const line=m.userData.exc[k];line.visible=$('exc').checked;line.scale.setScalar(reach/2);
+    })));
+    $('status').textContent=`${bodies.length} bodies · ${bodies.reduce((s,b)=>s+b.count,0)} Metalphas\n${pairs} interbody PA pairs\nMinimum PA distance: ${Number.isFinite(minimum)?minimum.toFixed(3)+' Md':'—'}\nIn-body CI Ø: ${Number.isFinite(diameterMin)?diameterMin.toFixed(3):'—'}–${diameterMax.toFixed(3)} Md\nSelected body |ΣF| / F₀: ${force.length().toPrecision(5)}\nF / F₀ = (1 Md / d)²${overlap?'\nCoincident PA: singular interaction; move bodies apart.':''}`;
   }
   function fit(){const bounds=new THREE.Box3();bodies.forEach(b=>{b.group.updateMatrixWorld(true);bounds.union(new THREE.Box3().setFromObject(b.shell));});if(bounds.isEmpty())return;const center=bounds.getCenter(new THREE.Vector3()),size=bounds.getSize(new THREE.Vector3()).length();controls.target.copy(center);camera.position.copy(center).add(new THREE.Vector3(.4,.3,1).normalize().multiplyScalar(Math.max(8,size*1.5)));controls.update();}
-  function enter(){if(active)return;cancelScriptPlayback();if(comparisonMode)exitComparisonMode();stopOpeningCameraSequence();if(magnetGravity.active)setMagnetGravityMode(false);saved={pos:camera.position.clone(),target:controls.target.clone(),min:controls.minDistance,max:controls.maxDistance,auto:controls.autoRotate,pair:pairMode};pairMode=null;active=true;root.visible=true;universeGroup.visible=false;panel.hidden=false;document.body.classList.add('body-editor-active');controls.autoRotate=false;controls.minDistance=.1;controls.maxDistance=100000;if(!bodies.length){add('plate',[12,9,3],12,new THREE.Vector3(0,0,-4));add('plate',[12,9,3],12,new THREE.Vector3(0,0,4));}fit();update();}
+  function enter(){if(active)return;cancelScriptPlayback();if(comparisonMode)exitComparisonMode();stopOpeningCameraSequence();if(magnetGravity.active)setMagnetGravityMode(false);saved={pos:camera.position.clone(),target:controls.target.clone(),min:controls.minDistance,max:controls.maxDistance,auto:controls.autoRotate,pair:pairMode};pairMode=null;active=true;root.visible=true;universeGroup.visible=false;panel.hidden=false;document.body.classList.add('body-editor-active');activatePanelTab('body-editor');controls.autoRotate=false;controls.minDistance=.1;controls.maxDistance=100000;if(!bodies.length){add('plate',[12,12,3],12,new THREE.Vector3(0,0,-4));add('plate',[12,12,3],12,new THREE.Vector3(0,0,4));}fit();update();}
   function leave(){if(!active)return;endDrag();active=false;root.visible=false;panel.hidden=true;universeGroup.visible=true;document.body.classList.remove('body-editor-active');pairMode=saved.pair;camera.position.copy(saved.pos);controls.target.copy(saved.target);controls.minDistance=saved.min;controls.maxDistance=saved.max;controls.autoRotate=saved.auto;controls.update();}
   function safe(fn){try{fn();}catch(e){$('status').textContent=e.message;}}
-  $('close').onclick=leave;$('add').onclick=()=>safe(()=>{add($('shape').value,[num('w'),num('h'),num('z')],Math.round(num('count')),new THREE.Vector3(bodies.length*15,0,0));fit();});
+  $('close').onclick=()=>activatePanelTab(lastMeronicMode);$('add').onclick=()=>safe(()=>{add($('shape').value,[num('w'),num('h'),num('z')],Math.round(num('count')),new THREE.Vector3(bodies.length*15,0,0));fit();});
   $('body').onchange=()=>select(bodies.find(b=>b.id===num('body')));$('fit').onclick=fit;$('meron').onchange=()=>{selectedMeron=num('meron');syncMeron();};
   function validate(dims,count){if(dims.some(d=>!Number.isFinite(d)||d<.1||d>500)||!Number.isInteger(count)||count<1||count>48)throw new Error('Dimensions: 0.1–500 Md. Metalphas per body: 1–48.');}
   $('rebuild').onclick=()=>safe(()=>{if(!selected)return;const dims=[num('w'),num('h'),num('z')],count=num('count');validate(dims,count);const proposed={...selected,shape:$('shape').value,dims,count};const positions=distribute(proposed);Object.assign(selected,{shape:proposed.shape,dims,count});rebuild(selected,positions);selectedMeron=-1;sync();});
   $('apply').onclick=()=>safe(()=>{if(!selected)return;const p=['x','y','zpos'].map(num),r=['rx','ry','rz'].map(num);if([...p,...r].some(v=>!Number.isFinite(v)))throw new Error('Enter finite coordinates and angles.');selected.group.position.fromArray(p);selected.group.rotation.set(...r.map(THREE.MathUtils.degToRad));sync();});
   $('move-meron').onclick=()=>safe(()=>{const m=selected?.merons[selectedMeron];if(!m)return;const p=new THREE.Vector3(num('mx'),num('my'),num('mz'));if(!inside(selected,p))throw new Error('The Metalpha must remain inside its body.');m.position.copy(p);update();});
   $('delete').onclick=()=>{if(!selected)return;root.remove(selected.group);clearOwned(selected.group);bodies.splice(bodies.indexOf(selected),1);selected=null;if(bodies.length)select(bodies[0]);else{list();update();}};
+  $('ci-opacity').oninput=()=>blueMaterial.opacity=num('ci-opacity');$('grid').onchange=()=>{grid.visible=$('grid').checked;axes.visible=$('grid').checked;};
   $('sign').onchange=update;$('exc').onchange=update;$('opacity').oninput=()=>bodies.forEach(b=>b.shell.material.opacity=num('opacity'));
   $('gap-apply').onclick=()=>safe(()=>{if(bodies.length!==2||bodies.some(b=>!['plate','box'].includes(b.shape)||b.group.rotation.x||b.group.rotation.y||b.group.rotation.z))throw new Error('Gap preset requires two unrotated plates / boxes.');const gap=num('gap');if(!Number.isFinite(gap)||gap<0)throw new Error('Gap must be nonnegative.');bodies[1].group.position.copy(bodies[0].group.position).add(new THREE.Vector3(0,0,(bodies[0].dims[2]+bodies[1].dims[2])/2+gap));sync();});
   function setRay(e){const rect=renderer.domElement.getBoundingClientRect();pointer.set((e.clientX-rect.left)/rect.width*2-1,-(e.clientY-rect.top)/rect.height*2+1);raycaster.setFromCamera(pointer,camera);}
@@ -8475,7 +8509,7 @@ const bodyEditor = (() => {
   renderer.domElement.addEventListener('pointerup',endDrag,true);renderer.domElement.addEventListener('pointercancel',endDrag,true);
   $('save').onclick=()=>{const data={version:1,bodies:bodies.map(b=>({shape:b.shape,dims:b.dims,count:b.count,position:b.group.position.toArray(),rotation:[b.group.rotation.x,b.group.rotation.y,b.group.rotation.z],metalphas:b.merons.map(m=>m.position.toArray())})),sign:num('sign'),exc:$('exc').checked};const url=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download='meronic-body-scene.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
   $('load').onclick=()=>$('file').click();$('file').onchange=async()=>{try{const file=$('file').files[0];if(!file)return;const data=JSON.parse(await file.text());if(data.version!==1||!Array.isArray(data.bodies)||data.bodies.length>8)throw new Error('Invalid scene. Maximum 8 bodies.');data.bodies.forEach(b=>{validate(b.dims,b.count);if(!['plate','box','sphere','cone'].includes(b.shape)||![b.position,b.rotation].every(a=>Array.isArray(a)&&a.length===3&&a.every(Number.isFinite))||!Array.isArray(b.metalphas)||b.metalphas.length!==b.count||!b.metalphas.every(a=>Array.isArray(a)&&a.length===3&&a.every(Number.isFinite)&&inside(b,new THREE.Vector3(...a))))throw new Error('Invalid body or local coordinates.');});bodies.forEach(b=>{root.remove(b.group);clearOwned(b.group);});bodies.length=0;selected=null;data.bodies.forEach(b=>{const created={id:++serial,shape:b.shape,dims:b.dims,count:b.count,color:bodies.length%2?0xffb583:0x76cfff,group:new THREE.Group(),merons:[]};rebuild(created,b.metalphas.map(p=>new THREE.Vector3(...p)));created.group.position.fromArray(b.position);created.group.rotation.set(...b.rotation);root.add(created.group);bodies.push(created);});$('sign').value=data.sign===-1?-1:1;$('exc').checked=!!data.exc;if(bodies.length)select(bodies[0]);else{list();update();}fit();}catch(e){$('status').textContent=e.message;}finally{$('file').value='';}};
-  window.meronicBodyEditor={enter,leave,bodies,update,select};return {get active(){return active;}};
+  window.meronicBodyEditor={enter,leave,bodies,update,select,get active(){return active;}};return {get active(){return active;}};
 })();
 
 // polarity removed
