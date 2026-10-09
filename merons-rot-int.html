@@ -8027,10 +8027,10 @@ const bodyEditor = (() => {
   const panel=document.createElement('section'); panel.id='bodyEditorPanel'; panel.className='panel-pane'; panel.dataset.panelPane='body-editor'; panel.setAttribute('role','tabpanel'); panel.hidden=true;
   const field=(id,label,value,step='0.1',min='')=>`<label>${label}<input id="be-${id}" type="number" step="${step}" value="${value}" ${min!==''?`min="${min}"`:''}></label>`;
   panel.innerHTML=`<h2>Body Editor <button id="be-close" type="button">Close</button></h2>
-    <p>Dimensions and coordinates in Md · fixed Metalpha scale</p>
+    <p>Dimensions and coordinates in Md · MC Ø 1 Md · plate width 24 Md</p>
     <div class="be-row"><select id="be-shape"><option value="plate">Plate</option><option value="box">Box / cube</option><option value="sphere">Sphere</option><option value="cone">Cone</option></select><button id="be-add">Add body</button></div>
     <div class="be-row"><select id="be-body" aria-label="Selected body"></select><button id="be-delete">Delete</button><button id="be-fit">Frame bodies</button></div>
-    <div class="be-grid">${field('w','Width / diameter',12,'0.1',0.1)}${field('h','Height',12,'0.1',0.1)}${field('z','Depth / thickness',12,'0.1',0.1)}${field('count','Metalphas',6,'1',1)}</div>
+    <div class="be-grid">${field('w','Width / diameter',24,'0.1',0.1)}${field('h','Height',12,'0.1',0.1)}${field('z','Depth / thickness',12,'0.1',0.1)}${field('count','Metalphas',6,'1',1)}</div>
     <button id="be-rebuild">Apply dimensions / distribute</button>
     <h3>Body position / rotation</h3><div class="be-grid">${['x','y','zpos'].map((k,i)=>field(k,['X','Y','Z'][i],0)).join('')}${['rx','ry','rz'].map((k,i)=>field(k,['X°','Y°','Z°'][i],0,'1')).join('')}</div>
     <div class="be-row"><label>Drag plane <select id="be-plane"><option>XY</option><option>XZ</option><option>YZ</option></select></label><button id="be-apply">Apply transform</button></div>
@@ -8047,22 +8047,23 @@ const bodyEditor = (() => {
   const $=id=>document.getElementById('be-'+id), num=id=>Number($(id).value);
   const button=document.createElement('button');button.type='button';button.className='builder-mode-button';button.dataset.builderMode='body-editor';button.setAttribute('aria-pressed','false');button.innerHTML='<span>Body</span><span>Editor</span>';button.addEventListener('click',()=>enter());document.querySelector('.builder-mode-switch').appendChild(button);
   const blueMaterial=new THREE.LineBasicMaterial({color:0x5aafff,transparent:true,opacity:.06,blending:THREE.AdditiveBlending,depthWrite:false,depthTest:true});
+  const excMaterial=new THREE.LineBasicMaterial({color:0xff3030,transparent:true,opacity:.06,blending:THREE.AdditiveBlending,depthWrite:false,depthTest:true});
   const pointMaterial=new THREE.MeshBasicMaterial({color:0x5aafff,transparent:true,opacity:.7,depthWrite:false});
   const unitCI=(()=>{const pts=[];for(let i=0;i<18;i++){const u=i*Math.PI*2/18;let prev=null;for(let j=0;j<=24;j++){const v=j*Math.PI*2/24;const r=1+Math.cos(v);const p=new THREE.Vector3(r*Math.cos(u),r*Math.sin(u),Math.sin(v));if(prev)pts.push(prev,p);prev=p;}}return new THREE.BufferGeometry().setFromPoints(pts);})();
   const faceBlueMaterial=new THREE.MeshBasicMaterial({color:0x5aafff,transparent:true,opacity:.06,side:THREE.DoubleSide,depthWrite:false});
-  const mats=[blueMaterial,pointMaterial,faceBlueMaterial];
+  const mats=[blueMaterial,excMaterial,pointMaterial,faceBlueMaterial];
   // Grid stays fixed in world XZ, with one small square per Md.
   const grid=new THREE.GridHelper(200,200,0x5a91bc,0x233c55);grid.name='BodyEditor_Grid_XZ_1Md';grid.material.transparent=true;grid.material.opacity=.5;root.add(grid);
   const axes=new THREE.AxesHelper(8);root.add(axes);
-  const vertices=rawVertices.map(v=>new THREE.Vector3(...v).normalize().multiplyScalar(Math.sqrt(3)));
+  const vertices=rawVertices.map(v=>new THREE.Vector3(...v).normalize());
   const quats=vertices.map(()=>new THREE.Quaternion());
   triades.forEach(t=>{const c=t.indices.reduce((a,i)=>a.add(vertices[i]),new THREE.Vector3()).divideScalar(3);t.indices.forEach(i=>quats[i].setFromUnitVectors(new THREE.Vector3(0,0,1),new THREE.Vector3().crossVectors(c.clone().normalize(),vertices[i].clone().sub(c).normalize()).normalize()));});
   function metalpha(){
     const g=new THREE.Group();g.userData.pas=[];g.userData.exc=[];g.userData.cis=[];
     vertices.forEach((p,i)=>{const ca=new THREE.Group();ca.position.copy(p);ca.quaternion.copy(quats[i]);g.add(ca);g.userData.pas.push(ca);ca.userData.excTargets=new Map();
-      const resources=getSharedCompalphaResources();const pa=new THREE.Mesh(resources.sphereGeometry,pointMaterial);ca.add(pa);
-      const axis=new THREE.Line(resources.axisGeometry,blueMaterial);ca.add(axis);
-      const ci=new THREE.LineSegments(getMeridianGeometry(12,1,LAYER_DEFS[1]),blueMaterial);ci.name='Metalpha_MC';ca.add(ci);g.userData.cis.push(ci);
+      const resources=getSharedCompalphaResources();const pa=new THREE.Mesh(resources.sphereGeometry,pointMaterial);pa.scale.setScalar(.3);ca.add(pa);
+      const axis=new THREE.Line(resources.axisGeometry,blueMaterial);axis.scale.setScalar(.25);ca.add(axis);
+      const ci=new THREE.LineSegments(unitCI,blueMaterial);ci.scale.setScalar(.25);ci.name='Metalpha_MC';ca.add(ci);g.userData.cis.push(ci);
     });
     // Same cuboctahedron faces as Construction, in the common blue palette.
     const faceVertices=[];cuboFaces.forEach(f=>{const indices=f.indices;const triangles=indices.length===4?[[0,1,2],[0,2,3]]:[[0,1,2]];triangles.forEach(t=>t.forEach(k=>faceVertices.push(vertices[indices[k]].clone())));});
@@ -8092,7 +8093,7 @@ const bodyEditor = (() => {
   }
   function geometry(b){const [w,h,z]=b.dims;return b.shape==='sphere'?new THREE.SphereGeometry(w/2,32,20):b.shape==='cone'?new THREE.ConeGeometry(w/2,h,32):new THREE.BoxGeometry(w,h,z);}
   function rebuild(b,positions){const pos=positions||distribute(b);clearOwned(b.group);b.merons=[];const geo=geometry(b);b.shell=new THREE.Mesh(geo,new THREE.MeshBasicMaterial({color:b.color,transparent:true,opacity:num('opacity'),depthWrite:false,side:THREE.DoubleSide}));b.group.add(b.shell);b.edges=new THREE.LineSegments(new THREE.EdgesGeometry(geo),new THREE.LineBasicMaterial({color:b.color,transparent:true,opacity:.7}));b.group.add(b.edges);pos.forEach(p=>{const m=metalpha();m.position.copy(p);b.group.add(m);b.merons.push(m);});}
-  function add(shape='plate',dims=[12,12,12],count=6,position=new THREE.Vector3()){validate(dims,count);if(bodies.length>=8)throw new Error('Maximum 8 bodies.');const b={id:++serial,shape,dims,count,color:bodies.length%2?0xffb583:0x76cfff,group:new THREE.Group(),merons:[]};rebuild(b);b.group.position.copy(position);b.group.position.y=(shape==='sphere'?dims[0]:dims[1])/2;root.add(b.group);bodies.push(b);select(b);return b;}
+  function add(shape='plate',dims=[24,12,12],count=6,position=new THREE.Vector3()){validate(dims,count);if(bodies.length>=8)throw new Error('Maximum 8 bodies.');const b={id:++serial,shape,dims,count,color:bodies.length%2?0xffb583:0x76cfff,group:new THREE.Group(),merons:[]};rebuild(b);b.group.position.copy(position);b.group.position.y=(shape==='sphere'?dims[0]:dims[1])/2;root.add(b.group);bodies.push(b);select(b);return b;}
   function select(b,index=-1){selected=b;selectedMeron=index;list();sync();bodies.forEach(c=>c.edges.material.color.set(c===b?0xffff99:c.color));}
   function list(){$('body').innerHTML=bodies.map(b=>`<option value="${b.id}">Body ${b.id} · ${b.shape}</option>`).join('');if(selected)$('body').value=selected.id;}
   function sync(){if(!selected)return;const b=selected;$('shape').value=b.shape;['w','h','z'].forEach((k,i)=>$(k).value=b.dims[i]);$('count').value=b.count;['x','y','zpos'].forEach((k,i)=>$(k).value=b.group.position.getComponent(i).toFixed(3));['rx','ry','rz'].forEach((k,i)=>$(k).value=THREE.MathUtils.radToDeg(b.group.rotation[['x','y','z'][i]]).toFixed(2));$('meron').innerHTML='<option value="-1">Whole body</option>'+b.merons.map((m,i)=>`<option value="${i}">Metalpha ${i+1}</option>`).join('');$('meron').value=selectedMeron;syncMeron();update();}
@@ -8109,7 +8110,7 @@ const bodyEditor = (() => {
       const center=m.getWorldPosition(new THREE.Vector3());let neighbor=null,best=Infinity;
       merons.forEach(other=>{if(owners.get(other)===owners.get(m))return;const d=center.distanceToSquared(other.getWorldPosition(new THREE.Vector3()));if(d<best){best=d;neighbor=other;}});
       (neighbor?[neighbor]:[]).forEach(other=>{used.add(other.uuid);let line=targets.get(other.uuid);
-        if(!line){line=new THREE.LineSegments(unitCI,blueMaterial);line.name='ExC_to_'+other.uuid;ca.add(line);targets.set(other.uuid,line);}
+        if(!line){line=new THREE.LineSegments(unitCI,excMaterial);line.name='ExC_to_'+other.uuid;ca.add(line);targets.set(other.uuid,line);}
         const target=ca.worldToLocal(other.getWorldPosition(new THREE.Vector3()));
         const rho=Math.hypot(target.x,target.y),distance=target.length();
         // Horn torus through the target center: R = (rho² + z²) / (2 rho).
@@ -8124,7 +8125,7 @@ const bodyEditor = (() => {
     $('status').textContent=`${bodies.length} bodies · ${bodies.reduce((s,b)=>s+b.count,0)} Metalphas\n${pairs} interbody PA pairs\nMinimum PA distance: ${Number.isFinite(minimum)?minimum.toFixed(3)+' Md':'—'}\nVariable ExC Ø: ${Number.isFinite(diameterMin)?diameterMin.toFixed(3):'—'}–${diameterMax.toFixed(3)} Md\nSelected body |ΣF| / F₀: ${force.length().toPrecision(5)}\nF / F₀ = (1 Md / d)²${overlap?'\nCoincident PA: singular interaction; move bodies apart.':''}`;
   }
   function fit(){const bounds=new THREE.Box3();bodies.forEach(b=>{b.group.updateMatrixWorld(true);bounds.union(new THREE.Box3().setFromObject(b.shell));});if(bounds.isEmpty())return;const center=bounds.getCenter(new THREE.Vector3()),size=bounds.getSize(new THREE.Vector3()).length();controls.target.copy(center);camera.position.copy(center).add(new THREE.Vector3(.4,.3,1).normalize().multiplyScalar(Math.max(8,size*1.5)));controls.update();}
-  function enter(){if(active)return;cancelScriptPlayback();if(comparisonMode)exitComparisonMode();stopOpeningCameraSequence();if(magnetGravity.active)setMagnetGravityMode(false);saved={pos:camera.position.clone(),target:controls.target.clone(),min:controls.minDistance,max:controls.maxDistance,auto:controls.autoRotate,pair:pairMode};pairMode=null;active=true;root.visible=true;universeGroup.visible=false;panel.hidden=false;document.body.classList.add('body-editor-active');activatePanelTab('body-editor');controls.autoRotate=false;controls.minDistance=.1;controls.maxDistance=100000;if(!bodies.length){add('plate',[12,12,12],6,new THREE.Vector3(0,0,-8.5));add('plate',[12,12,12],6,new THREE.Vector3(0,0,8.5));}fit();update();}
+  function enter(){if(active)return;cancelScriptPlayback();if(comparisonMode)exitComparisonMode();stopOpeningCameraSequence();if(magnetGravity.active)setMagnetGravityMode(false);saved={pos:camera.position.clone(),target:controls.target.clone(),min:controls.minDistance,max:controls.maxDistance,auto:controls.autoRotate,pair:pairMode};pairMode=null;active=true;root.visible=true;universeGroup.visible=false;panel.hidden=false;document.body.classList.add('body-editor-active');activatePanelTab('body-editor');controls.autoRotate=false;controls.minDistance=.1;controls.maxDistance=100000;if(!bodies.length){add('plate',[24,12,12],6,new THREE.Vector3(0,0,-8.5));add('plate',[24,12,12],6,new THREE.Vector3(0,0,8.5));}fit();update();}
   function leave(){if(!active)return;endDrag();active=false;root.visible=false;panel.hidden=true;universeGroup.visible=true;document.body.classList.remove('body-editor-active');pairMode=saved.pair;camera.position.copy(saved.pos);controls.target.copy(saved.target);controls.minDistance=saved.min;controls.maxDistance=saved.max;controls.autoRotate=saved.auto;controls.update();}
   function safe(fn){try{fn();}catch(e){$('status').textContent=e.message;}}
   $('close').onclick=()=>activatePanelTab(lastMeronicMode);$('add').onclick=()=>safe(()=>{add($('shape').value,[num('w'),num('h'),num('z')],Math.round(num('count')),new THREE.Vector3(bodies.length*15,0,0));fit();});
@@ -8134,7 +8135,7 @@ const bodyEditor = (() => {
   $('apply').onclick=()=>safe(()=>{if(!selected)return;const p=['x','y','zpos'].map(num),r=['rx','ry','rz'].map(num);if([...p,...r].some(v=>!Number.isFinite(v)))throw new Error('Enter finite coordinates and angles.');selected.group.position.fromArray(p);selected.group.rotation.set(...r.map(THREE.MathUtils.degToRad));sync();});
   $('move-meron').onclick=()=>safe(()=>{const m=selected?.merons[selectedMeron];if(!m)return;const p=new THREE.Vector3(num('mx'),num('my'),num('mz'));if(!inside(selected,p))throw new Error('The Metalpha must remain inside its body.');m.position.copy(p);update();});
   $('delete').onclick=()=>{if(!selected)return;root.remove(selected.group);clearOwned(selected.group);bodies.splice(bodies.indexOf(selected),1);selected=null;if(bodies.length)select(bodies[0]);else{list();update();}};
-  $('ci-opacity').oninput=()=>{blueMaterial.opacity=num('ci-opacity');faceBlueMaterial.opacity=num('ci-opacity');pointMaterial.opacity=num('ci-opacity');};$('grid').onchange=()=>{grid.visible=$('grid').checked;axes.visible=$('grid').checked;};
+  $('ci-opacity').oninput=()=>{blueMaterial.opacity=num('ci-opacity');excMaterial.opacity=num('ci-opacity');faceBlueMaterial.opacity=num('ci-opacity');pointMaterial.opacity=num('ci-opacity');};$('grid').onchange=()=>{grid.visible=$('grid').checked;axes.visible=$('grid').checked;};
   $('sign').onchange=update;$('exc').onchange=update;$('opacity').oninput=()=>bodies.forEach(b=>b.shell.material.opacity=num('opacity'));
   $('gap-apply').onclick=()=>safe(()=>{if(bodies.length!==2||bodies.some(b=>!['plate','box'].includes(b.shape)||b.group.rotation.x||b.group.rotation.y||b.group.rotation.z))throw new Error('Gap preset requires two unrotated plates / boxes.');const gap=num('gap');if(!Number.isFinite(gap)||gap<0)throw new Error('Gap must be nonnegative.');bodies[1].group.position.copy(bodies[0].group.position).add(new THREE.Vector3(0,0,(bodies[0].dims[2]+bodies[1].dims[2])/2+gap));sync();});
   function setRay(e){const rect=renderer.domElement.getBoundingClientRect();pointer.set((e.clientX-rect.left)/rect.width*2-1,-(e.clientY-rect.top)/rect.height*2+1);raycaster.setFromCamera(pointer,camera);}
