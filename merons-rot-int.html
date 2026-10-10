@@ -8037,7 +8037,8 @@ const bodyEditor = (() => {
     <p>Click a body to show X (red), Y (green), Z (blue). Drag an arrow for one axis, or the white center for free movement. Orbit on empty space. Shift-click selects a Metalpha.</p>
     <h3>Individual Metalpha</h3><select id="be-meron"><option value="-1">Whole body</option></select><div class="be-grid">${['mx','my','mz'].map((k,i)=>field(k,['Local X','Local Y','Local Z'][i],0)).join('')}</div><button id="be-move-meron">Apply local position</button>
     <h3>Interaction</h3><div class="be-row"><select id="be-sign"><option value="1">Concordant · attraction</option><option value="-1">Discordant · repulsion</option></select><label><input id="be-exc" type="checkbox" checked> Show ExC</label></div>
-    <label>Metalpha CI opacity <input id="be-ci-opacity" type="range" min="0" max="1" step="0.005" value="0.80"></label>
+    <label>MC opacity <input id="be-ci-opacity" type="range" min="0" max="1" step="0.005" value="0.80"></label>
+    <label>ExC opacity <input id="be-exc-opacity" type="range" min="0" max="1" step="0.005" value="0.08"></label>
     <label><input id="be-grid" type="checkbox" checked> Grid XZ · 1 Md squares</label>
     <label>Body opacity <input id="be-opacity" type="range" min="0.02" max="0.7" step="0.01" value="0.15"></label>
     <div class="be-row">${field('gap','Initial plates: face gap',44,'0.1',0)}<button id="be-gap-apply">Set gap</button></div>
@@ -8070,9 +8071,14 @@ const bodyEditor = (() => {
   const $=id=>document.getElementById('be-'+id), num=id=>Number($(id).value);
   const button=document.createElement('button');button.type='button';button.className='builder-mode-button';button.dataset.builderMode='body-editor';button.setAttribute('aria-pressed','false');button.innerHTML='<span>Body</span><span>Editor</span>';button.addEventListener('click',()=>enter());document.querySelector('.builder-mode-switch').appendChild(button);
   const blueMaterial=new THREE.LineBasicMaterial({color:0x123b80,transparent:true,opacity:.80,blending:THREE.NormalBlending,depthWrite:false,depthTest:true});
-  const excMaterial=new THREE.LineBasicMaterial({color:0xff3030,transparent:true,opacity:.08,blending:THREE.AdditiveBlending,depthWrite:false,depthTest:true});
+  const excMaterial=new THREE.LineBasicMaterial({color:0xff3030,transparent:true,opacity:.08,blending:THREE.NormalBlending,depthWrite:false,depthTest:true});
   const pointMaterial=new THREE.MeshBasicMaterial({color:0x123b80,transparent:true,opacity:.4,depthWrite:false});
-  const unitCI=(()=>{const pts=[];for(let i=0;i<18;i++){const u=i*Math.PI*2/18;let prev=null;for(let j=0;j<=24;j++){const v=j*Math.PI*2/24;const r=1+Math.cos(v);const p=new THREE.Vector3(r*Math.cos(u),r*Math.sin(u),Math.sin(v));if(prev)pts.push(prev,p);prev=p;}}return new THREE.BufferGeometry().setFromPoints(pts);})();
+  // Reuse the Builder's meridian generator, with circle smoothness 48.
+  const previousResolution=meridianResolution;
+  meridianResolution=48;
+  const unitCI=getMeridianGeometry(18,1,{r:1});
+  meridianResolution=previousResolution;
+
   const faceBlueMaterial=new THREE.MeshBasicMaterial({color:0x123b80,transparent:true,opacity:.04,side:THREE.DoubleSide,depthWrite:false});
   const mats=[blueMaterial,excMaterial,pointMaterial,faceBlueMaterial];
   // Grid stays fixed in world XZ, with one small square per Md.
@@ -8106,7 +8112,7 @@ const bodyEditor = (() => {
     });
     // Same cuboctahedron faces as Construction, in the common blue palette.
     const faceVertices=[];cuboFaces.forEach(f=>{const indices=f.indices;const triangles=indices.length===4?[[0,1,2],[0,2,3]]:[[0,1,2]];triangles.forEach(t=>t.forEach(k=>faceVertices.push(vertices[indices[k]].clone())));});
-    const faceGeo=new THREE.BufferGeometry().setFromPoints(faceVertices);g.add(new THREE.Mesh(faceGeo,faceBlueMaterial));return g;
+    return g; // Wire geometry only: no translucent face fill over the MC.
   }
   function clearOwned(group){const geometries=new Set(),materials=new Set();group.traverse(o=>{if(o.geometry && o.geometry!==unitCI && !Array.from(meridianGeometryCache.values()).includes(o.geometry) && !Object.values(getSharedCompalphaResources()).includes(o.geometry))geometries.add(o.geometry);if(o.material&&!mats.includes(o.material)&&!Object.values(getSharedCompalphaResources()).includes(o.material))materials.add(o.material);});geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());group.clear();}
   function inside(b,p){const [w,h,z]=b.dims;if(b.shape==='sphere')return p.length()<=w/2-1.75;if(b.shape==='cone'){const radius=(w/2)*(h/2-p.y)/h;return Math.hypot(p.x,p.z)+1.75<=radius&&Math.abs(p.y)<=h/2-1.75;}return Math.abs(p.x)<=w/2-1.75&&Math.abs(p.y)<=h/2-1.75&&Math.abs(p.z)<=z/2-1.75;}
@@ -8180,7 +8186,7 @@ const bodyEditor = (() => {
   $('apply').onclick=()=>safe(()=>{if(!selected)return;const p=['x','y','zpos'].map(num),r=['rx','ry','rz'].map(num);if([...p,...r].some(v=>!Number.isFinite(v)))throw new Error('Enter finite coordinates and angles.');selected.group.position.fromArray(p);selected.group.rotation.set(...r.map(THREE.MathUtils.degToRad));sync();});
   $('move-meron').onclick=()=>safe(()=>{const m=selected?.merons[selectedMeron];if(!m)return;const p=new THREE.Vector3(num('mx'),num('my'),num('mz'));if(!inside(selected,p))throw new Error('The Metalpha must remain inside its body.');m.position.copy(p);update();});
   $('delete').onclick=()=>{if(!selected)return;root.remove(selected.group);clearOwned(selected.group);bodies.splice(bodies.indexOf(selected),1);selected=null;if(bodies.length)select(bodies[0]);else{list();update();}};
-  $('ci-opacity').oninput=()=>{blueMaterial.opacity=num('ci-opacity');excMaterial.opacity=num('ci-opacity');faceBlueMaterial.opacity=num('ci-opacity')*.05;pointMaterial.opacity=num('ci-opacity')*.5;};$('grid').onchange=()=>{grid.visible=$('grid').checked;axes.visible=$('grid').checked;};
+  $('ci-opacity').oninput=()=>{blueMaterial.opacity=num('ci-opacity');};$('exc-opacity').oninput=()=>{excMaterial.opacity=num('exc-opacity');};$('grid').onchange=()=>{grid.visible=$('grid').checked;axes.visible=$('grid').checked;};
   $('sign').onchange=update;$('exc').onchange=update;$('opacity').oninput=()=>bodies.forEach(b=>b.shell.material.opacity=num('opacity'));
   $('gap-apply').onclick=()=>safe(()=>{if(bodies.length!==2||bodies.some(b=>!['plate','box'].includes(b.shape)||b.group.rotation.x||b.group.rotation.y||b.group.rotation.z))throw new Error('Gap preset requires two unrotated plates / boxes.');const gap=num('gap');if(!Number.isFinite(gap)||gap<0)throw new Error('Gap must be nonnegative.');bodies[1].group.position.copy(bodies[0].group.position).add(new THREE.Vector3(0,0,(bodies[0].dims[2]+bodies[1].dims[2])/2+gap));sync();});
   function setRay(e){const rect=renderer.domElement.getBoundingClientRect();pointer.set((e.clientX-rect.left)/rect.width*2-1,-(e.clientY-rect.top)/rect.height*2+1);raycaster.setFromCamera(pointer,camera);}
