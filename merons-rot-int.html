@@ -8037,7 +8037,7 @@ const bodyEditor = (() => {
     <p>Click a body to show X (red), Y (green), Z (blue). Drag an arrow for one axis, or the white center for free movement. Orbit on empty space. Shift-click selects a Metalpha.</p>
     <h3>Individual Metalpha</h3><select id="be-meron"><option value="-1">Whole body</option></select><div class="be-grid">${['mx','my','mz'].map((k,i)=>field(k,['Local X','Local Y','Local Z'][i],0)).join('')}</div><button id="be-move-meron">Apply local position</button>
     <h3>Interaction</h3><div class="be-row"><select id="be-sign"><option value="1">Concordant · attraction</option><option value="-1">Discordant · repulsion</option></select><label><input id="be-exc" type="checkbox" checked> Show ExC</label></div>
-    <label>Metalpha CI opacity <input id="be-ci-opacity" type="range" min="0" max="0.8" step="0.005" value="0.08"></label>
+    <label>Metalpha CI opacity <input id="be-ci-opacity" type="range" min="0" max="0.8" step="0.005" value="0.20"></label>
     <label><input id="be-grid" type="checkbox" checked> Grid XZ · 1 Md squares</label>
     <label>Body opacity <input id="be-opacity" type="range" min="0.02" max="0.7" step="0.01" value="0.15"></label>
     <div class="be-row">${field('gap','Initial plates: face gap',44,'0.1',0)}<button id="be-gap-apply">Set gap</button></div>
@@ -8069,11 +8069,11 @@ const bodyEditor = (() => {
   explanation.addEventListener('pointerleave',()=>{if(matchMedia('(hover:hover)').matches&&theoryPin.getAttribute('aria-pressed')!=='true')collapseTheory(true);});
   const $=id=>document.getElementById('be-'+id), num=id=>Number($(id).value);
   const button=document.createElement('button');button.type='button';button.className='builder-mode-button';button.dataset.builderMode='body-editor';button.setAttribute('aria-pressed','false');button.innerHTML='<span>Body</span><span>Editor</span>';button.addEventListener('click',()=>enter());document.querySelector('.builder-mode-switch').appendChild(button);
-  const blueMaterial=new THREE.LineBasicMaterial({color:0x5aafff,transparent:true,opacity:.08,blending:THREE.AdditiveBlending,depthWrite:false,depthTest:true});
+  const blueMaterial=new THREE.LineBasicMaterial({color:0x5aafff,transparent:true,opacity:.20,blending:THREE.AdditiveBlending,depthWrite:false,depthTest:true});
   const excMaterial=new THREE.LineBasicMaterial({color:0xff3030,transparent:true,opacity:.08,blending:THREE.AdditiveBlending,depthWrite:false,depthTest:true});
   const pointMaterial=new THREE.MeshBasicMaterial({color:0x5aafff,transparent:true,opacity:.7,depthWrite:false});
   const unitCI=(()=>{const pts=[];for(let i=0;i<18;i++){const u=i*Math.PI*2/18;let prev=null;for(let j=0;j<=24;j++){const v=j*Math.PI*2/24;const r=1+Math.cos(v);const p=new THREE.Vector3(r*Math.cos(u),r*Math.sin(u),Math.sin(v));if(prev)pts.push(prev,p);prev=p;}}return new THREE.BufferGeometry().setFromPoints(pts);})();
-  const faceBlueMaterial=new THREE.MeshBasicMaterial({color:0x5aafff,transparent:true,opacity:.08,side:THREE.DoubleSide,depthWrite:false});
+  const faceBlueMaterial=new THREE.MeshBasicMaterial({color:0x5aafff,transparent:true,opacity:.20,side:THREE.DoubleSide,depthWrite:false});
   const mats=[blueMaterial,excMaterial,pointMaterial,faceBlueMaterial];
   // Grid stays fixed in world XZ, with one small square per Md.
   const grid=new THREE.GridHelper(200,200,0x5a91bc,0x233c55);grid.name='BodyEditor_Grid_XZ_1Md';grid.material.transparent=true;grid.material.opacity=.5;root.add(grid);
