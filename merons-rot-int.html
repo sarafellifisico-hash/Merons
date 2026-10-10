@@ -8027,7 +8027,7 @@ const bodyEditor = (() => {
   const panel=document.createElement('section'); panel.id='bodyEditorPanel'; panel.className='panel-pane'; panel.dataset.panelPane='body-editor'; panel.setAttribute('role','tabpanel'); panel.hidden=true;
   const field=(id,label,value,step='0.1',min='')=>`<label>${label}<input id="be-${id}" type="number" step="${step}" value="${value}" ${min!==''?`min="${min}"`:''}></label>`;
   panel.innerHTML=`<h2>Body Editor <button id="be-close" type="button">Close</button></h2>
-    <p>Dimensions and coordinates in Md · MC · D 1 Md (Construction scale) · plate width 48 Md</p>
+    <p>Body dimensions and coordinates in Md · Metalpha display scale 50% · hexagon spacing 12 Md</p>
     <div class="be-row"><select id="be-shape"><option value="plate">Plate</option><option value="box">Box / cube</option><option value="sphere">Sphere</option><option value="cone">Cone</option></select><button id="be-add">Add body</button></div>
     <div class="be-row"><select id="be-body" aria-label="Selected body"></select><button id="be-delete">Delete</button><button id="be-fit">Frame bodies</button></div>
     <div class="be-grid">${field('w','Width / diameter',48,'0.1',0.1)}${field('h','Height',48,'0.1',0.1)}${field('z','Depth / thickness',4,'0.1',0.1)}${field('count','Metalphas',6,'1',1)}</div>
@@ -8055,7 +8055,7 @@ const bodyEditor = (() => {
       <p>In the MM, the measured attraction is attributed to <strong>Exomolecular Interaction: the Rotating Interaction (IG / RI) of the Interaction Circles (CI) of the Compalphas forming the Merons</strong>. Compalphas are immaterial toroidal geometric fields; no material particles, photons or waves are exchanged, and no external vacuum pressure is required by this proposed mechanism.</p>
       <p><strong>Concordant CI rotation produces attraction; discordant rotation produces repulsion.</strong> In this interpretation, the strong interaction and gravity are manifestations of the same IG: their difference lies in the distance between Compalphas, already at the Meronic level. Casimir attraction is interpreted as gravity at small separations through the Exomolecular Circles (ExC).</p>
       <h3>What the Body Editor shows</h3>
-      <p><span class="be-blue">Navy blue: MC at the Construction scale.</span> <span class="be-red">Red: ExC with variable dimensions, passing through the center of the nearest Metalpha in the other body.</span> Distances used in the interaction readout are measured between Alpha Points (PA), not between body surfaces.</p>
+      <p><span class="be-blue">Navy blue: MC with the Construction proportions; Metalpha display size reduced to 50%.</span> <span class="be-red">Red: ExC with variable dimensions, passing through the center of the nearest Metalpha in the other body.</span> The six Metalphas lie on a broad regular hexagon at the middle of each plate’s thickness, with space between their MC. Neighboring Metalpha centers are separated by 12 Md, the intramolecular reference associated with the green CI layer. The green circles need not be displayed: MC remain navy blue and ExC red. The dimensions are didactic MM units, not experimentally calibrated lengths. Distances used in the interaction readout are measured between Alpha Points (PA), not between body surfaces.</p>
       <p>The MM accepts the experimental measurements and proposes a different underlying mechanism. Here the force readout uses the normalized pair rule |F| / F₀ = (1 Md / d)², summed over PA pairs. It is a didactic MM visualization, not an experimentally calibrated Casimir force in newtons.</p>
       <p class="be-source">Reference for the alternative quantum formulation: <a href="https://doi.org/10.1103/PhysRevD.72.021301" target="_blank" rel="noopener noreferrer">R. L. Jaffe, 2005</a>.</p>
     </div>`;
@@ -8098,7 +8098,7 @@ const bodyEditor = (() => {
   const quats=vertices.map(()=>new THREE.Quaternion());
   triades.forEach(t=>{const c=t.indices.reduce((a,i)=>a.add(vertices[i]),new THREE.Vector3()).divideScalar(3);t.indices.forEach(i=>quats[i].setFromUnitVectors(new THREE.Vector3(0,0,1),new THREE.Vector3().crossVectors(c.clone().normalize(),vertices[i].clone().sub(c).normalize()).normalize()));});
   function metalpha(){
-    const g=new THREE.Group();g.userData.pas=[];g.userData.exc=[];g.userData.cis=[];
+    const g=new THREE.Group();g.scale.setScalar(.5);g.userData.pas=[];g.userData.exc=[];g.userData.cis=[];
     vertices.forEach((p,i)=>{const ca=new THREE.Group();ca.position.copy(p);ca.quaternion.copy(quats[i]);g.add(ca);g.userData.pas.push(ca);ca.userData.excTargets=new Map();
       const resources=getSharedCompalphaResources();const pa=new THREE.Mesh(resources.sphereGeometry,pointMaterial);pa.scale.setScalar(.3);ca.add(pa);
       const axis=new THREE.Line(resources.axisGeometry,blueMaterial);axis.scale.setScalar(.25);ca.add(axis);
@@ -8113,8 +8113,14 @@ const bodyEditor = (() => {
   function distribute(b){
     const [w,h,z]=b.dims;
     if(b.shape==='plate'){
+      // Six independent Metalphas on a broad regular hexagon, at mid-thickness.
+      if(b.count===6){
+        const radius=IC_DIAMETERS[2]; // Intramolecular reference: 12 Md between neighboring centers.
+        if(w/2<radius+1.75||h/2<Math.sqrt(3)*radius/2+1.75)throw new Error('Enlarge the plate to fit the hexagon with 12 Md intramolecular spacing.');
+        return Array.from({length:6},(_,k)=>new THREE.Vector3(radius*Math.cos(k*Math.PI/3),radius*Math.sin(k*Math.PI/3),0));
+      }
       // Shared vertices of regular hexagons, rather than a square/triangular grid.
-      const pitch=3.5, seen=new Set(), candidates=[];
+      const pitch=Math.max(3.5,Math.min(w,h)/(2*Math.sqrt(b.count))), seen=new Set(), candidates=[];
       const cols=Math.ceil(w/(1.5*pitch))+2,rows=Math.ceil(h/(Math.sqrt(3)*pitch))+2;
       for(let q=-cols;q<=cols;q++)for(let r=-rows;r<=rows;r++)for(let k=0;k<6;k++){
         const x=1.5*pitch*q+pitch*Math.cos(k*Math.PI/3),y=Math.sqrt(3)*pitch*(r+q/2)+pitch*Math.sin(k*Math.PI/3);
