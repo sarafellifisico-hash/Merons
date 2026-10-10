@@ -8037,7 +8037,7 @@ const bodyEditor = (() => {
     <p>Click a body to show X (red), Y (green), Z (blue). Drag an arrow for one axis, or the white center for free movement. Orbit on empty space. Shift-click selects a Metalpha.</p>
     <h3>Individual Metalpha</h3><select id="be-meron"><option value="-1">Whole body</option></select><div class="be-grid">${['mx','my','mz'].map((k,i)=>field(k,['Local X','Local Y','Local Z'][i],0)).join('')}</div><button id="be-move-meron">Apply local position</button>
     <h3>Interaction</h3><div class="be-row"><select id="be-sign"><option value="1">Concordant · attraction</option><option value="-1">Discordant · repulsion</option></select><label><input id="be-exc" type="checkbox" checked> Show ExC</label></div>
-    <label>Metalpha CI opacity <input id="be-ci-opacity" type="range" min="0" max="0.8" step="0.005" value="0.20"></label>
+    <label>Metalpha CI opacity <input id="be-ci-opacity" type="range" min="0" max="1" step="0.005" value="0.80"></label>
     <label><input id="be-grid" type="checkbox" checked> Grid XZ · 1 Md squares</label>
     <label>Body opacity <input id="be-opacity" type="range" min="0.02" max="0.7" step="0.01" value="0.15"></label>
     <div class="be-row">${field('gap','Initial plates: face gap',44,'0.1',0)}<button id="be-gap-apply">Set gap</button></div>
@@ -8055,7 +8055,7 @@ const bodyEditor = (() => {
       <p>In the MM, the measured attraction is attributed to <strong>Exomolecular Interaction: the Rotating Interaction (IG / RI) of the Interaction Circles (CI) of the Compalphas forming the Merons</strong>. Compalphas are immaterial toroidal geometric fields; no material particles, photons or waves are exchanged, and no external vacuum pressure is required by this proposed mechanism.</p>
       <p><strong>Concordant CI rotation produces attraction; discordant rotation produces repulsion.</strong> In this interpretation, the strong interaction and gravity are manifestations of the same IG: their difference lies in the distance between Compalphas, already at the Meronic level. Casimir attraction is interpreted as gravity at small separations through the Exomolecular Circles (ExC).</p>
       <h3>What the Body Editor shows</h3>
-      <p><span class="be-blue">Blue: MC at the Construction scale.</span> <span class="be-red">Red: ExC with variable dimensions, passing through the center of the nearest Metalpha in the other body.</span> Distances used in the interaction readout are measured between Alpha Points (PA), not between body surfaces.</p>
+      <p><span class="be-blue">Navy blue: MC at the Construction scale.</span> <span class="be-red">Red: ExC with variable dimensions, passing through the center of the nearest Metalpha in the other body.</span> Distances used in the interaction readout are measured between Alpha Points (PA), not between body surfaces.</p>
       <p>The MM accepts the experimental measurements and proposes a different underlying mechanism. Here the force readout uses the normalized pair rule |F| / F₀ = (1 Md / d)², summed over PA pairs. It is a didactic MM visualization, not an experimentally calibrated Casimir force in newtons.</p>
       <p class="be-source">Reference for the alternative quantum formulation: <a href="https://doi.org/10.1103/PhysRevD.72.021301" target="_blank" rel="noopener noreferrer">R. L. Jaffe, 2005</a>.</p>
     </div>`;
@@ -8069,11 +8069,11 @@ const bodyEditor = (() => {
   explanation.addEventListener('pointerleave',()=>{if(matchMedia('(hover:hover)').matches&&theoryPin.getAttribute('aria-pressed')!=='true')collapseTheory(true);});
   const $=id=>document.getElementById('be-'+id), num=id=>Number($(id).value);
   const button=document.createElement('button');button.type='button';button.className='builder-mode-button';button.dataset.builderMode='body-editor';button.setAttribute('aria-pressed','false');button.innerHTML='<span>Body</span><span>Editor</span>';button.addEventListener('click',()=>enter());document.querySelector('.builder-mode-switch').appendChild(button);
-  const blueMaterial=new THREE.LineBasicMaterial({color:0x5aafff,transparent:true,opacity:.20,blending:THREE.AdditiveBlending,depthWrite:false,depthTest:true});
+  const blueMaterial=new THREE.LineBasicMaterial({color:0x123b80,transparent:true,opacity:.80,blending:THREE.NormalBlending,depthWrite:false,depthTest:true});
   const excMaterial=new THREE.LineBasicMaterial({color:0xff3030,transparent:true,opacity:.08,blending:THREE.AdditiveBlending,depthWrite:false,depthTest:true});
-  const pointMaterial=new THREE.MeshBasicMaterial({color:0x5aafff,transparent:true,opacity:.7,depthWrite:false});
+  const pointMaterial=new THREE.MeshBasicMaterial({color:0x123b80,transparent:true,opacity:.4,depthWrite:false});
   const unitCI=(()=>{const pts=[];for(let i=0;i<18;i++){const u=i*Math.PI*2/18;let prev=null;for(let j=0;j<=24;j++){const v=j*Math.PI*2/24;const r=1+Math.cos(v);const p=new THREE.Vector3(r*Math.cos(u),r*Math.sin(u),Math.sin(v));if(prev)pts.push(prev,p);prev=p;}}return new THREE.BufferGeometry().setFromPoints(pts);})();
-  const faceBlueMaterial=new THREE.MeshBasicMaterial({color:0x5aafff,transparent:true,opacity:.20,side:THREE.DoubleSide,depthWrite:false});
+  const faceBlueMaterial=new THREE.MeshBasicMaterial({color:0x123b80,transparent:true,opacity:.04,side:THREE.DoubleSide,depthWrite:false});
   const mats=[blueMaterial,excMaterial,pointMaterial,faceBlueMaterial];
   // Grid stays fixed in world XZ, with one small square per Md.
   const grid=new THREE.GridHelper(200,200,0x5a91bc,0x233c55);grid.name='BodyEditor_Grid_XZ_1Md';grid.material.transparent=true;grid.material.opacity=.5;root.add(grid);
@@ -8174,7 +8174,7 @@ const bodyEditor = (() => {
   $('apply').onclick=()=>safe(()=>{if(!selected)return;const p=['x','y','zpos'].map(num),r=['rx','ry','rz'].map(num);if([...p,...r].some(v=>!Number.isFinite(v)))throw new Error('Enter finite coordinates and angles.');selected.group.position.fromArray(p);selected.group.rotation.set(...r.map(THREE.MathUtils.degToRad));sync();});
   $('move-meron').onclick=()=>safe(()=>{const m=selected?.merons[selectedMeron];if(!m)return;const p=new THREE.Vector3(num('mx'),num('my'),num('mz'));if(!inside(selected,p))throw new Error('The Metalpha must remain inside its body.');m.position.copy(p);update();});
   $('delete').onclick=()=>{if(!selected)return;root.remove(selected.group);clearOwned(selected.group);bodies.splice(bodies.indexOf(selected),1);selected=null;if(bodies.length)select(bodies[0]);else{list();update();}};
-  $('ci-opacity').oninput=()=>{blueMaterial.opacity=num('ci-opacity');excMaterial.opacity=num('ci-opacity');faceBlueMaterial.opacity=num('ci-opacity');pointMaterial.opacity=num('ci-opacity');};$('grid').onchange=()=>{grid.visible=$('grid').checked;axes.visible=$('grid').checked;};
+  $('ci-opacity').oninput=()=>{blueMaterial.opacity=num('ci-opacity');excMaterial.opacity=num('ci-opacity');faceBlueMaterial.opacity=num('ci-opacity')*.05;pointMaterial.opacity=num('ci-opacity')*.5;};$('grid').onchange=()=>{grid.visible=$('grid').checked;axes.visible=$('grid').checked;};
   $('sign').onchange=update;$('exc').onchange=update;$('opacity').oninput=()=>bodies.forEach(b=>b.shell.material.opacity=num('opacity'));
   $('gap-apply').onclick=()=>safe(()=>{if(bodies.length!==2||bodies.some(b=>!['plate','box'].includes(b.shape)||b.group.rotation.x||b.group.rotation.y||b.group.rotation.z))throw new Error('Gap preset requires two unrotated plates / boxes.');const gap=num('gap');if(!Number.isFinite(gap)||gap<0)throw new Error('Gap must be nonnegative.');bodies[1].group.position.copy(bodies[0].group.position).add(new THREE.Vector3(0,0,(bodies[0].dims[2]+bodies[1].dims[2])/2+gap));sync();});
   function setRay(e){const rect=renderer.domElement.getBoundingClientRect();pointer.set((e.clientX-rect.left)/rect.width*2-1,-(e.clientY-rect.top)/rect.height*2+1);raycaster.setFromCamera(pointer,camera);}
