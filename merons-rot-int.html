@@ -8077,6 +8077,7 @@ const bodyEditor = (() => {
   explanation.addEventListener('pointerenter',()=>{if(matchMedia('(hover:hover)').matches)collapseTheory(false);});
   explanation.addEventListener('pointerleave',()=>{if(matchMedia('(hover:hover)').matches&&theoryPin.getAttribute('aria-pressed')!=='true')collapseTheory(true);});
   const $=id=>document.getElementById('be-'+id), num=id=>Number($(id).value);
+  $('count').max='12';
   const button=document.createElement('button');button.type='button';button.className='builder-mode-button';button.dataset.builderMode='body-editor';button.setAttribute('aria-pressed','false');button.innerHTML='<span>Body</span><span>Editor</span>';button.addEventListener('click',()=>enter());document.querySelector('.builder-mode-switch').appendChild(button);
   const blueMaterial=new THREE.LineBasicMaterial({color:0x123b80,transparent:true,opacity:.80,blending:THREE.NormalBlending,depthWrite:false,depthTest:true});
   const excMaterial=new THREE.LineBasicMaterial({color:0xff3030,transparent:true,opacity:.08,blending:THREE.NormalBlending,depthWrite:false,depthTest:true});
@@ -8088,7 +8089,8 @@ const bodyEditor = (() => {
   meridianResolution=previousResolution;
 
   const faceBlueMaterial=new THREE.MeshBasicMaterial({color:0x123b80,transparent:true,opacity:.04,side:THREE.DoubleSide,depthWrite:false});
-  const mats=[blueMaterial,excMaterial,pointMaterial,faceBlueMaterial];
+  const cuboMaterial=new THREE.LineBasicMaterial({color:0xffffff,transparent:true,opacity:.65,blending:THREE.NormalBlending,depthWrite:false});
+  const mats=[blueMaterial,excMaterial,pointMaterial,faceBlueMaterial,cuboMaterial];
   // Grid stays fixed in world XZ, with one small square per Md.
   const grid=new THREE.GridHelper(200,200,0x5a91bc,0x233c55);grid.name='BodyEditor_Grid_XZ_1Md';grid.material.transparent=true;grid.material.opacity=.5;root.add(grid);
   const axes=new THREE.AxesHelper(8);root.add(axes);
@@ -8109,6 +8111,8 @@ const bodyEditor = (() => {
     gizmo.scale.setScalar(Math.max(.25,scale));gizmo.updateMatrixWorld(true);
   }
   const vertices=rawVertices.map(v=>new THREE.Vector3(...v).normalize());
+  // Share one 24-edge geometry across all Body Editor Metalphas.
+  const cuboGeometry=(()=>{const points=[],seen=new Set();cuboFaces.forEach(face=>{face.indices.forEach((i,k)=>{const j=face.indices[(k+1)%face.indices.length],key=[i,j].sort((a,b)=>a-b).join(':');if(!seen.has(key)){seen.add(key);points.push(vertices[i],vertices[j]);}});});return new THREE.BufferGeometry().setFromPoints(points);})();
   const quats=vertices.map(()=>new THREE.Quaternion());
   triades.forEach(t=>{const c=t.indices.reduce((a,i)=>a.add(vertices[i]),new THREE.Vector3()).divideScalar(3);t.indices.forEach(i=>quats[i].setFromUnitVectors(new THREE.Vector3(0,0,1),new THREE.Vector3().crossVectors(c.clone().normalize(),vertices[i].clone().sub(c).normalize()).normalize()));});
   function metalpha(){
@@ -8118,11 +8122,11 @@ const bodyEditor = (() => {
       const axis=new THREE.Line(resources.axisGeometry,blueMaterial);axis.scale.setScalar(.25);ca.add(axis);
       const ci=new THREE.LineSegments(unitCI,blueMaterial);ci.scale.setScalar(IC_GEOMETRY_RADII[1]);ci.name='Metalpha_MC';ca.add(ci);g.userData.cis.push(ci);
     });
-    // Same cuboctahedron faces as Construction, in the common blue palette.
-    const faceVertices=[];cuboFaces.forEach(f=>{const indices=f.indices;const triangles=indices.length===4?[[0,1,2],[0,2,3]]:[[0,1,2]];triangles.forEach(t=>t.forEach(k=>faceVertices.push(vertices[indices[k]].clone())));});
-    return g; // Wire geometry only: no translucent face fill over the MC.
+    const cubo=new THREE.LineSegments(cuboGeometry,cuboMaterial);cubo.name='Metalpha_Cuboctahedron';g.add(cubo);
+    return g;
   }
-  function clearOwned(group){const geometries=new Set(),materials=new Set();group.traverse(o=>{if(o.geometry && o.geometry!==unitCI && !Array.from(meridianGeometryCache.values()).includes(o.geometry) && !Object.values(getSharedCompalphaResources()).includes(o.geometry))geometries.add(o.geometry);if(o.material&&!mats.includes(o.material)&&!Object.values(getSharedCompalphaResources()).includes(o.material))materials.add(o.material);});geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());group.clear();}
+
+  function clearOwned(group){const geometries=new Set(),materials=new Set();group.traverse(o=>{if(o.geometry && o.geometry!==unitCI && o.geometry!==cuboGeometry && !Array.from(meridianGeometryCache.values()).includes(o.geometry) && !Object.values(getSharedCompalphaResources()).includes(o.geometry))geometries.add(o.geometry);if(o.material&&!mats.includes(o.material)&&!Object.values(getSharedCompalphaResources()).includes(o.material))materials.add(o.material);});geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());group.clear();}
   function inside(b,p){const [w,h,z]=b.dims;if(b.shape==='sphere')return p.length()<=w/2-1.75;if(b.shape==='cone'){const radius=(w/2)*(h/2-p.y)/h;return Math.hypot(p.x,p.z)+1.75<=radius&&Math.abs(p.y)<=h/2-1.75;}return Math.abs(p.x)<=w/2-1.75&&Math.abs(p.y)<=h/2-1.75&&Math.abs(p.z)<=z/2-1.75;}
   function distribute(b){
     const [w,h,z]=b.dims;
@@ -8189,7 +8193,7 @@ const bodyEditor = (() => {
   function safe(fn){try{fn();}catch(e){$('status').textContent=e.message;}}
   $('add').onclick=()=>safe(()=>{add($('shape').value,[num('w'),num('h'),num('z')],Math.round(num('count')),new THREE.Vector3(bodies.length*15,0,0));fit();});
   $('body').onchange=()=>select(bodies.find(b=>b.id===num('body')));$('fit').onclick=fit;$('meron').onchange=()=>{selectedMeron=num('meron');syncMeron();};
-  function validate(dims,count){if(dims.some(d=>!Number.isFinite(d)||d<.1||d>500)||!Number.isInteger(count)||count<1||count>48)throw new Error('Dimensions: 0.1–500 Md. Metalphas per body: 1–48.');}
+  function validate(dims,count){if(dims.some(d=>!Number.isFinite(d)||d<.1||d>500)||!Number.isInteger(count)||count<1||count>12)throw new Error('Dimensions: 0.1–500 Md. Metalphas per body: 1–12.');}
   $('rebuild').onclick=()=>safe(()=>{if(!selected)return;const dims=[num('w'),num('h'),num('z')],count=num('count');validate(dims,count);const proposed={...selected,shape:$('shape').value,dims,count};const positions=distribute(proposed);Object.assign(selected,{shape:proposed.shape,dims,count});rebuild(selected,positions);const box=new THREE.Box3().setFromObject(selected.shell);selected.group.position.y-=box.min.y;selectedMeron=-1;sync();});
   $('apply').onclick=()=>safe(()=>{if(!selected)return;const p=['x','y','zpos'].map(num),r=['rx','ry','rz'].map(num);if([...p,...r].some(v=>!Number.isFinite(v)))throw new Error('Enter finite coordinates and angles.');selected.group.position.fromArray(p);selected.group.rotation.set(...r.map(THREE.MathUtils.degToRad));sync();});
   $('move-meron').onclick=()=>safe(()=>{const m=selected?.merons[selectedMeron];if(!m)return;const p=new THREE.Vector3(num('mx'),num('my'),num('mz'));if(!inside(selected,p))throw new Error('The Metalpha must remain inside its body.');m.position.copy(p);update();});
