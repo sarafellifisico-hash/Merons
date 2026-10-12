@@ -8088,7 +8088,7 @@ const bodyEditor = (() => {
   const unitCI=getMeridianGeometry(18,1,{r:1});
   meridianResolution=previousResolution;
 
-  const faceBlueMaterial=new THREE.MeshBasicMaterial({color:0x123b80,transparent:true,opacity:.04,side:THREE.DoubleSide,depthWrite:false});
+  const faceBlueMaterial=new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.12,side:THREE.DoubleSide,blending:THREE.NormalBlending,depthWrite:false});
   const cuboMaterial=new THREE.LineBasicMaterial({color:0xffffff,transparent:true,opacity:.65,blending:THREE.NormalBlending,depthWrite:false});
   const mats=[blueMaterial,excMaterial,pointMaterial,faceBlueMaterial,cuboMaterial];
   // Grid stays fixed in world XZ, with one small square per Md.
@@ -8113,6 +8113,7 @@ const bodyEditor = (() => {
   const vertices=rawVertices.map(v=>new THREE.Vector3(...v).normalize());
   // Share one 24-edge geometry across all Body Editor Metalphas.
   const cuboGeometry=(()=>{const points=[],seen=new Set();cuboFaces.forEach(face=>{face.indices.forEach((i,k)=>{const j=face.indices[(k+1)%face.indices.length],key=[i,j].sort((a,b)=>a-b).join(':');if(!seen.has(key)){seen.add(key);points.push(vertices[i],vertices[j]);}});});return new THREE.BufferGeometry().setFromPoints(points);})();
+  const cuboFaceGeometry=(()=>{const points=[];cuboFaces.forEach(face=>{const ids=face.indices;const triangles=ids.length===4?[[0,1,2],[0,2,3]]:[[0,1,2]];triangles.forEach(triangle=>triangle.forEach(k=>points.push(vertices[ids[k]])));});return new THREE.BufferGeometry().setFromPoints(points);})();
   const quats=vertices.map(()=>new THREE.Quaternion());
   triades.forEach(t=>{const c=t.indices.reduce((a,i)=>a.add(vertices[i]),new THREE.Vector3()).divideScalar(3);t.indices.forEach(i=>quats[i].setFromUnitVectors(new THREE.Vector3(0,0,1),new THREE.Vector3().crossVectors(c.clone().normalize(),vertices[i].clone().sub(c).normalize()).normalize()));});
   function metalpha(){
@@ -8122,11 +8123,12 @@ const bodyEditor = (() => {
       const axis=new THREE.Line(resources.axisGeometry,blueMaterial);axis.scale.setScalar(.25);ca.add(axis);
       const ci=new THREE.LineSegments(unitCI,blueMaterial);ci.scale.setScalar(IC_GEOMETRY_RADII[1]);ci.name='Metalpha_MC';ca.add(ci);g.userData.cis.push(ci);
     });
+    const faces=new THREE.Mesh(cuboFaceGeometry,faceBlueMaterial);faces.name='Metalpha_CuboctahedronFaces';g.add(faces);
     const cubo=new THREE.LineSegments(cuboGeometry,cuboMaterial);cubo.name='Metalpha_Cuboctahedron';g.add(cubo);
     return g;
   }
 
-  function clearOwned(group){const geometries=new Set(),materials=new Set();group.traverse(o=>{if(o.geometry && o.geometry!==unitCI && o.geometry!==cuboGeometry && !Array.from(meridianGeometryCache.values()).includes(o.geometry) && !Object.values(getSharedCompalphaResources()).includes(o.geometry))geometries.add(o.geometry);if(o.material&&!mats.includes(o.material)&&!Object.values(getSharedCompalphaResources()).includes(o.material))materials.add(o.material);});geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());group.clear();}
+  function clearOwned(group){const geometries=new Set(),materials=new Set();group.traverse(o=>{if(o.geometry && o.geometry!==unitCI && o.geometry!==cuboGeometry && o.geometry!==cuboFaceGeometry && !Array.from(meridianGeometryCache.values()).includes(o.geometry) && !Object.values(getSharedCompalphaResources()).includes(o.geometry))geometries.add(o.geometry);if(o.material&&!mats.includes(o.material)&&!Object.values(getSharedCompalphaResources()).includes(o.material))materials.add(o.material);});geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());group.clear();}
   function inside(b,p){const [w,h,z]=b.dims;if(b.shape==='sphere')return p.length()<=w/2-1.75;if(b.shape==='cone'){const radius=(w/2)*(h/2-p.y)/h;return Math.hypot(p.x,p.z)+1.75<=radius&&Math.abs(p.y)<=h/2-1.75;}return Math.abs(p.x)<=w/2-1.75&&Math.abs(p.y)<=h/2-1.75&&Math.abs(p.z)<=z/2-1.75;}
   function distribute(b){
     const [w,h,z]=b.dims;
