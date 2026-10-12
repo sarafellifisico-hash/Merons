@@ -8030,7 +8030,7 @@ const bodyEditor = (() => {
     <p>Body dimensions and coordinates in Md · Metalpha display scale 50% · hexagon spacing 12 Md</p>
     <div class="be-row"><select id="be-shape"><option value="plate">Plate</option><option value="box">Box / cube</option><option value="sphere">Sphere</option><option value="cone">Cone</option></select><button id="be-add">Add body</button></div>
     <div class="be-row"><select id="be-body" aria-label="Selected body"></select><button id="be-delete">Delete</button><button id="be-fit">Frame bodies</button></div>
-    <div class="be-grid">${field('w','Width/Diameter',48,'0.1',0.1)}${field('h','Height',48,'0.1',0.1)}${field('z','Depth / thickness',4,'0.1',0.1)}${field('count','Metalphas',6,'1',1)}</div>
+    <div class="be-grid">${field('w','Width/Diameter',48,'0.1',0.1)}${field('h','Height',48,'0.1',0.1)}${field('z','Depth/Thickness',4,'0.1',0.1)}${field('count','Metalphas',6,'1',1)}</div>
     <button id="be-rebuild">Apply dimensions / distribute</button>
     <h3>Body position / rotation</h3><div class="be-grid">${['x','y','zpos'].map((k,i)=>field(k,['X','Y','Z'][i],0)).join('')}${['rx','ry','rz'].map((k,i)=>field(k,['X°','Y°','Z°'][i],0,'1')).join('')}</div>
     <div class="be-row"><span>Move with X / Y / Z arrows</span><button id="be-apply">Apply transform</button></div>
