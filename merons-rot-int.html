@@ -5970,7 +5970,7 @@ function setupMetalphaControls() {
       selectMetalpha();
       metalphaTriadVisible[triadIndex] = !metalphaTriadVisible[triadIndex];
       button.classList.toggle('off', !metalphaTriadVisible[triadIndex]);
-      button.textContent = `${metalphaTriadVisible[triadIndex] ? 'Hide' : 'Show'} Tα ${triadIndex + 1}`;
+      button.textContent = `${metalphaTriadVisible[triadIndex] ? 'Hide' : 'Show'} AT ${triadIndex + 1}`;
       button.setAttribute('aria-pressed', String(metalphaTriadVisible[triadIndex]));
       applyMetalphaVisibility();
       applyRIState();
@@ -7312,7 +7312,7 @@ function syncMetalphaScriptUi() {
     const index = Number(button.dataset.triad);
     const visible = metalphaTriadVisible[index] !== false;
     button.classList.toggle('off', !visible);
-    button.textContent = `${visible ? 'Hide' : 'Show'} Tα ${index + 1}`;
+    button.textContent = `${visible ? 'Hide' : 'Show'} AT ${index + 1}`;
     button.setAttribute('aria-pressed', String(visible));
   });
   const separateButton = document.getElementById('separateTriadsBtn');
