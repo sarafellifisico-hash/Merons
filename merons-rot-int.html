@@ -864,7 +864,7 @@ body.pair-mode.magnet-gravity-active #panel:not(.minimized) { top:16px!important
 </style>
 <link rel="stylesheet" href="mobile-controls.css?v=single-outline-20261001">
 <style>#panel .panel-tabs[hidden]{display:none!important}</style>
-</head>
+<style>#panel-forces .control-card[hidden]{display:none!important}</style></head>
 <body data-tuidg-simulator="builder">
 <div id="canvas-wrap"></div>
 <div id="triadDistanceLabel" aria-label="Rotating Interaction distance">
@@ -922,7 +922,6 @@ body.pair-mode.magnet-gravity-active #panel:not(.minimized) { top:16px!important
 
   <div class="builder-mode-switch" role="group" aria-label="Meronic Builder mode">
     <button type="button" class="builder-mode-button active" data-builder-mode="build" aria-label="Meronic Builder" aria-pressed="true"><span>Meronic</span><span>Builder</span></button>
-    <button type="button" class="builder-mode-button" data-builder-mode="forces" aria-label="Meronic Forces" aria-pressed="false"><span>Meronic</span><span>Forces</span></button>
     <button type="button" class="builder-mode-button" data-builder-mode="magnet-gravity" aria-label="Magnetism Gravity" aria-pressed="false"><span>Magnetism</span><span>Gravity</span></button>
   </div>
   <nav class="panel-tabs" role="tablist" aria-label="Control categories">
@@ -983,7 +982,7 @@ body.pair-mode.magnet-gravity-active #panel:not(.minimized) { top:16px!important
 
     <section id="panel-forces" class="panel-pane" role="tabpanel" data-panel-pane="forces" hidden>
       <div class="control-card">
-        <div class="sec-title">Alpha Triads - The Metalpha Blocks</div>
+        <div class="sec-title">One Metalpha · Four Alpha Triads</div>
         <div class="force-triad-grid">
           <button type="button" class="force-action triad-toggle" data-triad="0" aria-pressed="true">Hide AT 1</button>
           <button type="button" class="force-action triad-toggle" data-triad="1" aria-pressed="true">Hide AT 2</button>
@@ -993,11 +992,11 @@ body.pair-mode.magnet-gravity-active #panel:not(.minimized) { top:16px!important
         <div class="force-action-grid">
           <button type="button" id="separateTriadsBtn" class="force-action">Separate AT to Exd</button>
           <button type="button" id="runRIBtn" class="force-action">Run Rotating Interaction</button>
-          <button type="button" id="toggleFiveMetalphasBtn" class="force-action">Hide Metalpha Structures</button>
+          <button type="button" id="toggleATStructures" class="force-action">Hide AT</button>
         </div>
       </div>
       <div class="control-card">
-        <div class="sec-title">Intensities of the Rotating Interaction</div>
+        <div class="sec-title">Four surrounding Metalphas · Interaction distances</div><button type="button" id="toggleFiveMetalphasBtn" class="force-action">Hide Metalpha Structures</button>
         <div class="pair-presets" aria-label="Four-Alpha-Triad interaction scales">
           <button type="button" class="pair-preset" data-pair-mode="meronic" aria-pressed="false">Meronic Distance<small>Meronic-Intrameronic (Strong Force)</small></button>
           <button type="button" class="pair-preset" data-pair-mode="molecular" aria-pressed="false">Molecular Distance<small>Molecular-Intramolecular (Electrostatic/Electromagnetic Forces)</small></button>
@@ -5673,13 +5672,13 @@ function applyMetalphaVisibility() {
   if (!metalpha) return;
 
   metalpha.userData.localComps.forEach((comp, compIndex) => {
-    comp.visible = metalphaTriadVisible[COMP_TO_TRIAD.get(compIndex)];
+    comp.visible = atStructuresVisible && metalphaTriadVisible[COMP_TO_TRIAD.get(compIndex)];
   });
 
   const showEdges = document.getElementById('showEdges').checked;
   edgeLines.forEach(({ line, a, b, comps }) => {
     if (comps !== metalpha.userData.localComps) return;
-    line.visible = showEdges &&
+    line.visible = atStructuresVisible && showEdges &&
       metalphaTriadVisible[COMP_TO_TRIAD.get(a)] &&
       metalphaTriadVisible[COMP_TO_TRIAD.get(b)];
   });
@@ -5687,12 +5686,12 @@ function applyMetalphaVisibility() {
   const showTriadFaces = document.getElementById('showTriades').checked;
   triadeLines.forEach(({ line, comps }) => {
     if (comps !== metalpha.userData.localComps) return;
-    line.visible = showTriadFaces && metalphaTriadVisible[line.userData.triadIndex];
+    line.visible = atStructuresVisible && showTriadFaces && metalphaTriadVisible[line.userData.triadIndex];
   });
 
   const showFaces = document.getElementById('showFaces').checked;
   metalpha.userData.faceGroup.children.forEach(mesh => {
-    mesh.visible = showFaces && mesh.userData.faceIndices.every(
+    mesh.visible = atStructuresVisible && showFaces && mesh.userData.faceIndices.every(
       compIndex => metalphaTriadVisible[COMP_TO_TRIAD.get(compIndex)]
     );
   });
@@ -5960,7 +5959,21 @@ function selectMetalpha() {
   if (comparisonMode) rebuildComparisonWorkspace();
 }
 
+let atStructuresVisible=true;
 function setupMetalphaControls() {
+  const forces=document.getElementById('panel-forces'),cards=forces.querySelectorAll(':scope > .control-card');
+  const switcher=document.createElement('div');switcher.className='force-action-grid';switcher.innerHTML='<button id="forceATMode" type="button" class="force-action" aria-pressed="true">Metalpha · 4 AT</button><button id="forceMeronMode" type="button" class="force-action" aria-pressed="false">4 Metalphas · Md / Mod / Exd</button>';forces.prepend(switcher);
+  function setForcePresentation(multi){
+    cards[0].hidden=multi;cards[1].hidden=!multi;
+    document.getElementById('forceATMode').setAttribute('aria-pressed',String(!multi));document.getElementById('forceMeronMode').setAttribute('aria-pressed',String(multi));
+    if(multi)activateFiveMeronRIDistance('md',true);
+    else{selectMetalpha();riRunning=true;applyRIState();applyMetalphaVisibility();fitCameraToCurrentStructure();}
+  }
+  document.getElementById('forceATMode').onclick=()=>setForcePresentation(false);
+  document.getElementById('forceMeronMode').onclick=()=>setForcePresentation(true);
+  cards[1].hidden=true;
+  document.getElementById('toggleATStructures').onclick=()=>{atStructuresVisible=!atStructuresVisible;document.getElementById('toggleATStructures').textContent=atStructuresVisible?'Hide AT':'Show AT';applyMetalphaVisibility();};
+
   document.querySelectorAll('.triad-toggle').forEach(button => {
     const triadIndex = Number(button.dataset.triad);
     button.addEventListener('click', event => {
@@ -5978,7 +5991,7 @@ function setupMetalphaControls() {
   document.getElementById('separateTriadsBtn').addEventListener('click', event => {
     event.stopPropagation();
     selectMetalpha();
-    animateTriadSeparation(!triadsSeparated);
+    riRunning=true;applyRIState();animateTriadSeparation(!triadsSeparated);
   });
 
   document.getElementById('runRIBtn').addEventListener('click', event => {
@@ -8035,7 +8048,7 @@ const bodyEditor = (() => {
     <div class="be-row">${field('gap','Initial plates: face gap',44,'0.1',0)}<button id="be-gap-apply">Set gap</button></div>
     <output id="be-status" aria-live="polite"></output><div class="be-row"><button id="be-save">Save scene</button><button id="be-load">Load scene</button><input id="be-file" type="file" accept="application/json,.json" hidden></div>`;
   panelBody.appendChild(panel); panelPanes.push(panel);
-  const style=document.createElement('style');style.textContent=`#bodyEditorPanel{color:#dfebff;font:12px system-ui}#bodyEditorPanel[hidden]{display:none}#bodyEditorPanel h2{font-size:16px;display:flex;justify-content:space-between}#bodyEditorPanel h3{margin:12px 0 6px;font-size:12px;color:#91c9ed}#bodyEditorPanel p{font-size:11px;color:#a8bad0}#bodyEditorPanel button,#bodyEditorPanel select,#bodyEditorPanel input[type=number]{background:#1b2c43;color:#eaf3ff;border:1px solid #526782;border-radius:7px;padding:6px;min-width:0}#bodyEditorPanel button{cursor:pointer}#bodyEditorPanel label{display:flex;flex-direction:column;gap:3px}#bodyEditorPanel .be-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:6px 0}#bodyEditorPanel .be-grid input{width:100%;box-sizing:border-box}#bodyEditorPanel .be-row{display:flex;gap:6px;align-items:center;margin:7px 0;flex-wrap:wrap}#bodyEditorPanel .be-row select{flex:1;max-width:180px}#be-status{display:block;white-space:pre-line;padding:9px;background:#101a2c;border-radius:8px}.builder-mode-switch{grid-template-columns:repeat(4,minmax(0,1fr))!important}`;document.head.appendChild(style);
+  const style=document.createElement('style');style.textContent=`#bodyEditorPanel{color:#dfebff;font:12px system-ui}#bodyEditorPanel[hidden]{display:none}#bodyEditorPanel h2{font-size:16px;display:flex;justify-content:space-between}#bodyEditorPanel h3{margin:12px 0 6px;font-size:12px;color:#91c9ed}#bodyEditorPanel p{font-size:11px;color:#a8bad0}#bodyEditorPanel button,#bodyEditorPanel select,#bodyEditorPanel input[type=number]{background:#1b2c43;color:#eaf3ff;border:1px solid #526782;border-radius:7px;padding:6px;min-width:0}#bodyEditorPanel button{cursor:pointer}#bodyEditorPanel label{display:flex;flex-direction:column;gap:3px}#bodyEditorPanel .be-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:6px 0}#bodyEditorPanel .be-grid input{width:100%;box-sizing:border-box}#bodyEditorPanel .be-row{display:flex;gap:6px;align-items:center;margin:7px 0;flex-wrap:wrap}#bodyEditorPanel .be-row select{flex:1;max-width:180px}#be-status{display:block;white-space:pre-line;padding:9px;background:#101a2c;border-radius:8px}.builder-mode-switch{grid-template-columns:repeat(3,minmax(0,1fr))!important}`;document.head.appendChild(style);
   // Right-hand explanation follows the translucent, collapsible RI panel.
   const explanation=document.createElement('aside');explanation.id='be-theory';explanation.hidden=true;explanation.setAttribute('aria-label','Casimir effect: Quantum Theory and Meronic Model');
   explanation.innerHTML=`<header><strong>Casimir effect · TQ / MM</strong><button id="be-theory-pin" type="button" aria-pressed="false">Pin</button><button id="be-theory-toggle" type="button" aria-expanded="true" aria-controls="be-theory-content" aria-label="Minimize explanation">−</button></header>
