@@ -991,7 +991,6 @@ body.pair-mode.magnet-gravity-active #panel:not(.minimized) { top:16px!important
         </div>
         <div class="force-action-grid">
           <button type="button" id="separateTriadsBtn" class="force-action">Separate AT to Exd</button>
-          <button type="button" id="runRIBtn" class="force-action">Run Rotating Interaction</button>
           <button type="button" id="toggleATStructures" class="force-action">Hide AT</button>
         </div>
       </div>
@@ -3205,6 +3204,7 @@ let meridianResolution = 48; // New variable for meridian resolution
 // polarity removed
 let meronParent = [], meronParentTri = [];
 let rotateSpeed = 0.0015;
+let forceATPresentation=false;
 let metalphaTriadVisible = [true, true, true, true];
 let triadsSeparated = false;
 let triadSeparationAmount = 0;
@@ -3334,7 +3334,7 @@ function syncForceControls(force = false) {
     button.classList.toggle('off', !visible);
     button.setAttribute('aria-pressed', String(visible));
   });
-  ['separateTriadsBtn', 'runRIBtn', 'toggleFiveMetalphasBtn'].forEach(command => {
+  ['separateTriadsBtn', 'toggleFiveMetalphasBtn'].forEach(command => {
     const button = document.getElementById(command);
     const labels = {
       separateTriadsBtn: triadsSeparated ? 'Join AT to Md' : 'Separate AT to Exd',
@@ -5743,7 +5743,7 @@ function applyRIState() {
   metalpha.userData.localComps.forEach(comp => {
     comp.userData.layerGroups.forEach((layerGroup, layerIndex) => {
       const checkbox = document.querySelector(`.layer-toggle[data-layer="${layerIndex}"]`);
-      layerGroup.visible = !riRunning && (checkbox?.checked ?? true);
+      layerGroup.visible = (!riRunning || forceATPresentation) && (checkbox?.checked ?? true);
     });
   });
   if (metalpha.userData.interactionGroup) {
@@ -5962,12 +5962,13 @@ function selectMetalpha() {
 let atStructuresVisible=true;
 function setupMetalphaControls() {
   const forces=document.getElementById('panel-forces'),cards=forces.querySelectorAll(':scope > .control-card');
-  const switcher=document.createElement('div');switcher.className='force-action-grid';switcher.innerHTML='<button id="forceATMode" type="button" class="force-action" aria-pressed="true">Metalpha · 4 AT</button><button id="forceMeronMode" type="button" class="force-action" aria-pressed="false">4 Metalphas · Md / Mod / Exd</button>';forces.prepend(switcher);
+  const switcher=document.createElement('div');switcher.className='force-action-grid';switcher.style.marginBottom='12px';switcher.innerHTML='<button id="forceATMode" type="button" class="force-action" aria-pressed="true">Metalpha · 4 AT</button><button id="forceMeronMode" type="button" class="force-action" aria-pressed="false">4 Metalphas · Md / Mod / Exd</button>';forces.prepend(switcher);
   function setForcePresentation(multi){
+    forceATPresentation=!multi;
     cards[0].hidden=multi;cards[1].hidden=!multi;
     document.getElementById('forceATMode').setAttribute('aria-pressed',String(!multi));document.getElementById('forceMeronMode').setAttribute('aria-pressed',String(multi));
     if(multi)activateFiveMeronRIDistance('md',true);
-    else{selectMetalpha();riRunning=true;applyRIState();applyMetalphaVisibility();fitCameraToCurrentStructure();}
+    else{selectMetalpha();atStructuresVisible=true;metalphaTriadVisible=[true,true,true,true];document.getElementById('toggleATStructures').textContent='Hide AT';document.querySelectorAll('.layer-toggle').forEach(cb=>cb.checked=true);updateLayerVisibility();riRunning=true;applyRIState();applyMetalphaVisibility();syncMetalphaScriptUi();fitCameraToCurrentStructure();}
   }
   document.getElementById('forceATMode').onclick=()=>setForcePresentation(false);
   document.getElementById('forceMeronMode').onclick=()=>setForcePresentation(true);
@@ -5991,14 +5992,7 @@ function setupMetalphaControls() {
   document.getElementById('separateTriadsBtn').addEventListener('click', event => {
     event.stopPropagation();
     selectMetalpha();
-    riRunning=true;applyRIState();animateTriadSeparation(!triadsSeparated);
-  });
-
-  document.getElementById('runRIBtn').addEventListener('click', event => {
-    event.stopPropagation();
-    if (!fiveMeronRIDistanceMode) selectMetalpha();
-    riRunning = !riRunning;
-    applyRIState();
+    forceATPresentation=true;atStructuresVisible=true;metalphaTriadVisible=[true,true,true,true];document.getElementById('toggleATStructures').textContent='Hide AT';applyMetalphaVisibility();riRunning=true;applyRIState();animateTriadSeparation(!triadsSeparated);
   });
 
   document.getElementById('toggleFiveMetalphasBtn').addEventListener('click', event => {
