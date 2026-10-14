@@ -270,7 +270,15 @@
         const baseAxis = meronAxes[idx];
         const sign = (i+idx)%2===0?1:-1;
         const axis = rotateAround(baseAxis, side, mirroredAngle(row,i)*sign);
-        const target=row.points[i+1]||row.points[i-1];if(ui.showCI.checked&&target)drawCIToPA(center,target,color,alpha,B,axis);
+        const target=row.points[i+1]||row.points[i-1];
+        if(ui.showCI.checked&&target){
+          // A bounded connection plane prevents a near-axial horn-torus singularity.
+          const delta=sub(target,center),direction=norm(delta);
+          let ciAxis=sub(axis,mul(direction,dot(axis,direction)));
+          if(length(ciAxis)<1e-6)ciAxis=sub(up,mul(direction,dot(up,direction)));
+          if(length(ciAxis)<1e-6)ciAxis=sub(side,mul(direction,dot(side,direction)));
+          drawHornTorus(center,norm(ciAxis),direction,length(delta)*.5,color,alpha*.65,.75,B,12,48);
+        }
       });
     }
     function drawCIToPA(a,b,color,opacity,B,axis=V(0,1,0)){const delta=sub(b,a),distance=length(delta);if(distance<.001)return;let rho=length(sub(delta,mul(axis,dot(delta,axis))));if(rho<.001){axis=norm(cross(norm(delta),V(0,1,0)));if(length(axis)<.001)axis=V(0,0,1);rho=distance;}const radius=distance*distance/(2*rho);drawHornTorus(a,axis,delta,radius,color,opacity*.65,.75,B,12,48);}
