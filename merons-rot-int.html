@@ -991,7 +991,7 @@ body.pair-mode.magnet-gravity-active #panel:not(.minimized) { top:16px!important
           <button type="button" class="force-action triad-toggle" data-triad="3" aria-pressed="true">Hide AT 4</button>
         </div>
         <div class="force-action-grid">
-          <button type="button" id="separateTriadsBtn" class="force-action">Separate Tα to Exd</button>
+          <button type="button" id="separateTriadsBtn" class="force-action">Separate AT to Exd</button>
           <button type="button" id="runRIBtn" class="force-action">Run Rotating Interaction</button>
           <button type="button" id="toggleFiveMetalphasBtn" class="force-action">Hide Metalpha Structures</button>
         </div>
@@ -1183,7 +1183,7 @@ body.pair-mode.magnet-gravity-active #panel:not(.minimized) { top:16px!important
             <option value="ic_full">02 · IC Completa · 6 Círculos</option>
             <option value="ig_ca">03 · IG dos Ca · Geometria</option>
             <option value="formation10">04 · Formação Mérons 1→10</option>
-            <option value="triads_deep">05 · Alpha Triads · 4 Tα</option>
+            <option value="triads_deep">05 · Alpha Triads · 4 AT</option>
             <option value="cyclic_full">06 · Cyclic IC · X/XY/XYZ</option>
             <option value="forces">07 · 3 Forças · 3 Escalas IC</option>
             <option value="isomers_cam">08 · Isômeros + Câmera</option>
@@ -3331,14 +3331,14 @@ function syncForceControls(force = false) {
   document.querySelectorAll('.triad-toggle').forEach(button => {
     const index = Number(button.dataset.triad);
     const visible = metalphaTriadVisible[index] !== false;
-    button.textContent = (visible ? 'Hide' : 'Show') + ' Tα ' + (index + 1);
+    button.textContent = (visible ? 'Hide' : 'Show') + ' AT ' + (index + 1);
     button.classList.toggle('off', !visible);
     button.setAttribute('aria-pressed', String(visible));
   });
   ['separateTriadsBtn', 'runRIBtn', 'toggleFiveMetalphasBtn'].forEach(command => {
     const button = document.getElementById(command);
     const labels = {
-      separateTriadsBtn: triadsSeparated ? 'Join Tα · Exd' : 'Separate Tα to Exd',
+      separateTriadsBtn: triadsSeparated ? 'Join AT to Md' : 'Separate AT to Exd',
       runRIBtn: riRunning ? 'Stop Rotating Interaction' : 'Run Rotating Interaction',
       toggleFiveMetalphasBtn: fiveMeronMetalphasVisible ? 'Hide Metalpha Structures' : 'Show Metalpha Structures'
     };
@@ -5762,34 +5762,32 @@ function applyRIState() {
 }
 
 function animateTriadSeparation(separate) {
-  triadsSeparated = separate;
-  const from = triadSeparationAmount;
-  const to = separate ? TRIAD_SEPARATION_DISTANCE : 0;
-  const startedAt = performance.now();
-  const distanceRatio = Math.abs(to - from) / TRIAD_SEPARATION_DISTANCE;
-  const duration = 900 + 2100 * distanceRatio;
-  const token = {};
-  triadSeparationAnimation = token;
-
-  function step(now) {
-    if (triadSeparationAnimation !== token) return;
-    const t = Math.min((now - startedAt) / duration, 1);
-    const eased = t < .5 ? 2*t*t : 1 - Math.pow(-2*t + 2, 2) / 2;
-    triadSeparationAmount = THREE.MathUtils.lerp(from, to, eased);
-    updateLocalGeometries();
-    if (t < 1) requestAnimationFrame(step);
-    else {
-      triadSeparationAnimation = null;
-      updateRIDistancePresentation();
-    }
+  stopOpeningCameraSequence();
+  if(zoomAnimationFrame){cancelAnimationFrame(zoomAnimationFrame);zoomAnimationFrame=null;}
+  triadsSeparated=separate;
+  const from=triadSeparationAmount,to=separate?TRIAD_SEPARATION_DISTANCE:0;
+  const token={};triadSeparationAnimation=token;
+  function moveCamera(pose,done){
+    const pos=camera.position.clone(),target=controls.target.clone(),start=performance.now();
+    function step(now){if(triadSeparationAnimation!==token)return;const t=Math.min((now-start)/1200,1),ease=t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
+      camera.position.lerpVectors(pos,pose.position,ease);controls.target.lerpVectors(target,pose.target,ease);controls.update();
+      if(t<1)requestAnimationFrame(step);else done();}
+    requestAnimationFrame(step);
   }
-  requestAnimationFrame(step);
-
-  const button = document.getElementById('separateTriadsBtn');
-  button.textContent = separate ? 'Join Tα · Exd' : 'Separate Tα to Exd';
-  button.classList.toggle('running', separate);
-  button.setAttribute('aria-pressed', String(separate));
-  syncForceControls();
+  function moveTriads(done){const start=performance.now(),duration=900+2100*Math.abs(to-from)/TRIAD_SEPARATION_DISTANCE;
+    function step(now){if(triadSeparationAnimation!==token)return;const t=Math.min((now-start)/duration,1),ease=t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
+      triadSeparationAmount=THREE.MathUtils.lerp(from,to,ease);updateLocalGeometries();
+      if(t<1)requestAnimationFrame(step);else done();}
+    requestAnimationFrame(step);
+  }
+  function finish(){triadSeparationAnimation=null;updateRIDistancePresentation();}
+  if(separate){
+    triadSeparationAmount=to;updateLocalGeometries();const pose=getCurrentStructureCameraPose();
+    triadSeparationAmount=from;updateLocalGeometries();
+    moveCamera(pose,()=>moveTriads(finish));
+  }else moveTriads(()=>moveCamera(getStructureCameraTarget(1),finish));
+  const button=document.getElementById('separateTriadsBtn');
+  button.textContent=separate?'Join AT to Md':'Separate AT to Exd';button.classList.toggle('running',separate);button.setAttribute('aria-pressed',String(separate));syncForceControls();
 }
 
 const FIVE_MERON_RI_DISTANCES = {
@@ -6985,20 +6983,20 @@ function createAlphaTriadsDeepScript() {
   return [
     { label: 'Alpha Triads · 4 Triads', duration: 0,
       state: createReadyStateAtPose(base, pose, 0),
-      title: 'ALPHA TRIADS · 4 Tα' },
-    { label: 'Tα1 isolada', duration: 1.2,
+      title: 'ALPHA TRIADS · 4 AT' },
+    { label: 'AT1 isolada', duration: 1.2,
       state: createReadyStateAtPose({...base, metalphaTriadVisible: [true,false,false,false]}, pose, 0.18),
-      title: 'Tα1' },
-    { label: 'Tα2 isolada', duration: 1.2,
+      title: 'AT1' },
+    { label: 'AT2 isolada', duration: 1.2,
       state: createReadyStateAtPose({...base, metalphaTriadVisible: [false,true,false,false]}, pose, 0.36),
-      title: 'Tα2' },
-    { label: '4 Tα juntas', duration: 1.0,
+      title: 'AT2' },
+    { label: '4 AT juntas', duration: 1.0,
       state: createReadyStateAtPose({...base, metalphaTriadVisible: [true,true,true,true]}, pose, 0.52),
       title: '4 TRIADS' },
-    { label: 'Separa Tα para Exd D96', duration: 2.4,
+    { label: 'Separa AT para Exd D96', duration: 2.4,
       state: createReadyStateAtPose({...base, triadsSeparated: true, triadSeparationAmount: TRIAD_SEPARATION_DISTANCE}, 
         getReadyCameraPose({center: new THREE.Vector3(), radius: 103}, 1.12), 0.82),
-      title: 'Tα → EXD D96' }
+      title: 'AT → EXD D96' }
   ];
 }
 
@@ -7106,8 +7104,8 @@ const READY_SCRIPT_PRESETS = Object.freeze({
     build: createFormation1to10Script
   }),
   triads_deep: Object.freeze({
-    title: '05 · Alpha Triads · 4 Tα',
-    description: 'Aprofunda Alpha Triads: isola Tα1-Tα4 e separa para Exomolecular D96. Função triads e RI.',
+    title: '05 · Alpha Triads · 4 AT',
+    description: 'Aprofunda Alpha Triads: isola AT1-AT4 e separa para Exomolecular D96. Função triads e RI.',
     build: createAlphaTriadsDeepScript
   }),
   cyclic_full: Object.freeze({
@@ -7316,7 +7314,7 @@ function syncMetalphaScriptUi() {
     button.setAttribute('aria-pressed', String(visible));
   });
   const separateButton = document.getElementById('separateTriadsBtn');
-  separateButton.textContent = triadsSeparated ? 'Join Tα · Exd' : 'Separate Tα to Exd';
+  separateButton.textContent = triadsSeparated ? 'Join AT to Md' : 'Separate AT to Exd';
   separateButton.classList.toggle('running', triadsSeparated);
   separateButton.setAttribute('aria-pressed', String(triadsSeparated));
   updateRIDistancePresentation();
@@ -7725,26 +7723,11 @@ function syncPairUI(){
 }
 let pairCameraAllLayers=false;
 function presentationFrame(){
-  const w=window.innerWidth,h=window.innerHeight;
-  if(pairMode){
-    // Center the pair in the full canvas, independent of either overlay panel.
-    camera.clearViewOffset();
-    return {width:Math.max(80,w-32),height:Math.max(80,h-32)};
-  }
-  const panel=document.getElementById('panel');
-  const pr=panel.getBoundingClientRect();
-  let left=16,top=16,right=w-16,bottom=h-16;
-  if(!panel.classList.contains('minimized')){
-    if(w>760)left=Math.min(pr.right+16,w*.48);
-    else top=Math.min(pr.bottom+12,h*.46);
-  }
-  const note=document.getElementById('pairNotes');
-  if(!note.hidden)bottom=Math.max(top+80,note.getBoundingClientRect().top-16);
-  const width=Math.max(80,right-left),height=Math.max(80,bottom-top);
-  // Keep OrbitControls' target at the true midpoint, but place it in the free screen area.
-  camera.setViewOffset(w,h,(w-left-right)/2,(h-top-bottom)/2,w,h);
-  return {width,height};
+  // All zooms preserve the full-canvas center, regardless of the overlay dock.
+  camera.clearViewOffset();
+  return {width:Math.max(80,window.innerWidth-32),height:Math.max(80,window.innerHeight-32)};
 }
+
 function getStructureCameraTarget(layerIndex){
   const frame=presentationFrame();
   universeGroup.updateMatrixWorld(true);
