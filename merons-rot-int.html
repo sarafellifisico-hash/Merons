@@ -5962,7 +5962,7 @@ function selectMetalpha() {
 let atStructuresVisible=true;
 function setupMetalphaControls() {
   const forces=document.getElementById('panel-forces'),cards=forces.querySelectorAll(':scope > .control-card');
-  const switcher=document.createElement('div');switcher.className='force-action-grid';switcher.style.marginBottom='12px';switcher.innerHTML='<button id="forceATMode" type="button" class="force-action" aria-pressed="true">Metalpha · 4 AT</button><button id="forceMeronMode" type="button" class="force-action" aria-pressed="false">4 Metalphas · Md / Mod / Exd</button>';forces.prepend(switcher);
+  const switcher=document.createElement('div');switcher.className='force-action-grid';switcher.style.marginBottom='12px';switcher.innerHTML='<button id="forceATMode" type="button" class="force-action" aria-pressed="true">Metalpha Triads</button><button id="forceMeronMode" type="button" class="force-action" aria-pressed="false">4 Metalphas · Md/Mod/Exd</button>';forces.prepend(switcher);
   function setForcePresentation(multi){
     forceATPresentation=!multi;
     cards[0].hidden=multi;cards[1].hidden=!multi;
