@@ -3933,7 +3933,12 @@ function updateRIDistancePresentation() {
     const color = new THREE.Color(visual.from[colorRole]).lerp(
       new THREE.Color(visual.to[colorRole]), visual.mix
     );
-    ri.refMaterial?.color.copy(color);
+    // Improve contrast through saturation and reference-line opacity, not tube width.
+    if(forceATPresentation){
+      const hsl={};color.getHSL(hsl);
+      if(hsl.s>.01)color.setHSL(hsl.h,1,Math.max(.5,hsl.l));
+    }
+    if(ri.refMaterial){ri.refMaterial.color.copy(color);ri.refMaterial.opacity=forceATPresentation?.48:.30;}
     ri.dashMaterials?.forEach(material => material.color.copy(color));
   });
 }
@@ -4021,11 +4026,12 @@ function updateCommonRICircles(metalphaGroup) {
     let radius = data.commonRadius;
     // Ajuste dinâmico de espessura para MoC e ExC nos modos Mod e Exd
     // MC (md) = espessura original, MoC (mod) = 50%, ExC (exd) = 33%
-    if (circle.userData.circleKind === 'MC') {
+    if (circle.userData.circleKind === 'MC' || forceATPresentation) {
       let desiredMultiplier = 1.0;
-      if (typeof fiveMeronRIDistanceStage !== 'undefined') {
-        if (fiveMeronRIDistanceStage === 'mod') desiredMultiplier = 0.5; // MoC = metade
-        else if (fiveMeronRIDistanceStage === 'exd') desiredMultiplier = 0.33; // ExC = 1/3
+      const thicknessStage=forceATPresentation?getRIDistanceVisual().stage:fiveMeronRIDistanceStage;
+      if (typeof thicknessStage !== 'undefined') {
+        if (thicknessStage === 'mod') desiredMultiplier = 0.5; // MoC = metade
+        else if (thicknessStage === 'exd') desiredMultiplier = 0.33; // ExC = 1/3
       }
       // Se o multiplicador mudou, recria geometria dos dashes com nova espessura
       if (circle.userData.ri.lastThicknessMultiplier !== desiredMultiplier) {
