@@ -2494,8 +2494,8 @@ function updateRecordingTimer() {
 }
 
 function setRecordingUi(isRecording) {
-  startRecordingBtn.disabled = isRecording || animationScriptSteps.length < 2;
-  startFacebookRecordingBtn.disabled = isRecording || animationScriptSteps.length < 2;
+  startRecordingBtn.disabled = isRecording;
+  startFacebookRecordingBtn.disabled = isRecording;
   stopRecordingBtn.disabled = !isRecording;
   recordStatus.classList.toggle('recording', isRecording);
   recordStatusText.textContent = isRecording && activeRecordingProfile
