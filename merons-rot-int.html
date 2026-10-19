@@ -1177,6 +1177,7 @@ body.pair-mode.magnet-gravity-active #panel:not(.minimized) { top:16px!important
         <div class="script-preset">
           <label for="scriptPresetSelect">Ready-made video script</label>
           <select id="scriptPresetSelect" class="script-preset-select">
+            <option value="mass_energy30">MM · Massa e energia · 30 s</option>
             <option value="meron_intro">01 · Meron Intro · 12 Ca</option>
             <option value="ic_full">02 · IC Completa · 6 Círculos</option>
             <option value="ig_ca">03 · IG dos Ca · Geometria</option>
@@ -2350,6 +2351,18 @@ function setCinematicTitle(title = '') {
   if (!cleanTitle) {
     cinematicTitleTexture.needsUpdate = true;
     return;
+  }
+  if(cleanTitle.length>100){
+    const ctx=cinematicTitleContext,width=cinematicTitleCanvas.width;
+    ctx.font='600 28px "Instrument Sans", Arial, sans-serif';
+    const lines=[];let line='';
+    cleanTitle.split(/\s+/).forEach(word=>{const next=line?line+' '+word:word;if(ctx.measureText(next).width>820&&line){lines.push(line);line=word;}else line=next;});if(line)lines.push(line);
+    const lineHeight=33,height=lines.length*lineHeight+24,y=10;
+    roundedCanvasRect(ctx,(width-870)/2,y,870,height,16);
+    ctx.fillStyle='rgba(8,20,34,.94)';ctx.fill();ctx.strokeStyle='rgba(132,204,229,.55)';ctx.lineWidth=1.2;ctx.stroke();
+    ctx.fillStyle='#eef8ff';ctx.textAlign='center';ctx.textBaseline='middle';
+    lines.forEach((text,i)=>ctx.fillText(text,width/2,y+12+lineHeight*(i+.5)));
+    cinematicTitleTexture.needsUpdate=true;return;
   }
   // === CAIXAS MENORES E PROPORCIONAIS - Ajuste solicitado ===
   let fontSize = 38;
@@ -7094,7 +7107,28 @@ function createMaster120Script() {
 }
 
 
+function createMassEnergy30Script(){
+  const base={currentMeronCount:1,pairMode:null,currentInterMeronDist:0,
+    layerVisibility:[...READY_SCRIPT_LAYERS.meronic],showLabels:false,showVectors:true,
+    showFaces:true,showEdges:true,showTriades:false,faceOpacityValue:.20,
+    riRunning:false,danceEnabled:false,danceAmpDeg:0,danceFreq:6,danceMode:3,
+    triadsSeparated:false,triadSeparationAmount:0,fiveMeronRIDistanceMode:false,
+    metalphaTriadVisible:[true,true,true,true],autoRotate:false,rotateSpeed:0};
+  const bounds=getReadyGrowthBounds(1);
+  const wide=getReadyCameraPose(bounds,2.0),close=getReadyCameraPose(bounds,1.12);
+  const mass='No MM: isso é um Méron Metalpha. Toda essa estrutura geométrica — o desenho dos Compalphas preenchendo o espaço — é o que chamamos de “massa”.';
+  const energy='No MM: isso é a energia cinético-oscilatória dos Ca. As oscilações desses Ca, em suas diferentes amplitudes, são o que chamamos de “ondas eletromagnéticas”: ondas de rádio, infravermelho, luz visível, eletricidade, raios X, raios gama etc.';
+  return [
+    {label:'Metalpha · início',duration:0,title:'',state:createReadyStateAtPose(base,wide,0)},
+    {label:'Giro e aproximação dos MC',duration:5,easing:'linear',title:'',state:createReadyStateAtPose(base,close,.7)},
+    {label:'Massa · estrutura geométrica',duration:7,easing:'linear',title:mass,state:createReadyStateAtPose(base,close,1.35)},
+    {label:'Energia · IC de 0° a 120°',duration:12,easing:'linear',title:energy,state:createReadyStateAtPose({...base,danceEnabled:true,danceAmpDeg:120},close,1.8)},
+    {label:'Energia · amplitude máxima',duration:4.7,easing:'linear',title:energy,state:createReadyStateAtPose({...base,danceEnabled:true,danceAmpDeg:120},close,2.0)}
+  ];
+}
+
 const READY_SCRIPT_PRESETS = Object.freeze({
+  mass_energy30:Object.freeze({title:'MM · Massa e energia · 30 s',description:'Metalpha em rotação, aproximação dos MC e IC crescente até 120°. Dois balões em português apresentam as definições de massa e energia do Modelo Merônico. Duração total: 30 segundos.',build:createMassEnergy30Script}),
   // === NOVOS ROTEIROS DIDÁTICOS - IC, IG Ca, Mérons - Caixas pequenas ===
   meron_intro: Object.freeze({
     title: '01 · Meron Intro · 12 Ca',
@@ -7235,7 +7269,7 @@ function loadAnimationScript() {
       .map((step, index) => ({
         duration: index === 0 ? 0 : clampNumber(step.duration, 0.5, 30, 4),
         label: typeof step.label === 'string' ? step.label.slice(0, 100) : '',
-        ...(typeof step.title === 'string' ? { title: step.title.slice(0, 120) } : {}),
+        ...(typeof step.title === 'string' ? { title: step.title.slice(0, 600) } : {}),
         easing: step.easing === 'linear' ? 'linear' : 'smooth',
         state: step.state
       }));
