@@ -1177,6 +1177,11 @@ body.pair-mode.magnet-gravity-active #panel:not(.minimized) { top:16px!important
           <button id="startRecording" class="record-btn">● Master 16:9<small>2560 × 1440 · 30 fps · 60 Mbps request</small></button>
           <button id="startFacebookRecording" class="record-btn facebook">● Facebook Reel 9:16<small>1080 × 1920 · 30 fps · 30 Mbps request</small></button>
         </div>
+        <button id="pauseRecording" class="record-btn mt-2" disabled>Ⅱ Pause recording</button>
+        <label class="panel-note">Keyboard recording profile <select id="keyboardRecordingProfile"><option value="master">Master 16:9</option><option value="facebook">Facebook Reel 9:16</option></select></label>
+        <div class="panel-note">Recording shortcuts (click to customize)</div>
+        <div class="record-profile-grid"><button id="recordToggleKey" type="button" class="cam-btn">Ctrl + → · Start / pause / resume</button><button id="recordStopKey" type="button" class="cam-btn">Ctrl + ↓ · Finish</button></div>
+        <button id="recordKeysReset" type="button" class="cam-btn">Reset shortcuts</button><div id="recordKeysHint" class="panel-note" aria-live="polite">Pause affects the video recording; the scene remains interactive.</div>
         <button id="stopRecording" class="record-btn stop mt-2" disabled>■ Finish Recording</button>
         <div id="recordStatus" class="record-status" aria-live="polite">
           <span><i class="record-dot"></i><span id="recordStatusText">Ready to record</span></span>
@@ -2438,6 +2443,7 @@ let mediaRecorder = null;
 let recordedChunks = [];
 let recordingTimerId = null;
 let recordingStartedAt = 0;
+let recordingPausedAt=0,recordingPausedDuration=0;
 let activeRecordingProfile = null;
 let recordingCanvas = null;
 let recordingRenderer = null;
@@ -2490,13 +2496,15 @@ function formatRecordingTime(milliseconds) {
 }
 
 function updateRecordingTimer() {
-  recordTimer.textContent = formatRecordingTime(performance.now() - recordingStartedAt);
+  recordTimer.textContent = formatRecordingTime((recordingPausedAt||performance.now()) - recordingStartedAt - recordingPausedDuration);
 }
 
 function setRecordingUi(isRecording) {
   startRecordingBtn.disabled = isRecording;
   startFacebookRecordingBtn.disabled = isRecording;
   stopRecordingBtn.disabled = !isRecording;
+  document.getElementById('pauseRecording').disabled=!isRecording;
+  document.getElementById('pauseRecording').textContent='Ⅱ Pause recording';
   recordStatus.classList.toggle('recording', isRecording);
   recordStatusText.textContent = isRecording && activeRecordingProfile
     ? `Recording ${activeRecordingProfile.label}`
@@ -2607,6 +2615,9 @@ function beginMediaRecording(profileKey = 'master') {
       cancelScriptPlayback(message);
     });
 
+    recorder.addEventListener('pause',()=>{recordingPausedAt=performance.now();document.getElementById('pauseRecording').textContent='▶ Resume recording';recordStatusText.textContent='Recording paused';recordStatus.classList.remove('recording');updateRecordingTimer();});
+    recorder.addEventListener('resume',()=>{recordingPausedDuration+=performance.now()-recordingPausedAt;recordingPausedAt=0;document.getElementById('pauseRecording').textContent='Ⅱ Pause recording';recordStatusText.textContent='Recording '+profile.label;recordStatus.classList.add('recording');});
+    recordingPausedAt=0;recordingPausedDuration=0;
     recorder.start(1000);
     recordingStartedAt = performance.now();
     recordTimer.textContent = '00:00';
@@ -2627,12 +2638,39 @@ startFacebookRecordingBtn.addEventListener('click', () => beginMediaRecording('f
 
 stopRecordingBtn.addEventListener('click', () => {
   cancelScriptPlayback('Recording stopped.');
-  if (mediaRecorder && mediaRecorder.state === 'recording') {
+  if (mediaRecorder && ['recording','paused'].includes(mediaRecorder.state)) {
     stopRecordingBtn.disabled = true;
     recordStatusText.textContent = 'Finishing video';
     mediaRecorder.stop();
   }
 });
+
+// Recorder shortcuts are independent of animation and camera controls.
+function toggleRecordingPause(){
+  if(!mediaRecorder){beginMediaRecording(document.getElementById('keyboardRecordingProfile').value);return;}
+  if(mediaRecorder.state==='recording')mediaRecorder.pause();else if(mediaRecorder.state==='paused')mediaRecorder.resume();
+}
+document.getElementById('pauseRecording').onclick=toggleRecordingPause;
+const defaultRecordingKeys={toggle:{code:'ArrowRight',ctrl:true,alt:false,shift:false,meta:false},stop:{code:'ArrowDown',ctrl:true,alt:false,shift:false,meta:false}};
+let recordingKeys=JSON.parse(JSON.stringify(defaultRecordingKeys)),recordKeyCapture=null;
+try{const saved=JSON.parse(localStorage.getItem('meronicRecordingKeysV1'));if(saved&&['toggle','stop'].every(k=>saved[k]&&typeof saved[k].code==='string'))recordingKeys=saved;}catch(_){}
+function recordingKeyLabel(key){return [key.ctrl?'Ctrl':null,key.alt?'Alt':null,key.shift?'Shift':null,key.meta?'Meta':null,({ArrowRight:'→',ArrowDown:'↓',ArrowLeft:'←',ArrowUp:'↑'})[key.code]||key.code.replace(/^Key/,'')].filter(Boolean).join(' + ');}
+function refreshRecordingKeys(){document.getElementById('recordToggleKey').textContent=recordingKeyLabel(recordingKeys.toggle)+' · Start / pause / resume';document.getElementById('recordStopKey').textContent=recordingKeyLabel(recordingKeys.stop)+' · Finish';}
+function matchesRecordingKey(e,key){return e.code===key.code&&e.ctrlKey===!!key.ctrl&&e.altKey===!!key.alt&&e.shiftKey===!!key.shift&&e.metaKey===!!key.meta;}
+[['recordToggleKey','toggle'],['recordStopKey','stop']].forEach(([id,action])=>document.getElementById(id).onclick=()=>{recordKeyCapture=action;document.getElementById('recordKeysHint').textContent='Press the new shortcut; Esc cancels.';});
+document.getElementById('recordKeysReset').onclick=()=>{recordingKeys=JSON.parse(JSON.stringify(defaultRecordingKeys));recordKeyCapture=null;try{localStorage.removeItem('meronicRecordingKeysV1');}catch(_){}refreshRecordingKeys();document.getElementById('recordKeysHint').textContent='Default shortcuts restored.';};
+document.addEventListener('keydown',e=>{
+  if(recordKeyCapture){e.preventDefault();e.stopImmediatePropagation();if(e.code==='Escape'){recordKeyCapture=null;document.getElementById('recordKeysHint').textContent='Shortcut change canceled.';return;}if(/^(Control|Shift|Alt|Meta)/.test(e.code)||e.repeat)return;
+    const key={code:e.code,ctrl:e.ctrlKey,alt:e.altKey,shift:e.shiftKey,meta:e.metaKey},other=recordKeyCapture==='toggle'?'stop':'toggle';
+    if(matchesRecordingKey(e,recordingKeys[other])){document.getElementById('recordKeysHint').textContent='This shortcut is already assigned. Choose another.';return;}
+    recordingKeys[recordKeyCapture]=key;recordKeyCapture=null;try{localStorage.setItem('meronicRecordingKeysV1',JSON.stringify(recordingKeys));}catch(_){}refreshRecordingKeys();document.getElementById('recordKeysHint').textContent='Shortcut saved in this browser.';return;
+  }
+  if(e.target.closest?.('input,textarea,select,[contenteditable="true"]'))return;
+  const toggle=matchesRecordingKey(e,recordingKeys.toggle),stop=matchesRecordingKey(e,recordingKeys.stop);if(!toggle&&!stop)return;
+  e.preventDefault();e.stopImmediatePropagation();if(e.repeat)return;
+  if(toggle)toggleRecordingPause();else stopRecordingBtn.click();
+},true);
+refreshRecordingKeys();
 
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
